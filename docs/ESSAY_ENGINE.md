@@ -28,6 +28,10 @@ and reused for every essay.
    - gets its own page at `/essays/<slug>`,
    - gets a community rating panel keyed on its `id`.
 
+## Browser payload recovery
+
+The essay body, not its optional series catalog, determines whether the article can open. A missing slug (payload 404 or static-host HTML fallback) offers a link back to articles with noncanonical `not-found` metadata. A 503 or malformed JSON is a load error, not a claim that the essay does not exist. Its rejected promise is stable within the visit; the page recovery button or another explicit chapter selection can retry without reloading the document. The shell owns placement, history and focus for both outcomes (see `APP_SHELL_RUNTIME.md`).
+
 ## Inline emphasis & variants
 
 - Wrap words in `**double asterisks**` inside `paragraph`, `poem.lines`,
@@ -49,7 +53,7 @@ data. When extending it, touch these — not the article files:
 | `EssayCover.tsx` | Shared cover surface (artwork + graceful «» fallback + kicker badge), used by both the hero and the listing card. |
 | `EssayHero.tsx` / `EssayCard.tsx` | Page hero and listing card; both read tokens from `theme.ts`. |
 | `ArticleRenderer.tsx` | Maps blocks → views, numbers the sections, and exposes `getEssayToc()`. |
-| `SectionChip.tsx` | Mobile long-read companion: current-chapter chip that appears only in reading mode (`html.chrome-hidden`) + a native Popover-API table of contents. Driven by `getEssayToc()`, so every essay gets it for free. |
+| `SectionChip.tsx` | Mobile current-chapter chip and native popover TOC (select fallback). Shown in reading mode or while the reader operates it. Shares chapter anchors and breakpoint focus with the desktop TOC; see `MEDIA_OVERLAY_RUNTIME.md`. |
 
 ### Reading mode (site-wide)
 
@@ -73,11 +77,28 @@ portraits (`PoetCard` ↔ poet hero) and essay covers (`EssayCard` ↔
 
 ### «Поделиться строкой» (share a line)
 
-`components/ui/ShareLine.tsx`: mount `<ShareLine scopeRef={ref} />` inside any
-long-read container. Selecting text shows a gold chip that copies a
-`#:~:text=` deep link; incoming visitors see the passage highlighted gold
-(`::target-text` in `index.css`). Already wired on the essay page — new
-essays get it for free.
+`components/ui/ShareLine.tsx` serves both essay articles and poet detail. Mark the
+published container `data-share-scope` and mount `<ShareLine scopeRef={ref} path={routePath} />`
+inside it. `path` belongs to the **rendered source**; an outgoing essay may still be
+readable after the address bar changes. Use the router basename and canonical trailing
+slash. Never copy the sender’s query, old fragment, form selection or community draft.
+
+The chip copies `#address:~:text=…`. The text directive is for the browser: native
+matching/highlighting (`::target-text`) is **not** guaranteed. Before the directive
+is an independent address for the reading position. Preserve a published section
+or source ID where one exists. Otherwise `sharedPassage.ts` identifies the first
+selected non-space character by reading flow, text-run length/fingerprint,
+occurrence and offset. It uses the canonical verse layer, not animated ink. There
+is no stored selection, second corpus, or quote in a query parameter. This address
+is for the published text, not a promise across arbitrary edits. An unresolved
+address after enrichment must not guess at a different passage. Old text-only links
+remain browser-owned; no data migration or content rewrite is involved.
+
+The existing route scroll owner places and focuses the arrival (see
+`APP_SHELL_RUNTIME.md`); the chip must not scroll the recipient. `qa/shared-passage.spec.mjs`
+opens the copied URL from a link in a fresh document and measures the **painted glyph**,
+including delayed data, rewrapping, repeated words and tall essay blocks. A successful
+clipboard write alone is not a recipient test.
 
 **To add a block type:** extend the `EssayBlock` union in `src/types/essay.ts`,
 add a component + `case` in `blocks.tsx` (the compiler forces the case), and reach

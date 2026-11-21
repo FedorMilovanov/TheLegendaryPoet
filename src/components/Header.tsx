@@ -6,6 +6,7 @@ import SpectralBrandMark from './SpectralBrandMark';
 import { RutubeIcon, YouTubeIcon, VKIcon } from './ChannelIcons';
 import { Search } from './PremiumIcons';
 import ThemeToggle from './ThemeToggle';
+import { commandTriggerProps } from './command/commandTrigger';
 import { titleCase } from '../utils/titleCase';
 
 const Header = () => {
@@ -77,8 +78,7 @@ const Header = () => {
           <div className="header-controls ml-auto shrink-0 items-center gap-2.5 lg:gap-3">
             <ThemeToggle />
             <button
-              type="button"
-              onClick={() => window.dispatchEvent(new Event('tlp-open-command-palette'))}
+              {...commandTriggerProps}
               className="theme-control-idle inline-flex min-h-11 items-center gap-1.5 rounded-full border border-cyan-400/20 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] transition hover:border-cyan-400/35"
               aria-label="Открыть поиск — Ctrl K"
             >

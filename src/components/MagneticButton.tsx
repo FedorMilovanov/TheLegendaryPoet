@@ -1,52 +1,41 @@
-import { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import type { PointerEvent, ReactNode } from 'react';
+import { motion, useReducedMotion, useSpring } from 'framer-motion';
 import { Link } from './ui/Link';
 
 interface MagneticButtonProps {
-  children: React.ReactNode;
+  children: ReactNode;
   to?: string;
   href?: string;
   className?: string;
   onClick?: () => void;
 }
 
+const spring = { stiffness: 220, damping: 24, mass: 0.5 };
+
 export default function MagneticButton({ children, to, href, className = '', onClick }: MagneticButtonProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { clientX, clientY } = e;
-    const { height, width, left, top } = ref.current!.getBoundingClientRect();
-    const middleX = clientX - (left + width / 2);
-    const middleY = clientY - (top + height / 2);
-    setPosition({ x: middleX * 0.3, y: middleY * 0.3 });
+  const reduced = useReducedMotion();
+  const x = useSpring(0, spring);
+  const y = useSpring(0, spring);
+  const reset = () => { x.set(0); y.set(0); };
+  const track = (event: PointerEvent<HTMLElement>) => {
+    if (reduced || event.pointerType === 'touch') return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    x.set(((event.clientX - rect.left) / rect.width - 0.5) * 12);
+    y.set(((event.clientY - rect.top) / rect.height - 0.5) * 6);
   };
 
-  const reset = () => {
-    setPosition({ x: 0, y: 0 });
+  // The pill, keyboard outline and hit region stay together. Only its ink
+  // follows the pointer; the pill clips both the ink and the shine sweep.
+  const props = {
+    onClick, onPointerMove: track, onPointerLeave: reset, onPointerCancel: reset, onBlur: reset,
+    className: `group relative inline-flex items-center justify-center overflow-hidden rounded-full px-8 py-4 font-medium tracking-wide transition-[color,border-color,background-color,box-shadow] duration-300 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] ${className}`,
   };
+  const content = <>
+    <span aria-hidden="true" className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 ease-out motion-safe:group-hover:translate-x-full" />
+    <motion.span className="pointer-events-none relative z-10 flex items-center gap-2" style={reduced ? undefined : { x, y }}>{children}</motion.span>
+  </>;
 
-  const Content = (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouse}
-      onMouseLeave={reset}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: 'spring', stiffness: 150, damping: 15, mass: 0.1 }}
-      className={`group relative inline-flex items-center justify-center overflow-hidden rounded-full px-8 py-4 font-medium tracking-wide transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] ${className}`}
-      onClick={onClick}
-    >
-      {/* Shine sweep effect */}
-      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
-      <span className="relative z-10 flex items-center gap-2">{children}</span>
-    </motion.div>
-  );
-
-  if (to) {
-    return <Link to={to} className="inline-block">{Content}</Link>;
-  }
-  if (href) {
-    return <a href={href} target="_blank" rel="noopener noreferrer" className="inline-block">{Content}</a>;
-  }
-  return <div className="inline-block cursor-pointer">{Content}</div>;
+  if (to) return <Link to={to} {...props}>{content}</Link>;
+  if (href) return <a href={href} target="_blank" rel="noopener noreferrer" {...props}>{content}</a>;
+  return <button type="button" {...props}>{content}</button>;
 }

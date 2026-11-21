@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, FileText, Home, Search } from './PremiumIcons';
 import { Link } from './ui/Link';
 import { titleCase } from '../utils/titleCase';
+import { commandTriggerProps } from './command/commandTrigger';
 
 /**
  * Premium mobile bottom dock. The four persistent destinations prioritise the
@@ -90,11 +91,6 @@ export default function MobileDock() {
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const openPalette = () => {
-    hapticFeedback();
-    window.dispatchEvent(new Event('tlp-open-command-palette'));
-  };
-
   return (
     <nav ref={dockRef} className="mobile-dock" role="navigation" aria-label="Мобильная навигация">
       <motion.div
@@ -106,7 +102,7 @@ export default function MobileDock() {
       >
         {dockLinks.slice(0, 2).map((link) => <DockLink key={link.path} link={link} active={isActive(link.path)} />)}
 
-        <button onClick={openPalette} className="dock-fab" aria-label="Открыть поиск и все разделы">
+        <button {...commandTriggerProps} onClickCapture={hapticFeedback} className="dock-fab" aria-label="Открыть поиск и все разделы">
           <span className="dock-fab-ring" aria-hidden="true" />
           <Search size={22} />
         </button>

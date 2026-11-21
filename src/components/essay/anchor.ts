@@ -1,3 +1,6 @@
+import type { EssaySource } from '../../types/essay';
+import { passageStamp } from '../../utils/passageStamp';
+
 /**
  * Single source of truth for section anchor ids.
  *
@@ -14,4 +17,10 @@ export function sectionAnchor(heading: string, explicit?: string): string {
       .replace(/[^a-zа-яё0-9]+/gi, '-')
       .replace(/^-+|-+$/g, '')
   );
+}
+
+/** Keep published citation IDs. Bibliography-only entries have an address
+ * independent of their filter, expansion state or position in the list. */
+export function sourceAnchor(source: EssaySource) {
+  return 'source-' + (source.id ?? `ref.${passageStamp(source.url ?? source.title)}`);
 }

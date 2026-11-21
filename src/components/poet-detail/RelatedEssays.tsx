@@ -44,7 +44,7 @@ export default function RelatedEssays({ poetId }: { poetId: string }) {
           <TiltCard key={essay.id} intensity={5}>
             <Link
               to={`/essays/${essay.slug}`}
-              className="theme-elevated-surface group block h-full overflow-hidden rounded-[2rem] border shadow-[0_22px_65px_rgba(0,0,0,0.18)] transition hover:border-luxury-gold/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/65"
+              className="tilt-card-surface relative theme-elevated-surface group block h-full overflow-hidden rounded-[2rem] border shadow-[0_22px_65px_rgba(0,0,0,0.18)] transition hover:border-luxury-gold/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold/65"
             >
               <EssayCover
                 src={essay.cardCover || essay.cover}

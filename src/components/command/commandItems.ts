@@ -1,4 +1,5 @@
 import { musicTracks, poets } from '../../data/poets';
+import { matchesRussianSearch } from '../../utils/searchText';
 import routeContract from '../../routes/route-contract.json';
 
 export interface CommandItem {
@@ -161,4 +162,16 @@ export function buildCommandItems({
 
 export function getCommandItems(essays: readonly CommandEssaySource[]): CommandItem[] {
   return buildCommandItems({ poets, essays, tracks: musicTracks });
+}
+
+/** The optional essay index only adds commands. Don't move an option out from
+ * under Enter or a pointer when it arrives. Keep this draft's visible prefix,
+ * then append any missing ranked matches. A new edit has no old prefix. */
+export function commandResults(items: readonly CommandItem[], query: string, shown?: readonly CommandItem[]) {
+  const ranked = query.trim()
+    ? items.filter(item => matchesRussianSearch(query, [item.label, item.description, item.group])).slice(0, 10)
+    : items.slice(0, 8);
+  if (!shown?.length) return ranked;
+  const ids = new Set(shown.map(item => item.id));
+  return [...shown, ...ranked.filter(item => !ids.has(item.id))];
 }

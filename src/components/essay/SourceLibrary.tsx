@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useLayoutEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Archive,
   BookOpenText,
@@ -10,6 +11,8 @@ import {
   Network,
 } from 'lucide-react';
 import type { EssaySource, EssaySourceKind } from '../../types/essay';
+import { sourceAnchor } from './anchor';
+import { decodeHash } from '../../utils/smoothScroll';
 
 const sourceKinds: Record<
   EssaySourceKind,
@@ -28,12 +31,13 @@ function sourceKind(source: EssaySource): EssaySourceKind {
 }
 
 export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
+  const { hash } = useLocation();
   const reduceMotion = useReducedMotion();
   const [filter, setFilter] = useState<Filter>('all');
   const [expanded, setExpanded] = useState(false);
 
   const indexedSources = useMemo(
-    () => sources.map((source, index) => ({ source, index: index + 1 })),
+    () => sources.map((source, index) => ({ source, index: index + 1, id: sourceAnchor(source) })),
     [sources],
   );
 
@@ -65,23 +69,13 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
     setExpanded(false);
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const revealLinkedSource = () => {
-      const match = window.location.hash.match(/^#source-(.+)$/);
-      if (!match) return;
-      const sourceId = decodeURIComponent(match[1]);
-      if (!sources.some((source) => source.id === sourceId)) return;
+      const id = decodeHash(hash);
+      if (!indexedSources.some(row => row.id === id)) return;
 
       setFilter('all');
       setExpanded(true);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document.getElementById(`source-${sourceId}`)?.scrollIntoView({
-            behavior: reduceMotion ? 'auto' : 'smooth',
-            block: 'center',
-          });
-        });
-      });
     };
 
     // New fragment URLs use native links/history. A repeated citation click
@@ -94,13 +88,11 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
     };
 
     revealLinkedSource();
-    window.addEventListener('hashchange', revealLinkedSource);
     document.addEventListener('click', revealRepeatedSource);
     return () => {
-      window.removeEventListener('hashchange', revealLinkedSource);
       document.removeEventListener('click', revealRepeatedSource);
     };
-  }, [reduceMotion, sources]);
+  }, [hash, indexedSources]);
 
   return (
     <section
@@ -154,71 +146,69 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
         })}
       </div>
 
-      <motion.ol layout className="mt-5 space-y-2.5">
-        <AnimatePresence initial={false} mode="popLayout">
-          {visible.map(({ source, index }) => {
-            const kind = sourceKind(source);
-            const meta = sourceKinds[kind];
-            const Icon = meta.icon;
-            const content = (
-              <>
-                <span className="mt-0.5 font-serif text-sm tabular-nums theme-functional-subtle">
-                  {String(index).padStart(2, '0')}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm leading-relaxed theme-text">{source.title}</span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.025] px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.13em] theme-functional-subtle">
-                      <Icon size={9} aria-hidden="true" /> {meta.label}
-                    </span>
+      {/* These rows are document fragment targets. Fade the ink, but keep the
+          IDs at their final layout positions even when a filter is removed. */}
+      <ol className="mt-5 space-y-2.5">
+        {visible.map(({ source, index, id }) => {
+          const kind = sourceKind(source);
+          const meta = sourceKinds[kind];
+          const Icon = meta.icon;
+          const content = (
+            <>
+              <span className="mt-0.5 font-serif text-sm tabular-nums theme-functional-subtle">
+                {String(index).padStart(2, '0')}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm leading-relaxed theme-text">{source.title}</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-white/8 bg-white/[0.025] px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.13em] theme-functional-subtle">
+                    <Icon size={9} aria-hidden="true" /> {meta.label}
                   </span>
-                  {(source.institution || source.year || source.note) && (
-                    <span className="mt-1 block text-xs leading-relaxed theme-functional-muted">
-                      {[source.institution, source.year].filter(Boolean).join(' · ')}
-                      {source.note ? `${source.institution || source.year ? ' — ' : ''}${source.note}` : ''}
-                    </span>
-                  )}
                 </span>
-                {source.url && (
-                  <ExternalLink
-                    size={13}
-                    aria-hidden="true"
-                    className="mt-1 shrink-0 text-luxury-gold/35 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-luxury-gold/75"
-                  />
+                {(source.institution || source.year || source.note) && (
+                  <span className="mt-1 block text-xs leading-relaxed theme-functional-muted">
+                    {[source.institution, source.year].filter(Boolean).join(' · ')}
+                    {source.note ? `${source.institution || source.year ? ' — ' : ''}${source.note}` : ''}
+                  </span>
                 )}
-              </>
-            );
+              </span>
+              {source.url && (
+                <ExternalLink
+                  size={13}
+                  aria-hidden="true"
+                  className="mt-1 shrink-0 text-luxury-gold/35 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-luxury-gold/75"
+                />
+              )}
+            </>
+          );
 
-            return (
-              <motion.li
-                id={source.id ? `source-${source.id}` : undefined}
-                key={source.id ?? source.url ?? `${index}-${source.title}`}
-                layout
-                initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.99 }}
-                transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-                className="scroll-mt-28 rounded-2xl target:ring-2 target:ring-[var(--tlp-control-active)] target:ring-offset-4 target:ring-offset-[var(--tlp-focus-offset)]"
-              >
-                {source.url ? (
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] theme-soft-surface px-3.5 py-3 transition-[background-color,border-color,transform] duration-300 hover:-translate-y-0.5 hover:border-luxury-gold/20 hover:bg-luxury-gold/[0.025]"
-                  >
-                    {content}
-                  </a>
-                ) : (
-                  <div className="flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] theme-soft-surface px-3.5 py-3">
-                    {content}
-                  </div>
-                )}
-              </motion.li>
-            );
-          })}
-        </AnimatePresence>
-      </motion.ol>
+          return (
+            <motion.li
+              id={id}
+              key={id}
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+              className="scroll-mt-28 rounded-2xl target:ring-2 target:ring-[var(--tlp-control-active)] target:ring-offset-4 target:ring-offset-[var(--tlp-focus-offset)]"
+            >
+              {source.url ? (
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] theme-soft-surface px-3.5 py-3 transition-[background-color,border-color] duration-300 hover:border-luxury-gold/20 hover:bg-luxury-gold/[0.025]"
+                >
+                  {content}
+                </a>
+              ) : (
+                <div className="flex min-h-14 items-start gap-3 rounded-2xl border border-white/[0.055] theme-soft-surface px-3.5 py-3">
+                  {content}
+                </div>
+              )}
+            </motion.li>
+          );
+        })}
+      </ol>
 
       {(hiddenCount > 0 || expanded) && filtered.length > collapsedLimit && (
         <div className="mt-6 flex justify-center">

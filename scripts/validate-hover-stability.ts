@@ -40,7 +40,6 @@ for (const [legacy, label] of [
 }
 for (const [required, label] of [
   ['.luxury-card {', 'luxury-card visual base'],
-  ['.luxury-card::before {', 'luxury-card sheen visual base'],
   ['.luxury-card:hover {', 'luxury-card visual hover state'],
 ]) {
   if (!indexCss.includes(required)) errors.push(`src/index.css: missing ${label}`);
@@ -51,9 +50,9 @@ requireText('src/components/TiltCard.tsx', 'className="tilt-card-content relativ
 requireText('src/components/TiltCard.tsx', 'onPointerEnter={prepareLayer}', 'pointer-entry compositor warm-up');
 requireText('src/components/TiltCard.tsx', "node.dataset.tiltTracking = 'true';", 'live-pointer transition ownership');
 requireText('src/components/TiltCard.tsx', 'delete node.dataset.tiltTracking;', 'tilt transition cleanup');
-requireText('src/components/TiltCard.tsx', 'className="tilt-card-sheen', 'separate sheen plane');
-if (!tiltCard.includes('<div className="tilt-card-content relative h-full w-full">\n          {children}\n          {sheen && (')) {
-  errors.push('src/components/TiltCard.tsx: children and sheen must share the single owned content plane');
+requireText('src/components/TiltCard.tsx', 'data-tilt-sheen={sheen || undefined}', 'scoped surface sheen opt-in');
+if (tiltCard.includes('className="tilt-card-sheen') || !tiltCard.includes('<div className="tilt-card-content relative h-full w-full">\n          {children}\n        </div>')) {
+  errors.push('src/components/TiltCard.tsx: only the artwork may paint a sheen, not a sibling covering its rectangular wrapper');
 }
 
 const stability = read('src/hover-stability.css');
@@ -65,8 +64,11 @@ for (const [text, label] of [
   ['.tilt-card-inner[data-tilt-tracking=', 'live-pointer transition override'],
   ['transition: none;', 'no transition backlog during pointer input'],
   ['backface-visibility: hidden;', 'backface stabilization'],
-  ['transform: translate3d(-160%, 0, 0) skewX(-18deg);', 'transform-only luxury sweep'],
-  ['transition-property: transform, opacity;', 'explicit sweep transition properties'],
+  ['[data-tilt-sheen] .tilt-card-surface::after', 'sheen clipped by its painted surface'],
+  ['border-radius: inherit;', 'sheen respects the artwork corners'],
+  ['.luxury-card:not(.tilt-card-surface)::before', 'one sheen owner per card'],
+  ['transform: translate3d(-100%, 0, 0);', 'transform-only luxury sweep'],
+  ['transition: transform 620ms', 'explicit sweep transition property'],
   ['.tilt-card-inner,\n  .luxury-card {\n    transition: none !important;', 'central reduced-motion transition ownership'],
   ['img[class*="group-hover:scale-"]', 'automatic group-hover artwork protection'],
   ['img[class*="hover:scale-"]', 'automatic direct-hover artwork protection'],

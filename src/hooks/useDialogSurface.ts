@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import {
   acquireOverlayLock,
-  canRestoreOverlayFocus,
   type OverlayLockHandle,
 } from '../utils/overlayRuntime';
+import { captureDialogFocusReturn } from '../utils/dialogFocusReturn';
+import { isAvailableFocusTarget } from '../utils/focusRuntime';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -19,9 +20,10 @@ const FOCUSABLE_SELECTOR = [
 function getFocusableElements(dialog: HTMLElement | null) {
   if (!dialog) return [];
   return [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((element) => {
-    if (element.closest('[inert]')) return false;
-    if (element.getAttribute('aria-hidden') === 'true') return false;
-    return element.getClientRects().length > 0;
+    // Programmatic targets (e.g. combobox options) are not Tab stops,
+    // even when their underlying element is a native button.
+    if (element.hasAttribute('tabindex') && element.tabIndex < 0) return false;
+    return isAvailableFocusTarget(element);
   });
 }
 
@@ -33,7 +35,6 @@ interface DialogSurfaceOptions {
   label?: string;
   closeOnEscape?: boolean;
   restoreFocus?: boolean;
-  restoreFocusRef?: RefObject<boolean | null>;
   /** Animated dialogs retain their overlay lease until AnimatePresence exit completion. */
   deferReleaseUntilUnmount?: boolean;
 }
@@ -51,7 +52,6 @@ export function useDialogSurface({
   label = 'dialog',
   closeOnEscape = true,
   restoreFocus = true,
-  restoreFocusRef,
   deferReleaseUntilUnmount = false,
 }: DialogSurfaceOptions) {
   const handleRef = useRef<OverlayLockHandle | null>(null);
@@ -65,10 +65,13 @@ export function useDialogSurface({
   useEffect(() => {
     if (!open) return;
 
-    const previouslyFocused = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
-    const handle = acquireOverlayLock(label, dialogRef.current);
+    const returnFocus = captureDialogFocusReturn();
+    let leaving = false;
+    const handle = acquireOverlayLock(label, dialogRef.current, () => {
+      if (leaving) return;
+      leaving = true;
+      onClose();
+    });
     handleRef.current = handle;
     handle.setEscapeHandler(closeOnEscape ? () => {
       // Non-animated surfaces may release on Escape. Animated surfaces must
@@ -85,7 +88,7 @@ export function useDialogSurface({
       const root = dialogRef.current;
       // An interaction may focus a control before this initial-focus frame runs.
       // Never steal focus from an element already inside the active dialog.
-      if (root?.contains(document.activeElement)) return;
+      if (!handle.isTopmost() || root?.contains(document.activeElement)) return;
       const preferred = initialFocusRef?.current;
       const fallback = getFocusableElements(root)[0] ?? root;
       (preferred ?? fallback)?.focus({ preventScroll: true });
@@ -103,17 +106,18 @@ export function useDialogSurface({
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const active = document.activeElement;
-      const activeInside = active instanceof Node && Boolean(dialogRef.current?.contains(active));
 
-      if (!activeInside) {
+      // A pointer can focus a tabindex=-1 scroll region (such as listbox
+      // padding). Resume the Tab cycle instead of exiting to browser chrome.
+      if (!focusable.some(element => element === active)) {
         event.preventDefault();
-        (event.shiftKey ? last : first)?.focus({ preventScroll: true });
+        (event.shiftKey ? last : first).focus();
       } else if (event.shiftKey && active === first) {
         event.preventDefault();
-        last?.focus({ preventScroll: true });
+        last.focus();
       } else if (!event.shiftKey && active === last) {
         event.preventDefault();
-        first?.focus({ preventScroll: true });
+        first.focus();
       }
     };
 
@@ -124,19 +128,15 @@ export function useDialogSurface({
       handle.release();
       if (handleRef.current === handle) handleRef.current = null;
 
-      const shouldRestoreFocus = restoreFocusRef?.current ?? restoreFocus;
-      if (shouldRestoreFocus && previouslyFocused) {
-        window.requestAnimationFrame(() => {
-          if (previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)) {
-            previouslyFocused.focus({ preventScroll: true });
-          }
-        });
-      }
+      if (!leaving && restoreFocus) window.requestAnimationFrame(returnFocus);
     };
-  }, [closeOnEscape, deferReleaseUntilUnmount, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef]);
+  }, [closeOnEscape, deferReleaseUntilUnmount, dialogRef, initialFocusRef, label, onClose, open, restoreFocus]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),
+    dismissForNavigation: useCallback(() => {
+      if (!handleRef.current?.dismissForNavigation()) onClose();
+    }, [onClose]),
   };
 }
 

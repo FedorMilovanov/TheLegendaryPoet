@@ -37,6 +37,7 @@ const ratingStars = read('src/components/community/RatingStars.tsx');
 const commentComposer = read('src/components/community/CommentComposer.tsx');
 const audioProvider = read('src/components/music/AudioPlayerProvider.tsx');
 const commandPalette = read('src/components/command/CommandPalette.tsx');
+const commandTrigger = read('src/components/command/commandTrigger.ts');
 const header = read('src/components/Header.tsx');
 const mobileDock = read('src/components/MobileDock.tsx');
 const deployWorkflow = read('.github/workflows/deploy.yml');
@@ -46,7 +47,6 @@ const essayValidator = read('scripts/validate-essays.ts');
 const archivePage = read('src/pages/MyArchivePage.tsx');
 const archiveStore = read('src/utils/myArchiveStore.ts');
 
-const appAst = inspectSource(app, 'App.tsx');
 const smoothAst = inspectSource(smooth, 'SmoothScroll.tsx');
 
 const expectedPages = routeContract.routes.map((route) => route.page);
@@ -68,10 +68,10 @@ expect(app.includes('<Suspense fallback={<RouteLoadingShell />}'), 'lazy routes 
 expect(app.includes('<RouteSettled pathname={location.pathname}'), 'focus and announcements must wait for lazy route content to settle');
 expect(app.includes('document.title ||'), 'settled routes must announce their final document title');
 expect(
-  appAst.hasMethodCallWithBooleanOptions('focus', { preventScroll: true }),
+  smoothAst.hasMethodCallWithBooleanOptions('focus', { preventScroll: true }),
   'SPA focus management must focus without disturbing the restored scroll position',
 );
-expect(app.includes('renderedPathRef.current !== location.pathname'), 'focus ownership must detect every real pathname transition');
+expect(app.includes('hasSettledPageHead(href)') && app.includes('++settledSequence'), 'only a committed page at its live address may announce a title or report a semantic visit');
 expect(!app.includes('initialPathRef'), 'focus ownership must not suppress a return to the initial session URL');
 expect(app.includes('variant="page"'), 'route failures must be isolated inside the persistent shell');
 expect(app.includes('<AudioChrome />'), 'global audio chrome must remain outside page-level routing failures');
@@ -123,8 +123,10 @@ expect(!smoothAst.hasMethodCall('preventDefault'), 'the app shell must not cance
 expect(smooth.includes("scrollRestoration = 'manual'"), 'SPA navigation must own scroll restoration');
 expect(smooth.includes("navigationType === 'POP'"), 'back/forward navigation must restore a saved position');
 expect(smooth.includes('prefers-reduced-motion: reduce'), 'programmatic scroll commands must respect reduced motion');
-expect(smooth.includes('positionsRef.current.size > 80'), 'scroll history must remain bounded during long sessions');
-expect(smooth.includes('function decodeHash'), 'malformed percent-encoded hashes must not crash navigation');
+expect(app.includes('useRestoreRouteScroll(pathname)') && smooth.includes('observeDepartures('), 'the settled route must restore positions captured on departure by the persistent shell');
+expect(read('src/utils/scrollHistory.ts').includes('this.positions.size > 80'), 'scroll history must remain bounded during long sessions');
+// validate-scroll-runtime also executes the eviction, stale URL and malformed fragment cases.
+expect(smooth.includes('decodeHash(hash)'), 'native fragment lookup must use the shared safe decoder');
 expect(smooth.includes('FIXED_HEADER_OFFSET'), 'hash navigation must compensate for the fixed header');
 expect(smooth.includes('getBoundingClientRect().top + window.scrollY'), 'native hash scrolling must apply the fixed-header offset');
 expect(smoothAst.hasEventListener('tlp-scroll-top'), 'the persistent shell must retain the explicit scroll-to-top command');
@@ -198,11 +200,15 @@ expect(
 );
 expect(commandPalette.includes('event.metaKey || event.ctrlKey'), 'Ctrl/Cmd+K must continue to toggle search');
 expect(
-  header.includes("new Event('tlp-open-command-palette')") && header.includes('aria-label="Открыть поиск — Ctrl K"'),
+  commandTrigger.includes("new Event('tlp-open-command-palette')") && commandTrigger.includes("'data-focus-peer': 'site-search'"),
+  'responsive search entry points must share the palette-open event and focus return identity',
+);
+expect(
+  header.includes('{...commandTriggerProps}') && header.includes('aria-label="Открыть поиск — Ctrl K"'),
   'desktop search must remain available exactly through the persistent header trigger',
 );
 expect(
-  mobileDock.includes("new Event('tlp-open-command-palette')")
+  mobileDock.includes('{...commandTriggerProps}')
     && mobileDock.includes('aria-label="Открыть поиск и все разделы"'),
   'mobile search and section discovery must remain available through the centre dock trigger',
 );

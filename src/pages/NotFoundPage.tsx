@@ -18,7 +18,7 @@ export default function NotFoundPage() {
     <div className="min-h-screen bg-[#050505] px-4 pb-24 pt-32 text-white">
       <div className="mx-auto max-w-3xl text-center">
         <div className="section-label">404</div>
-        <h1 className="mb-5 font-serif text-5xl font-bold sm:text-7xl">
+        <h1 data-route-unavailable className="mb-5 font-serif text-5xl font-bold sm:text-7xl">
           {titleCase('Страница')} <span className="neon-blue-gradient neon-glow-text">{titleCase('не найдена')}</span>
         </h1>
         <p className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-cyan-100/55">

@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router';
+import { createIsolationScope } from '../utils/accessibilityIsolation';
+import { OVERLAY_SCROLL_RESTORED } from '../utils/overlayRuntime';
 import { focusProgrammatically } from '../utils/focusRuntime';
 
 /**
@@ -27,7 +29,7 @@ export function useAutoHideChrome() {
     let hidden = false;
     let ticking = false;
     let pendingFrame: number | null = null;
-    const a11ySnapshots = new Map<HTMLElement, { inert: boolean; ariaHidden: string | null }>();
+    const hiddenChrome = createIsolationScope();
 
     const chromeElements = () => [
       ...document.querySelectorAll<HTMLElement>('.site-header, .mobile-dock, .palette-fab'),
@@ -40,26 +42,8 @@ export function useAutoHideChrome() {
         if (active && elements.some((element) => element.contains(active))) {
           focusProgrammatically(document.getElementById('main-content'));
         }
-        for (const element of elements) {
-          if (!a11ySnapshots.has(element)) {
-            a11ySnapshots.set(element, {
-              inert: element.inert,
-              ariaHidden: element.getAttribute('aria-hidden'),
-            });
-          }
-          element.inert = true;
-          element.setAttribute('aria-hidden', 'true');
-        }
-        return;
-      }
-
-      for (const [element, snapshot] of a11ySnapshots) {
-        if (!element.isConnected) continue;
-        element.inert = snapshot.inert;
-        if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
-        else element.setAttribute('aria-hidden', snapshot.ariaHidden);
-      }
-      a11ySnapshots.clear();
+        elements.forEach(hiddenChrome.hide);
+      } else hiddenChrome.clear();
     };
 
     const apply = (next: boolean) => {
@@ -71,12 +55,17 @@ export function useAutoHideChrome() {
     };
 
     const revealOnNavigation = () => apply(false);
+    const resumeAtRestoredPosition = () => { lastY = window.scrollY; };
 
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       pendingFrame = requestAnimationFrame(() => {
         pendingFrame = null;
+        ticking = false;
+        // Fixing the body for a dialog temporarily reports scrollY=0. It is
+        // not a reader scroll and must not hide the opener or reveal chrome.
+        if (root.classList.contains('overlay-open')) return;
         const y = window.scrollY;
         const diff = y - lastY;
         // Returning to the top is an invariant, not a thresholded scroll gesture:
@@ -89,12 +78,12 @@ export function useAutoHideChrome() {
           else if (diff < 0) apply(false);
           lastY = y;
         }
-        ticking = false;
       });
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('tlp-reveal-chrome', revealOnNavigation);
+    window.addEventListener(OVERLAY_SCROLL_RESTORED, resumeAtRestoredPosition);
     return () => {
       // A frame queued before route unmount must not restore stale chrome state.
       if (pendingFrame !== null) cancelAnimationFrame(pendingFrame);
@@ -102,6 +91,7 @@ export function useAutoHideChrome() {
       ticking = false;
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('tlp-reveal-chrome', revealOnNavigation);
+      window.removeEventListener(OVERLAY_SCROLL_RESTORED, resumeAtRestoredPosition);
       root.classList.remove('chrome-hidden');
       syncChromeAccessibility(false);
     };

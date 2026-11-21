@@ -6,7 +6,7 @@ const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const common = [
   '--config=playwright.config.mjs',
   '--workers=1',
-  '--reporter=line',
+  '--reporter=line,./scripts/qa-github-failure-reporter.mjs',
 ];
 const artifactDir = path.resolve('qa-artifacts');
 const processLogPath = path.join(artifactDir, 'webkit-home-processes.log');
@@ -47,6 +47,12 @@ const suites = [
     file: 'qa/mobile-home-webkit.spec.mjs',
     grep: `WebKit ${route} route keeps one representative lazy landmark and runtime stable`,
   })),
+  { id: 'desktop-hover-surfaces', project: 'webkit-reader-desktop', file: 'qa/hover-surfaces.spec.mjs' },
+  { id: 'desktop-dialog-return', project: 'webkit-reader-desktop', file: 'qa/reader-dialog-return.spec.mjs' },
+  { id: 'desktop-reader-history', project: 'webkit-reader-desktop', file: 'qa/reader-history.spec.mjs' },
+  { id: 'desktop-shared-passage', project: 'webkit-reader-desktop', file: 'qa/shared-passage.spec.mjs' },
+  { id: 'desktop-command-navigation', project: 'webkit-reader-desktop', file: 'qa/command-navigation.spec.mjs' },
+  { id: 'desktop-route-recovery', project: 'webkit-reader-desktop', file: 'qa/route-recovery.spec.mjs' },
   {
     id: 'desktop-reader-certification',
     file: 'qa/premium-reader-certification.spec.mjs',
@@ -60,12 +66,16 @@ const record = (line) => {
   console.log(stamped);
 };
 
+// Suites use fresh processes. Keep evidence for every independent contour
+// and return the first failing exit status; never certify a partial matrix.
+let failureStatus = 0;
 for (const [index, suite] of suites.entries()) {
   const args = [
     'playwright',
     'test',
     suite.file,
     ...common,
+    `--output=test-results/webkit-${suite.id}`,
     `--project=${suite.project ?? 'iphone-safari'}`,
   ];
   if (suite.grep) args.push('--grep', suite.grep);
@@ -92,10 +102,12 @@ for (const [index, suite] of suites.entries()) {
   }
   if (result.status !== 0) {
     record(`[webkit-home-process FAIL] ${label} elapsed_ms=${elapsedMs} status=${result.status ?? 'null'}`);
-    process.exit(result.status ?? 1);
+    failureStatus ||= result.status ?? 1;
+    continue;
   }
 
   record(`[webkit-home-process PASS] ${label} elapsed_ms=${elapsedMs}`);
 }
 
+if (failureStatus) process.exit(failureStatus);
 record(`[webkit-home-process COMPLETE] ${suites.length}/${suites.length} all contours passed`);

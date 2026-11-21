@@ -6,6 +6,7 @@ import routeContract from '../src/routes/route-contract.json';
 import {
   buildCommandItems,
   buildSectionCommandItems,
+  commandResults,
   commandSectionPresentations,
   getCommandItems,
 } from '../src/components/command/commandItems';
@@ -179,6 +180,21 @@ expect(
   fixtureEssaySection?.path === '/essays/fixture-essay#fixture-section',
   'builder must derive unseen essay section deep links',
 );
+
+// Incremental results keep the already exposed prefix, even when every
+// incoming row outranks it. The complete ranking still fits after the prefix;
+// another edit is not pinned and a missing match is never synthesized.
+const row = (id: string) => ({ id, label: 'Материал', path: `/${id}`, description: '', group: '' });
+const local = Array.from({ length: 13 }, (_, n) => row(`local-${n}`));
+const incoming = Array.from({ length: 14 }, (_, n) => row(`late-${n}`));
+const shown = commandResults(local, 'материал');
+const complete = [...incoming, ...local];
+const rank = commandResults(complete, 'материал');
+const merged = commandResults(complete, 'материал', shown);
+expect(shown.length === 10 && rank.length === 10 && merged.length === 20, 'a live draft must have bounded results');
+expect([...shown, ...rank].every((item, i) => merged[i].id === item.id), 'index completion cannot replace exposed commands');
+expect(commandResults(local, 'материал', shown).length === shown.length, 'incremental duplicates must collapse by stable id');
+expect(commandResults(complete, 'нет совпадений').length === 0, 'a fresh draft cannot recall a provisional match from another query');
 
 const commandItemsSource = fs.readFileSync(path.resolve('src/components/command/commandItems.ts'), 'utf8');
 const generatorSource = fs.readFileSync(path.resolve('scripts/gen-essay-search-index.ts'), 'utf8');

@@ -45,6 +45,7 @@
 }
 
 .hero-poet-window-image {
+  transform: scale(1.04);
   transition: transform 0.58s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease, filter 0.5s ease;
 }
 
@@ -56,6 +57,7 @@
 }
 
 .hero-poet-window-shine {
+  transform: rotate(18deg);
   transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.42s ease;
 }
 
@@ -117,7 +119,7 @@
 
   .group:hover .hero-poet-window-image,
   .group:focus-visible .hero-poet-window-image {
-    transform: scale(1.085);
+    transform: scale(1.075);
     filter: grayscale(0.28) contrast(1.22) saturate(0.88);
     opacity: 0.95;
   }
@@ -129,7 +131,7 @@
 
   .group:hover .hero-poet-window-shine,
   .group:focus-visible .hero-poet-window-shine {
-    transform: translateX(330%) rotate(18deg);
+    transform: translateX(450%) rotate(18deg);
     opacity: 0.62;
   }
 

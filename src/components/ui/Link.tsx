@@ -10,6 +10,7 @@ import {
   type To,
 } from 'react-router';
 import { scheduleRoutePreload } from '../../routes/routeModules';
+import { noteAppDeparture } from '../../utils/browserNavigation';
 
 /**
  * Site-standard internal navigation.
@@ -100,6 +101,7 @@ export function useAppNavigate() {
         navigate(to);
         return;
       }
+      noteAppDeparture();
       navigate(to, { viewTransition: true, ...options });
     },
     [navigate],

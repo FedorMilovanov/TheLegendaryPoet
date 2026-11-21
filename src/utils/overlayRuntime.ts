@@ -1,8 +1,14 @@
+import { createIsolationScope } from './accessibilityIsolation';
+import { activeEntryId, type ScrollVisit } from './scrollHistory';
 import { pauseSmoothScroll } from './smoothScroll';
+import { capturePagePosition, resolvePagePosition, type PagePosition } from './readingBookmark';
+
+export const OVERLAY_SCROLL_RESTORED = 'tlp-overlay-scroll-restored';
 
 type StyleSnapshot = {
-  scrollX: number;
-  scrollY: number;
+  page: PagePosition;
+  href: string;
+  entry?: string;
   body: {
     position: string;
     top: string;
@@ -24,11 +30,7 @@ type OverlayEntry = {
   label: string;
   root: HTMLElement | null;
   onEscape: (() => void) | null;
-};
-
-type AccessibilitySnapshot = {
-  inert: boolean;
-  ariaHidden: string | null;
+  onNavigate?: () => void;
 };
 
 type OverlayDebugState = {
@@ -43,6 +45,7 @@ type OverlayDebugState = {
 export interface OverlayLockHandle {
   release: () => void;
   isTopmost: () => boolean;
+  dismissForNavigation: () => boolean;
   setRoot: (root: HTMLElement | null) => void;
   setEscapeHandler: (handler: (() => void) | null) => void;
 }
@@ -52,30 +55,10 @@ let styleSnapshot: StyleSnapshot | null = null;
 let resumeSmoothScroll: ((restoredScrollY?: number) => void) | null = null;
 let escapeCount = 0;
 let lastEscapeLabel: string | null = null;
-const accessibilitySnapshots = new Map<HTMLElement, AccessibilitySnapshot>();
-
-function restoreOverlayAccessibility() {
-  for (const [element, snapshot] of accessibilitySnapshots) {
-    element.inert = snapshot.inert;
-    if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
-    else element.setAttribute('aria-hidden', snapshot.ariaHidden);
-  }
-  accessibilitySnapshots.clear();
-}
-
-function isolateAccessibilityBranch(element: HTMLElement) {
-  if (!accessibilitySnapshots.has(element)) {
-    accessibilitySnapshots.set(element, {
-      inert: element.inert,
-      ariaHidden: element.getAttribute('aria-hidden'),
-    });
-  }
-  element.inert = true;
-  element.setAttribute('aria-hidden', 'true');
-}
+const backgroundIsolation = createIsolationScope();
 
 function syncOverlayAccessibility() {
-  restoreOverlayAccessibility();
+  backgroundIsolation.clear();
   const top = overlayStack[overlayStack.length - 1];
   const root = top?.root;
   if (!root?.isConnected) return;
@@ -89,7 +72,7 @@ function syncOverlayAccessibility() {
       const sibling = siblingNode as HTMLElement;
       if (typeof sibling.setAttribute !== 'function') continue;
       if (sibling.tagName === 'SCRIPT' || sibling.tagName === 'STYLE' || sibling.tagName === 'LINK') continue;
-      isolateAccessibilityBranch(sibling);
+      backgroundIsolation.hide(sibling);
     }
     branch = parent;
   }
@@ -168,19 +151,34 @@ function onOverlayKeyDown(event: KeyboardEvent) {
   top.onEscape();
 }
 
-function lockDocument() {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+function belongsTo(snapshot: StyleSnapshot, href: string, entry: string | undefined) {
+  return snapshot.href === href && (!snapshot.entry || snapshot.entry === entry);
+}
 
+/** Use the painted *departing* visit, not the address bar: fallback popstate
+ * already exposes the next URL. A lock spanning entries retains X/Y but an
+ * outgoing essay's passage cannot double as a bookmark for another visit. */
+export function captureUnlockedPosition(visit: ScrollVisit): PagePosition {
+  if (!styleSnapshot) return capturePagePosition();
+  const { page } = styleSnapshot;
+  return belongsTo(styleSnapshot, visit.url, visit.id) ? page : { x: page.x, y: page.y };
+}
+
+let claimArrival: (() => boolean) | undefined;
+export function registerOverlayArrival(claim: () => boolean) {
+  claimArrival = claim;
+  return () => { if (claimArrival === claim) claimArrival = undefined; };
+}
+
+function lockDocument(painted: boolean) {
   const body = document.body;
   const html = document.documentElement;
-  const scrollX = window.scrollX;
-  const scrollY = window.scrollY;
+  const page = painted ? capturePagePosition() : { x: window.scrollX, y: window.scrollY };
   const scrollbarGap = Math.max(0, window.innerWidth - html.clientWidth);
   const computedPaddingRight = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
 
   styleSnapshot = {
-    scrollX,
-    scrollY,
+    page, href: window.location.href, entry: activeEntryId(),
     body: {
       position: body.style.position,
       top: body.style.top,
@@ -203,8 +201,8 @@ function lockDocument() {
   html.style.overflow = 'hidden';
   html.style.overscrollBehavior = 'none';
   body.style.position = 'fixed';
-  body.style.top = `${-scrollY}px`;
-  body.style.left = `${-scrollX}px`;
+  body.style.top = `${-page.y}px`;
+  body.style.left = `${-page.x}px`;
   body.style.right = '0';
   body.style.width = '100%';
   body.style.overflow = 'hidden';
@@ -222,6 +220,7 @@ function unlockDocument() {
   const html = document.documentElement;
 
   document.removeEventListener('keydown', onOverlayKeyDown, true);
+  let restoredY = snapshot?.page.y;
   if (snapshot) {
     body.style.position = snapshot.body.position;
     body.style.top = snapshot.body.top;
@@ -233,14 +232,18 @@ function unlockDocument() {
     body.style.overscrollBehavior = snapshot.body.overscrollBehavior;
     html.style.overflow = snapshot.html.overflow;
     html.style.overscrollBehavior = snapshot.html.overscrollBehavior;
-    window.scrollTo(snapshot.scrollX, snapshot.scrollY);
+    restoredY = belongsTo(snapshot, window.location.href, activeEntryId()) ? resolvePagePosition(snapshot.page).y : snapshot.page.y;
+    window.scrollTo(snapshot.page.x, restoredY);
   }
 
-  restoreOverlayAccessibility();
+  backgroundIsolation.clear();
   html.classList.remove('overlay-open');
   body.classList.remove('overlay-open');
   styleSnapshot = null;
-  resumeSmoothScroll?.(snapshot?.scrollY);
+  // A reflowed bookmark may have a very different Y. Observers of reader
+  // gestures must start from the restored position, not infer a scroll down.
+  if (snapshot) window.dispatchEvent(new Event(OVERLAY_SCROLL_RESTORED));
+  resumeSmoothScroll?.(restoredY);
   resumeSmoothScroll = null;
   setLegacyModalFlag(false);
   publishOverlayDebug();
@@ -252,25 +255,36 @@ function unlockDocument() {
  * restoring body scroll or Lenis too early. Escape is dispatched once through
  * the same stack instead of being contested by independent document listeners.
  */
-export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null = null): OverlayLockHandle {
+export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null = null, onNavigate?: () => void): OverlayLockHandle {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return {
       release: () => undefined,
       isTopmost: () => true,
+      dismissForNavigation: () => false,
       setRoot: () => undefined,
       setEscapeHandler: () => undefined,
     };
   }
 
-  const entry: OverlayEntry = { token: Symbol(label), label, root, onEscape: null };
+  const entry: OverlayEntry = { token: Symbol(label), label, root, onEscape: null, onNavigate };
   overlayStack.push(entry);
-  if (overlayStack.length === 1) lockDocument();
+  const painted = claimArrival?.() ?? true;
+  if (overlayStack.length === 1) lockDocument(painted);
   syncOverlayAccessibility();
   publishOverlayDebug();
   let released = false;
 
   return {
     isTopmost: () => getTopOverlay()?.token === entry.token,
+    dismissForNavigation: () => {
+      const index = overlayStack.indexOf(entry);
+      if (index < 0) return false;
+      // Navigation leaves this dialog and its underlying surfaces, not an
+      // unrelated, newer one. Request logical closes; exiting portals retain
+      // their locks and the outgoing reading bookmark until they unmount.
+      for (const surface of overlayStack.slice(0, index + 1).reverse()) surface.onNavigate?.();
+      return true;
+    },
     setRoot: (nextRoot) => {
       if (!released) {
         entry.root = nextRoot;
@@ -289,6 +303,10 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
       syncOverlayAccessibility();
       publishOverlayDebug();
       if (overlayStack.length === 0) unlockDocument();
+      else if (document.activeElement === document.body) {
+        // Search can disappear before a lower dialog's last painted frame.
+        overlayStack.at(-1)?.root?.focus({ preventScroll: true });
+      }
     },
   };
 }

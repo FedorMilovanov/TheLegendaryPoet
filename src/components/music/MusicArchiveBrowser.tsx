@@ -167,7 +167,7 @@ export default function MusicArchiveBrowser({ tracks, featuredTrackId }: MusicAr
               <button
                 type="button"
                 onClick={() => setVisibleLimit((current) => current + PAGE_SIZE)}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.025] px-6 text-xs font-bold text-white/58 shadow-[0_14px_45px_rgba(0,0,0,0.24)] transition hover:-translate-y-0.5 hover:border-cyan-300/28 hover:bg-cyan-300/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/[0.1] bg-white/[0.025] px-6 text-xs font-bold text-white/58 shadow-[0_14px_45px_rgba(0,0,0,0.24)] transition-colors hover:border-cyan-300/28 hover:bg-cyan-300/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
               >
                 <ChevronDown size={17} /> Показать ещё {Math.min(PAGE_SIZE, remainingCount)}
               </button>

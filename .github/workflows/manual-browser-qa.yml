@@ -22,7 +22,11 @@ env:
 jobs:
   browser-qa:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # 30 spec files x two projects at --workers=1 plus the process-isolated
+    # WebKit run no longer fit 90 minutes. 120 is the bounded ceiling in
+    # docs/browser-install-budget.json; docs/merge-certification.json owns this
+    # number and the waiter ordering below it.
+    timeout-minutes: 120
     steps:
       - name: Checkout exact browser tested head
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -45,7 +49,7 @@ jobs:
           VITE_BASE: /
         run: |
           set +e
-          { npm run sitemap; npm run build; npm run validate:build-output; } > production-build.log 2>&1
+          { npm run sitemap && npm run build && npm run validate:build-output; } > production-build.log 2>&1
           status=$?
           cat production-build.log
           exit $status
@@ -105,12 +109,18 @@ jobs:
           qa/mobile-platforms.spec.mjs
           qa/community-request-topology.spec.mjs
           qa/reader-journeys.spec.mjs
+          qa/reader-dialog-return.spec.mjs
+          qa/reader-history.spec.mjs
+          qa/shared-passage.spec.mjs
+          qa/command-navigation.spec.mjs
+          qa/route-recovery.spec.mjs
           qa/fragment-navigation.spec.mjs
           qa/premium-reader-certification.spec.mjs
           qa/yesenin-part-one.spec.mjs
           qa/brand-emblem.spec.mjs
           qa/brand-reference-comparison.spec.mjs
           qa/hover-stability.spec.mjs
+          qa/hover-surfaces.spec.mjs
           qa/essay-lightbox-overlay.spec.mjs
           qa/focus-visibility.spec.mjs
           qa/image-integrity.spec.mjs
@@ -196,7 +206,7 @@ jobs:
           --project=chromium-core
           --project=iphone-safari
           --workers=1
-          --reporter=line
+          --reporter=line,./scripts/qa-github-failure-reporter.mjs
       - name: Upload analytics route QA evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

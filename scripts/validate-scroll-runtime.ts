@@ -32,6 +32,11 @@ Object.defineProperty(globalThis, 'document', { configurable: true, value: testD
 
 const smoothScroll = await import('../src/utils/smoothScroll');
 
+const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8');
+const nativeOffset = css.match(/#main-content\s+:target\s*\{\s*scroll-margin-top:\s*(\d+)px/);
+assertContract(Number(nativeOffset?.[1]) === smoothScroll.FIXED_HEADER_OFFSET,
+  'late browser fragment fallback and the route coordinator must agree on the fixed-header clearance');
+
 smoothScroll.scrollToId('missing');
 assertContract(nativeScrolls.length === 0, 'missing anchors must not trigger native scrolling');
 
@@ -56,37 +61,42 @@ releaseSecond(400);
 assertContract(!smoothScroll.isSmoothScrollPaused(), 'overlay release functions must remain idempotent');
 
 const coordinatorSource = readFileSync(new URL('../src/components/SmoothScroll.tsx', import.meta.url), 'utf8');
+const requestSource = readFileSync(new URL('../src/utils/pendingRouteScroll.ts', import.meta.url), 'utf8');
 const smoothScrollSource = readFileSync(new URL('../src/utils/smoothScroll.ts', import.meta.url), 'utf8');
 const poetryBackdropSource = readFileSync(new URL('../src/components/PoetryBackdrop.tsx', import.meta.url), 'utf8');
 const scrollTopSource = readFileSync(new URL('../src/components/ScrollToTop.tsx', import.meta.url), 'utf8');
 const readingProgressSource = readFileSync(new URL('../src/components/articles/ReadingProgress.tsx', import.meta.url), 'utf8');
 const essayPageSource = readFileSync(new URL('../src/pages/EssayPage.tsx', import.meta.url), 'utf8');
 
+const requestAst = inspectSource(requestSource, 'pendingRouteScroll.ts');
 const coordinatorAst = inspectSource(coordinatorSource, 'SmoothScroll.tsx');
 const scrollTopAst = inspectSource(scrollTopSource, 'ScrollToTop.tsx');
+const historyAst = inspectSource(readFileSync(new URL('../src/utils/scrollHistory.ts', import.meta.url), 'utf8'), 'scrollHistory.ts');
+assertContract(!historyAst.hasEventListener('scroll') && !historyAst.hasEventListener('wheel') && !historyAst.hasMethodCall('preventDefault'),
+  'departure capture must not sample every scroll, cancel wheel input or intercept native navigation');
 const readingProgressAst = inspectSource(readingProgressSource, 'ReadingProgress.tsx');
 
-assertContract(!coordinatorAst.hasModuleImport('lenis'), 'the document scroll coordinator must not load a global JavaScript scroller');
-assertContract(!coordinatorSource.includes('smoothWheel'), 'ordinary wheel movement must remain browser-native');
-assertContract(!coordinatorAst.hasMethodCall('raf'), 'document scrolling must not depend on a perpetual JavaScript animation loop');
-assertContract(!coordinatorAst.hasEventListener('wheel'), 'the app shell must not intercept wheel input');
-assertContract(!coordinatorAst.hasMethodCall('preventDefault'), 'the app shell must not cancel native document scrolling');
+for (const ast of [coordinatorAst, requestAst]) {
+  assertContract(!ast.hasModuleImport('lenis'), 'the document scroll coordinator must not load a global JavaScript scroller');
+  assertContract(!ast.hasMethodCall('raf'), 'document scrolling must not depend on a perpetual JavaScript animation loop');
+  assertContract(!ast.hasMethodCall('preventDefault'), 'the app shell must not cancel native document scrolling');
+}
+assertContract(!coordinatorSource.includes('smoothWheel') && !requestSource.includes('smoothWheel'), 'ordinary wheel movement must remain browser-native');
+assertContract(!coordinatorAst.hasEventListener('wheel'), 'the persistent app shell must not intercept wheel input');
 assertContract(coordinatorAst.hasEventListener('tlp-scroll-top'), 'the native scroll coordinator must retain the scroll-to-top command');
-assertContract(coordinatorSource.includes('new MutationObserver'), 'delayed hash targets must use DOM readiness observation instead of short fixed polling');
-assertContract(coordinatorSource.includes('HASH_OBSERVER_TIMEOUT_MS = 15_000'), 'hash observation must have a bounded 15-second lifetime for slow lazy routes');
-const observerRegistration = "observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true })";
-const observerIndex = coordinatorSource.indexOf(observerRegistration);
-const postRegistrationLookupIndex = coordinatorSource.indexOf('if (findAndScrollToHash()) {', observerIndex + observerRegistration.length);
-const observerTimeoutIndex = coordinatorSource.indexOf('window.setTimeout(stopHashObserver, HASH_OBSERVER_TIMEOUT_MS)', observerIndex + observerRegistration.length);
-assertContract(observerIndex >= 0, 'hash observation must watch bounded DOM insertions for the requested anchor');
-assertContract(
-  postRegistrationLookupIndex > observerIndex && observerTimeoutIndex > postRegistrationLookupIndex,
-  'hash restoration must re-check synchronously after observer registration to close the lookup/observe race before arming timeout cleanup',
-);
-assertContract(coordinatorSource.includes('observer?.disconnect()'), 'hash observation must disconnect deterministically');
-assertContract(observerTimeoutIndex >= 0, 'hash observation must retain a bounded timeout cleanup');
-assertContract(!coordinatorSource.includes('HASH_RETRY_LIMIT'), 'fixed-count hash retry windows must remain removed');
-assertContract(!coordinatorSource.includes('setTimeout(restore, 60)'), 'hash restoration must not regress to repeated polling');
+assertContract(!requestAst.hasEventListener('scroll') && requestAst.hasEventListener('wheel', { options: { passive: true } }),
+  'a pending request may passively observe wheel intent, not sample document movement');
+assertContract(requestSource.includes('new MutationObserver'), 'delayed hash targets must use DOM readiness observation instead of short fixed polling');
+assertContract(requestSource.includes('window.setTimeout(() => { stopWaiting(); place(true); }, 15_000)'),
+  'hash observation must stop waiting and attempt the available layout after 15 seconds');
+// The VM below also executes the registration gap, cancellation, listener
+// teardown and timeout paths with the actual two-frame focus helper.
+assertContract(requestAst.hasMethodCallWithBooleanOptions('observe', { childList: true, subtree: true }, 1),
+  'hash observation must watch DOM insertions for the requested anchor');
+for (const source of [coordinatorSource, requestSource]) {
+  assertContract(!source.includes('HASH_RETRY_LIMIT'), 'fixed-count hash retry windows must remain removed');
+  assertContract(!source.includes('setTimeout(restore, 60)'), 'hash restoration must not regress to repeated polling');
+}
 assertContract(!smoothScrollSource.includes('setActiveLenis'), 'the native scroll utility must not retain a legacy Lenis registration API');
 assertContract(!poetryBackdropSource.includes('useScroll'), 'decorative poetry must not subscribe to scroll frames');
 assertContract(!poetryBackdropSource.includes('useTransform'), 'decorative poetry must not derive motion values from document scrolling');

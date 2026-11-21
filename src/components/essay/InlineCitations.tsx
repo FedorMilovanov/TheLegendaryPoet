@@ -1,4 +1,7 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { sourceAnchor } from './anchor';
+import { supportsPopover } from '../../utils/popover';
+import { useAnchoredPanel } from '../../hooks/useAnchoredPanel';
 import type { EssaySource } from '../../types/essay';
 
 export interface EssaySourceReference {
@@ -25,71 +28,59 @@ export default function InlineCitations({
   if (resolved.length === 0) return null;
 
   return (
-    <sup className="ml-1 inline-flex whitespace-nowrap translate-y-[-0.12em] items-center gap-1 align-baseline not-italic">
+    <sup className="inline-flex max-w-full translate-y-[-0.12em] flex-wrap items-center gap-1 pl-1 align-baseline not-italic">
       {resolved.map(({ id, reference }) => (
-        <CitationLink key={id} id={id} reference={reference} />
+        <CitationLink key={id} reference={reference} />
       ))}
     </sup>
   );
 }
 
-/** Keep the existing inline tooltip within the visible window, not its anchor's center. */
-function CitationLink({ id, reference }: { id: string; reference: EssaySourceReference }) {
+function CitationLink({ reference }: { reference: EssaySourceReference }) {
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const active = hovered || focused;
+  const tipRef = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
 
-  useLayoutEffect(() => {
-    if (!active) return;
-    const link = linkRef.current;
-    const tooltip = link?.parentElement?.querySelector<HTMLElement>('[role="tooltip"]');
-    if (!link || !tooltip) return;
-    const viewport = window.visualViewport;
-    const position = () => {
-      const left = viewport?.offsetLeft ?? 0;
-      const width = viewport?.width ?? document.documentElement.clientWidth;
-      tooltip.style.setProperty('--tlp-citation-viewport-width', `${width}px`);
-      const anchor = link.getBoundingClientRect();
-      const tipWidth = tooltip.getBoundingClientRect().width;
-      const centered = anchor.left + anchor.width / 2 - tipWidth / 2;
-      const clamped = Math.max(left + 8, Math.min(centered, left + width - tipWidth - 8));
-      tooltip.style.setProperty('--tlp-citation-shift', `${clamped - centered}px`);
-    };
-    position();
-    window.addEventListener('resize', position);
-    window.addEventListener('scroll', position, true);
-    viewport?.addEventListener('resize', position);
-    viewport?.addEventListener('scroll', position);
-    return () => {
-      window.removeEventListener('resize', position);
-      window.removeEventListener('scroll', position, true);
-      viewport?.removeEventListener('resize', position);
-      viewport?.removeEventListener('scroll', position);
-    };
-  }, [active]);
+  useAnchoredPanel(open, linkRef, tipRef);
+  const show = () => tipRef.current?.showPopover();
+  const hide = () => tipRef.current?.hidePopover();
 
   return (
-    <span className="group/citation relative inline-flex">
+    <span
+      className="relative inline-flex"
+      onPointerEnter={(event) => {
+        if (!tipRef.current || event.pointerType === 'touch') return;
+        // An auto popover replaces its peers. A passing pointer may replace
+        // another hover preview, never a keyboard preview or an open control.
+        const owner = document.querySelector<HTMLElement>(':popover-open:not([role="tooltip"]), .theme-essay-citation:focus + :popover-open');
+        if (!owner || owner.style.visibility === 'hidden') show();
+      }}
+      onPointerLeave={() => { if (document.activeElement !== linkRef.current) hide(); }}
+      onPointerCancel={hide}
+    >
       <a
         ref={linkRef}
-        onPointerEnter={() => setHovered(true)}
-        onPointerLeave={() => setHovered(false)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        href={`#source-${id}`}
-        title={reference.source.title}
+        onFocus={show}
+        onBlur={hide}
+        onClick={hide}
+        href={'#' + sourceAnchor(reference.source)}
+        title={supportsPopover ? undefined : reference.source.title}
         aria-label={`Источник ${reference.number}: ${reference.source.title}`}
-        className="theme-essay-citation relative inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.055] px-1.5 font-sans text-[9px] font-bold leading-none tabular-nums transition-[transform,border-color,background-color,color] duration-200 hover:-translate-y-0.5 hover:border-luxury-gold/40 hover:bg-luxury-gold/[0.11]"
+        className="theme-essay-citation relative inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-luxury-gold/18 bg-luxury-gold/[0.055] px-1.5 font-sans text-[9px] font-bold leading-none tabular-nums transition-colors duration-200 hover:border-luxury-gold/40 hover:bg-luxury-gold/[0.11]"
       >
         {reference.number}
       </a>
-      <span
-        role="tooltip"
-        className="theme-essay-citation-tooltip pointer-events-none absolute bottom-[calc(100%+0.45rem)] z-30 w-max whitespace-normal rounded-lg border border-luxury-gold/20 px-2.5 py-1.5 text-left text-[10px] font-normal leading-snug normal-case tracking-normal opacity-0 shadow-xl transition-opacity duration-150 group-hover/citation:opacity-100 group-focus-within/citation:opacity-100"
-      >
-        {reference.source.title}
-      </span>
+      {supportsPopover && (
+        <span
+          ref={tipRef}
+          popover="auto"
+          role="tooltip"
+          onToggle={(event) => setOpen(event.currentTarget.matches(':popover-open'))}
+          className="anchored-panel theme-essay-citation-tooltip w-max whitespace-normal rounded-lg border border-luxury-gold/20 px-2.5 py-1.5 text-left text-xs font-normal leading-snug normal-case tracking-normal shadow-xl"
+        >
+          {reference.source.title}
+        </span>
+      )}
     </span>
   );
 }

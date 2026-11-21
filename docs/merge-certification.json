@@ -140,9 +140,9 @@
     "site-browser-release": {
       "workflowFile": ".github/workflows/manual-browser-qa.yml",
       "canonicalJob": "browser-qa",
-      "canonicalJobTimeoutMinutes": 90,
+      "canonicalJobTimeoutMinutes": 120,
       "event": "pull_request",
-      "pollTimeoutSeconds": 6600,
+      "pollTimeoutSeconds": 8100,
       "pollIntervalSeconds": 20,
       "paths": [
         ".github/workflows/manual-browser-qa.yml",
@@ -163,7 +163,7 @@
         "scripts/run-webkit-process-isolated.mjs"
       ],
       "waiterJob": "site-browser-qa",
-      "waiterJobTimeoutMinutes": 120
+      "waiterJobTimeoutMinutes": 150
     }
   }
 }

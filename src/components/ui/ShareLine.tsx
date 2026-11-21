@@ -1,138 +1,104 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { Check, Link2 } from 'lucide-react';
-
-/**
- * «Поделиться строкой» — select any passage inside the scoped container and a
- * small gold chip offers to copy a deep link to that exact line, built on the
- * URL text-fragment standard (`#:~:text=`). Whoever opens the link lands on
- * the passage with the browser highlighting it — tinted gold via the
- * `::target-text` rules in index.css.
- *
- * Universal engine piece: mount once per long-read page and pass the ref of
- * the text container (essay body, poem sheet, …). No per-article wiring.
- */
+import { useHref } from 'react-router';
+import { canonicalRoutePath } from '../../routes/publicUrl';
+import { selectedPublicRange, sharedPassageId } from '../../utils/sharedPassage';
+import { useAnchoredPanel } from '../../hooks/useAnchoredPanel';
+import { Check, Share2 } from 'lucide-react';
 
 /** Escape a string for a text-fragment directive. `-` and `,` are syntax. */
 function encodeFragmentPart(s: string): string {
   return encodeURIComponent(s).replace(/-/g, '%2D');
 }
 
-/** Build `#:~:text=` URL for the current page pointing at `text`. */
-function buildFragmentUrl(text: string): string {
+function buildFragmentUrl(href: string, passage: string, text: string): string {
   const clean = text.replace(/\s+/g, ' ').trim();
-  const base = `${window.location.origin}${window.location.pathname}`;
   const words = clean.split(' ');
-  if (clean.length <= 120 || words.length <= 10) {
-    return `${base}#:~:text=${encodeFragmentPart(clean)}`;
-  }
-  // Long selections: range syntax (textStart,textEnd) keeps the URL short.
-  const start = words.slice(0, 5).join(' ');
-  const end = words.slice(-5).join(' ');
-  return `${base}#:~:text=${encodeFragmentPart(start)},${encodeFragmentPart(end)}`;
+  const parts = clean.length > 120 && words.length > 10 ? [words.slice(0, 5).join(' '), words.slice(-5).join(' ')] : [clean];
+  return `${window.location.origin}${href}#${encodeURIComponent(passage)}:~:text=${parts.map(encodeFragmentPart).join(',')}`;
+}
+
+function sameSelection(a: Range, b: Range | null) {
+  return b !== null && a.startContainer === b.startContainer && a.startOffset === b.startOffset &&
+    a.endContainer === b.endContainer && a.endOffset === b.endOffset;
 }
 
 interface ShareLineProps {
+  path: string;
   /** The element whose text is shareable (e.g. the essay <article>). */
   scopeRef: RefObject<HTMLElement | null>;
 }
 
-export default function ShareLine({ scopeRef }: ShareLineProps) {
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const [copied, setCopied] = useState(false);
+/** Copy a public reading address plus a native text-fragment directive. The
+ * directive can highlight a match; the passage address also works when the
+ * browser does not highlight or the article only arrives after page load. */
+export default function ShareLine({ scopeRef, path }: ShareLineProps) {
+  const href = useHref(canonicalRoutePath(path)); // source on screen, not an unpainted destination
+  const [visible, setVisible] = useState(false);
+  const selectionRef = useRef<Range | null>(null);
+  const [feedback, setFeedback] = useState<'copied' | 'failed' | null>(null);
+  const feedbackRange = useRef<Range | null>(null);
   const chipRef = useRef<HTMLButtonElement>(null);
   const copiedTimer = useRef<number | undefined>(undefined);
 
+  useAnchoredPanel(visible, selectionRef, chipRef, 10);
+
   useEffect(() => {
-    let raf = 0;
-
-    const readSelection = () => {
-      const sel = document.getSelection();
-      const scope = scopeRef.current;
-      if (!sel || sel.isCollapsed || sel.rangeCount === 0 || !scope) return null;
-      const range = sel.getRangeAt(0);
-      const within =
-        scope.contains(range.startContainer) && scope.contains(range.endContainer);
-      if (!within || !sel.toString().trim()) return null;
-      return range;
-    };
-
-    const place = () => {
-      const range = readSelection();
-      if (!range) {
-        setPos(null);
-        return;
+    const sync = () => {
+      selectionRef.current = selectedPublicRange(scopeRef.current);
+      if (feedbackRange.current && !sameSelection(feedbackRange.current, selectionRef.current)) {
+        feedbackRange.current = null;
+        window.clearTimeout(copiedTimer.current);
+        setFeedback(null);
       }
-      const rect = range.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) {
-        setPos(null);
-        return;
-      }
-      const chipH = 40;
-      const above = rect.top > chipH + 64;
-      setPos({
-        top: above ? rect.top - chipH - 10 : rect.bottom + 12,
-        left: Math.min(Math.max(rect.left + rect.width / 2, 90), window.innerWidth - 90),
-      });
+      setVisible(selectionRef.current !== null);
     };
-
-    const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(place);
-    };
-
-    document.addEventListener('selectionchange', schedule);
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
+    setFeedback(null);
+    sync();
+    document.addEventListener('selectionchange', sync);
     return () => {
-      cancelAnimationFrame(raf);
-      document.removeEventListener('selectionchange', schedule);
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
+      document.removeEventListener('selectionchange', sync);
+      feedbackRange.current = null;
+      window.clearTimeout(copiedTimer.current);
     };
-  }, [scopeRef]);
-
-  useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
+  }, [scopeRef, href]);
 
   const copy = async () => {
-    const sel = document.getSelection();
-    const text = sel?.toString() ?? '';
-    if (!text.trim()) return;
+    const scope = scopeRef.current, range = selectedPublicRange(scope);
+    if (!scope || !range || !sameSelection(range, selectionRef.current)) return;
+    const passage = sharedPassageId(scope, range);
+    if (!passage) return;
+    const snapshot = range.cloneRange();
+    feedbackRange.current = snapshot;
+    window.clearTimeout(copiedTimer.current);
+    let result: 'copied' | 'failed' = 'copied';
     try {
-      await navigator.clipboard.writeText(buildFragmentUrl(text));
-      setCopied(true);
-      window.clearTimeout(copiedTimer.current);
-      copiedTimer.current = window.setTimeout(() => {
-        setCopied(false);
-        setPos(null);
-        document.getSelection()?.removeAllRanges();
-      }, 1400);
+      await navigator.clipboard.writeText(buildFragmentUrl(href, passage, document.getSelection()!.toString()));
     } catch {
-      // Clipboard unavailable (permissions/insecure context) — fail quietly.
+      result = 'failed';
     }
+    if (feedbackRange.current !== snapshot || !sameSelection(snapshot, selectedPublicRange(scope))) return;
+    setFeedback(result);
+    copiedTimer.current = window.setTimeout(() => {
+      feedbackRange.current = null;
+      setFeedback(null);
+    }, 1400);
   };
 
-  if (!pos) return null;
+  if (!visible) return null;
 
+  const Icon = feedback === 'copied' ? Check : Share2;
   return (
     <button
       ref={chipRef}
       type="button"
-      className="share-line-chip"
-      style={{ top: pos.top, left: pos.left }}
+      className="anchored-panel share-line-chip"
       // Keep the selection alive: the button must not steal it on tap.
       onPointerDown={(e) => e.preventDefault()}
       onClick={copy}
       aria-live="polite"
     >
-      {copied ? (
-        <>
-          <Check size={13} aria-hidden="true" /> Скопировано
-        </>
-      ) : (
-        <>
-          <Link2 size={13} aria-hidden="true" /> Ссылка на строку
-        </>
-      )}
+      <Icon size={13} aria-hidden="true" />
+      {feedback === 'copied' ? 'Скопировано' : feedback === 'failed' ? 'Не удалось скопировать' : 'Ссылка на строку'}
     </button>
   );
 }

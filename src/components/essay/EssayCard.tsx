@@ -20,9 +20,9 @@ export default function EssayCard({ essay, variant = 'default', headingLevel = 3
   const feature = variant === 'feature';
 
   return (
-    <Link to={`/essays/${essay.slug}`} className="group block h-full">
+    <Link to={`/essays/${essay.slug}`} className="group block h-full rounded-[2rem]">
       <TiltCard intensity={feature ? 4 : 6}>
-        <div className={`luxury-card relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-luxury-gold/15 bg-[#060606] ${feature ? 'md:flex-row' : ''}`}>
+        <div className={`tilt-card-surface luxury-card relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-luxury-gold/15 bg-[#060606] ${feature ? 'md:flex-row' : ''}`}>
           <EssayCover
             src={essay.cardCover || essay.cover}
             alt={essay.coverAlt || essay.title}

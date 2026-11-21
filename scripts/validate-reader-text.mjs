@@ -14,9 +14,10 @@ expect(source.includes("style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
 expect(source.includes('whitespace-pre-wrap'), 'canonical layer must preserve source whitespace and line breaks');
 expect(source.includes('line.split(/(\\s+)/u)'), 'canonical layer must preserve every whitespace token instead of collapsing spaces');
 expect(source.includes("data-poem-canonical-word"), 'canonical word spans must remain available for pointer interaction');
-expect(source.includes('onPointerEnter={() => startDwell(key)}'), 'canonical words must drive the existing dwell interaction');
+expect(source.includes('startDwell(token.key)') && source.includes("event.pointerType !== 'touch'"), 'canonical words must drive the existing dwell interaction');
 expect(source.includes('onPointerLeave={stopDwell}'), 'canonical words must release dwell state consistently');
-expect(!source.includes('select-none'), 'reader text must not disable native text selection');
+expect(/data-poem-visual[^>]*\bselect-none\b/.test(source), 'copying across the reader must exclude decorative ink');
+expect(!/data-poem-canonical\b[^>]*\bselect-none\b/.test(source), 'canonical text must not disable native selection');
 
 if (failures.length) {
   console.error('Reader text validation failed:');

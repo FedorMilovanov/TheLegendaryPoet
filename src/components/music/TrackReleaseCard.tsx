@@ -47,7 +47,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
         backgroundColor: 'var(--track-surface)',
         backgroundImage: 'linear-gradient(145deg, color-mix(in srgb, var(--track-surface) 92%, black), rgba(5,5,5,.93))',
       }}
-      className="theme-dark-island group relative grid overflow-hidden rounded-[2rem] border border-white/[0.09] shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition-[transform,border-color,box-shadow] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_30px_100px_rgba(0,0,0,0.46)] sm:grid-cols-[190px_1fr]"
+      className="theme-dark-island group relative grid overflow-hidden rounded-[2rem] border border-white/[0.09] shadow-[0_22px_70px_rgba(0,0,0,0.3)] transition-[border-color,box-shadow] duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-white/[0.18] hover:shadow-[0_30px_100px_rgba(0,0,0,0.46)] sm:grid-cols-[190px_1fr]"
     >
       <div className="relative aspect-square overflow-hidden bg-black sm:aspect-auto sm:min-h-[232px]">
         <Link to={`/music/${track.id}`} className="block h-full w-full" aria-label={`Открыть публикацию «${track.title}»`}>
@@ -58,7 +58,7 @@ export default function TrackReleaseCard({ track }: { track: MusicTrack }) {
               alt={`Обложка трека «${track.title}»`}
               sizes="(min-width: 640px) 190px, 100vw"
               style={coverTransition}
-              className="hover-media relative h-full w-full object-cover transition-[transform,filter] duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035] group-hover:saturate-[1.06]"
+              className="hover-media relative h-full w-full object-cover transition-[scale,filter] duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035] group-hover:saturate-[1.06]"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-transparent to-white/[0.04] sm:bg-gradient-to-r sm:from-transparent sm:to-black/65" />

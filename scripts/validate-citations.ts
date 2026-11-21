@@ -1,3 +1,4 @@
+import { sourceAnchor } from '../src/components/essay/anchor';
 import { essays } from '../src/data/essays/index';
 
 const errors: string[] = [];
@@ -10,6 +11,8 @@ const minimumCitedBlocks: Record<string, number> = {
 };
 
 for (const essay of essays) {
+  const anchors = (essay.sources ?? []).map(sourceAnchor);
+  if (new Set(anchors).size !== anchors.length) errors.push(`${essay.slug}: duplicate rendered bibliography fragment`);
   const sourceMap = new Map(
     (essay.sources ?? [])
       .filter((source): source is typeof source & { id: string } => Boolean(source.id))

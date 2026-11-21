@@ -294,8 +294,9 @@ for (const theme of ['dark', 'light']) {
       test.use({ colorScheme: theme, contextOptions: { reducedMotion } });
       test('viewer escapes article containment while nested search remains above it', async ({ page }) => {
         const runtime = attachRuntimeDiagnostics(page);
-        // A known decodable local fixture isolates geometry from Wikimedia
-        // egress. This is not verification/replacement of production image bytes.
+        // Isolate this one viewer's geometry, not the entire media host. Other
+        // requests keep their real loading/error behavior. No live-image claim.
+        const viewerImage = new URL('https://commons.wikimedia.org/wiki/Special:Redirect/file/Сергей_Есенин_(1921).jpg').href;
         const fixture = fs.readFileSync(path.resolve('public/images/essays/yesenin/yesenin-part-1-editorial.webp'));
         const fixtureRequests = [];
         const failedImageRequests = [];
@@ -304,7 +305,7 @@ for (const theme of ['dark', 'light']) {
             failedImageRequests.push({ url: request.url(), error: request.failure()?.errorText });
           }
         });
-        await page.route(/^https:\/\/[^/]+\.wikimedia\.org\//, async (route) => {
+        await page.route(url => url.href === viewerImage, async (route) => {
           fixtureRequests.push(route.request().url());
           await route.fulfill({ contentType: 'image/webp', body: fixture });
         });
@@ -317,6 +318,8 @@ for (const theme of ['dark', 'light']) {
         try {
           await expect(opener).toBeInViewport();
           await expect.poll(() => opener.locator('img').evaluate((node) => node.naturalWidth)).toBeGreaterThan(0);
+          expect(await opener.locator('img').evaluate(node => node.currentSrc)).toBe(viewerImage);
+          expect(fixtureRequests).toContain(viewerImage);
         } catch (error) {
           // Preserve the assertion/timeout. Native CI annotations must expose
           // whether this is routing, decoding, or lazy-image visibility; signed

@@ -2,7 +2,7 @@
  * KineticText - per-letter spring hover + long-dwell focus mode.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 
 interface KineticTextProps {
   text: string;
@@ -17,18 +17,21 @@ interface KineticTextProps {
   focusScale?: number;
 }
 
+const restInk = { y: 0, scale: 1, rotateZ: 0, filter: 'blur(0px)', opacity: 1, textShadow: 'none' };
 const waveVariants: Variants = {
-  rest: { y: 0, rotateZ: 0 },
+  rest: restInk,
   hover: {
+    ...restInk,
     y: -8,
-    rotateZ: [-1.5, 1.5, 0],
+    rotateZ: -1.5,
     transition: { type: 'spring', stiffness: 520, damping: 16, mass: 0.5 },
   },
 };
 
 const glowVariants: Variants = {
-  rest: { scale: 1 },
+  rest: restInk,
   hover: {
+    ...restInk,
     scale: 1.18,
     transition: { type: 'spring', stiffness: 600, damping: 20 },
   },
@@ -46,6 +49,8 @@ export default function KineticText({
   focusKeyPrefix = text,
   focusScale = 1.42,
 }: KineticTextProps) {
+  const reduceMotion = useReducedMotion();
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const variants = variant === 'glow' ? glowVariants : waveVariants;
   const words = text.split(' ');
   const [focusIdx, setFocusIdx] = useState<number | null>(null);
@@ -61,6 +66,7 @@ export default function KineticText({
   }, [focusMode, onSharedFocusChange]);
 
   const cancelDwell = useCallback(() => {
+    setHoverIdx(null);
     if (dwellTimer.current) clearTimeout(dwellTimer.current);
     dwellTimer.current = null;
     if (onSharedFocusChange) onSharedFocusChange(null);
@@ -85,46 +91,47 @@ export default function KineticText({
             const isSibling = isFocusActive && !isFocused;
 
             return (
-              <motion.span
+              <span
                 key={`${wi}-${ci}`}
-                className="kinetic-letter inline-block cursor-default select-none"
-                initial="rest"
-                whileHover={!isFocusActive ? 'hover' : undefined}
-                variants={variants}
-                onPointerEnter={() => startDwell(idx, letterKey)}
+                className="kinetic-letter relative inline-block cursor-default select-none"
+                style={{ zIndex: isFocused ? 10 : 1 }}
+                onPointerEnter={(event) => {
+                  if (reduceMotion || event.pointerType === 'touch') return;
+                  setHoverIdx(idx);
+                  startDwell(idx, letterKey);
+                }}
                 onPointerLeave={cancelDwell}
-                animate={
-                  isFocused
-                    ? {
-                        scale: focusScale,
-                        y: -8,
-                        filter: 'blur(0px)',
-                        textShadow: '0 0 12px rgba(216,253,255,0.9), 0 0 34px rgba(0,212,255,0.55)',
-                        transition: { duration: 0.95, ease: [0.16, 1, 0.3, 1] },
-                      }
-                    : isSibling
-                      ? {
-                          scale: 0.97,
-                          y: 0,
-                          filter: 'blur(3.5px)',
-                          opacity: 0.55,
-                          textShadow: 'none',
-                          transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
-                        }
-                      : {
-                          scale: 1,
-                          y: 0,
-                          filter: 'blur(0px)',
-                          opacity: 1,
-                          textShadow: 'none',
-                          transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-                        }
-                }
-                transition={{ delay: (wi * 6 + ci) * stagger }}
-                style={{ display: 'inline-block', willChange: 'transform, filter', zIndex: isFocused ? 10 : 1, position: 'relative', transformOrigin: 'center center' }}
+                onPointerCancel={cancelDwell}
               >
-                {char}
-              </motion.span>
+                <motion.span
+                  className="pointer-events-none inline-block"
+                  initial="rest"
+                  variants={variants}
+                  animate={
+                    isFocused
+                      ? {
+                          scale: focusScale,
+                          y: -8,
+                          filter: 'blur(0px)',
+                          textShadow: '0 0 12px rgba(216,253,255,0.9), 0 0 34px rgba(0,212,255,0.55)',
+                          transition: { duration: 0.95, ease: [0.16, 1, 0.3, 1] },
+                        }
+                      : isSibling
+                        ? {
+                            scale: 0.97,
+                            y: 0,
+                            filter: 'blur(3.5px)',
+                            opacity: 0.55,
+                            textShadow: 'none',
+                            transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+                          }
+                        : hoverIdx === idx ? 'hover' : 'rest'
+                  }
+                  transition={{ delay: (wi * 6 + ci) * stagger }}
+                >
+                  {char}
+                </motion.span>
+              </span>
             );
           })}
         </span>

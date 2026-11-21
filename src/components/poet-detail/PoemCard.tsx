@@ -6,6 +6,7 @@ import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
 import { useFavoritePoem } from '../../hooks/useFavoritePoems';
 import InteractivePoemText from './InteractivePoemText';
+import ReaderLayoutPending from '../ReaderLayoutPending';
 import { toggleFavoritePoem } from '../../utils/myArchiveStore';
 
 const PoemResourceLinks = lazy(() => import('./PoemResourceLinks'));
@@ -84,9 +85,9 @@ export default function PoemCard({ poem }: PoemCardProps) {
         </div>
       </div>
 
-      <InteractivePoemText text={poem.text} />
+      <InteractivePoemText text={poem.text} poemId={poem.id} />
       {(poem.sourceUrl || poem.relatedMusicTrackIds?.length) && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<ReaderLayoutPending />}>
           <PoemResourceLinks poem={poem} />
         </Suspense>
       )}

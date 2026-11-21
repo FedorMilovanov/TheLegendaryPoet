@@ -1,5 +1,5 @@
-import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { BrowserRouter as Router, Navigate, Routes, Route, useLocation, useOutlet } from 'react-router';
+import { Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { BrowserRouter as Router, Navigate, Routes, Route, useHref, useLocation, useOutlet } from 'react-router';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { supportsViewTransitions } from './lib/viewTransition';
 import { musicTracks } from './data/poets';
@@ -9,7 +9,7 @@ import AmbientBackdrop from './components/AmbientBackdrop';
 import CommandPalette from './components/command/CommandPalette';
 import CustomCursor from './components/CustomCursor';
 import ErrorBoundary from './components/ErrorBoundary';
-import SmoothScroll from './components/SmoothScroll';
+import SmoothScroll, { useRestoreRouteScroll } from './components/SmoothScroll';
 import PoetryBackdrop from './components/PoetryBackdrop';
 import MobileDock from './components/MobileDock';
 import ScrollToTop from './components/ScrollToTop';
@@ -22,7 +22,9 @@ import ImmersivePlayer from './components/music/ImmersivePlayer';
 import { AudioPlayerProvider, useAudioPlayer } from './components/music/AudioPlayerProvider';
 import { useAutoHideChrome } from './hooks/useAutoHideChrome';
 import { applicationRoutes, legacyRedirects, NotFoundPage } from './routes/routeModules';
-import { notifyAnalyticsRouteSettled } from './utils/analytics';
+import { observeBrowserAddress } from './utils/browserNavigation';
+import { hasSettledPageHead, PAGE_HEAD_AVAILABLE, RouteHeadAddress, syncDiscoveryAddress } from './routes/discoveryHead';
+import { ANALYTICS_CONSENT_EVENT, notifyAnalyticsRouteSettled } from './utils/analytics';
 
 const WipeOverlay = () => (
   <motion.div
@@ -47,50 +49,47 @@ const WipeOverlay = () => (
 
 let introPlayed = false;
 
-function RouteSettled({ pathname, onSettled, children }: { pathname: string; onSettled: () => void; children: ReactNode }) {
+let settledSequence = 0;
+
+function RouteSettled({ pathname, announce, children }: { pathname: string; announce: (title: string) => void; children: ReactNode }) {
+  const href = useHref(pathname);
+  useRestoreRouteScroll(pathname);
   useEffect(() => {
-    const timeout = window.setTimeout(onSettled, 0);
-    return () => window.clearTimeout(timeout);
-  }, [onSettled, pathname]);
-  return <>{children}</>;
+    // A token belongs to a committed pathname, not an attempted render.
+    // Grant during a transition must not replay the previous page's view;
+    // Back can make this same mounted visit eligible again without remounting.
+    const navigationToken = `${pathname}:${++settledSequence}`;
+    let timer = 0;
+    const schedule = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (!hasSettledPageHead(href)) return;
+        const title = document.title || 'Страница открыта';
+        announce(title);
+        notifyAnalyticsRouteSettled({ path: pathname, title, navigationToken });
+      }, 0);
+    };
+    schedule();
+    window.addEventListener(PAGE_HEAD_AVAILABLE, schedule);
+    window.addEventListener(ANALYTICS_CONSENT_EVENT, schedule);
+    return () => {
+      window.removeEventListener(PAGE_HEAD_AVAILABLE, schedule);
+      window.removeEventListener(ANALYTICS_CONSENT_EVENT, schedule);
+      window.clearTimeout(timer);
+    };
+  }, [announce, href, pathname]);
+  return <RouteHeadAddress.Provider value={href}>{children}</RouteHeadAddress.Provider>;
 }
 
 function RouteContent() {
   const location = useLocation();
   const outlet = useOutlet();
-  const renderedPathRef = useRef(location.pathname);
-  const routeNavigationSequenceRef = useRef(0);
-  const shouldFocusOnSettleRef = useRef(false);
   const [announcement, setAnnouncement] = useState('');
 
-  if (renderedPathRef.current !== location.pathname) {
-    renderedPathRef.current = location.pathname;
-    routeNavigationSequenceRef.current += 1;
-    shouldFocusOnSettleRef.current = true;
-  }
-
-  const handleSettled = useCallback(() => {
-    const title = document.title || 'Страница открыта';
-    setAnnouncement(title);
-    notifyAnalyticsRouteSettled({
-      path: location.pathname,
-      title,
-      navigationToken: `${location.pathname}:${routeNavigationSequenceRef.current}`,
-    });
-    // The render boundary records every pathname transition, including a
-    // return to the URL that opened the session. The first document render is
-    // passive, while every real SPA transition owns focus after lazy content
-    // has settled.
-    if (shouldFocusOnSettleRef.current) {
-      shouldFocusOnSettleRef.current = false;
-      document.getElementById('main-content')?.focus({ preventScroll: true });
-    }
-  }, [location.pathname]);
-
   const page = (
-    <ErrorBoundary resetKey={location.pathname} variant="page">
+    <ErrorBoundary location={location} variant="page">
       <Suspense fallback={<RouteLoadingShell />}>
-        <RouteSettled pathname={location.pathname} onSettled={handleSettled}>
+        <RouteSettled pathname={location.pathname} announce={setAnnouncement}>
           {outlet}
         </RouteSettled>
       </Suspense>
@@ -104,9 +103,11 @@ function RouteContent() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
+            // Fade the page, not its layout origin: a translated article puts
+            // even a correctly restored paragraph below the reading line.
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.46, ease: [0.16, 1, 0.3, 1] }}
           >
             {page}
@@ -172,11 +173,12 @@ function AudioChrome() {
 }
 
 function RoutedApp() {
+  useLayoutEffect(() => observeBrowserAddress(syncDiscoveryAddress), []);
   const location = useLocation();
   return (
     <>
       <AnalyticsRouteTracker />
-      <ErrorBoundary resetKey={location.pathname}>
+      <ErrorBoundary location={location}>
         <AppRoutes />
       </ErrorBoundary>
       <AudioChrome />

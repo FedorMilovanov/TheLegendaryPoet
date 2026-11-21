@@ -360,12 +360,10 @@ html.theme-light .theme-essay-emphasis:not(:where(.theme-dark-island, .theme-dar
 
 /* The floating source label remains a dark surface in either reader theme. */
 .theme-essay-citation-tooltip {
-  left: 50%;
-  max-width: min(16rem, calc(var(--tlp-citation-viewport-width, 100vw) - 16px));
-  transform: translateX(calc(-50% + var(--tlp-citation-shift, 0px)));
+  --panel-max-width: 16rem;
   overflow-wrap: anywhere;
   background-color: #12100c;
-  color: rgb(170 170 170 / 85%);
+  color: #e0d8c9;
 }
 
 .theme-poem-text {
@@ -429,6 +427,12 @@ html.theme-light .theme-essay-emphasis:not(:where(.theme-dark-island, .theme-dar
 .poem-reader-surface {
   background-color: #050505 !important;
   color: #ffffff;
+}
+@media (forced-colors: active) {
+  /* The UA replaces transparent ink with a system colour. Paint the canonical
+     text once instead of drawing a second high-contrast copy on top of it. */
+  [data-poem-canonical] { color: CanvasText; }
+  [data-poem-visual] { display: none; }
 }
 .poet-hero-shade {
   background: linear-gradient(to top, #050505 0%, rgba(5, 5, 5, 0.62) 52%, transparent 100%) !important;

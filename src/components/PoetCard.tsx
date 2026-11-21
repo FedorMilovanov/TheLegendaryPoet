@@ -15,14 +15,14 @@ interface PoetCardProps {
 const PoetCard = ({ poet, headingLevel = 3 }: PoetCardProps) => {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
-    <Link to={`/poets/${poet.id}`} className="group block h-full">
+    <Link to={`/poets/${poet.id}`} className="group block h-full rounded-2xl">
       <TiltCard intensity={6}>
-        <div className="theme-page-surface overflow-hidden h-full flex flex-col border border-cyan-400/15 breath-hover relative z-10 rounded-2xl">
+        <div className="tilt-card-surface theme-page-surface overflow-hidden h-full flex flex-col border border-cyan-400/15 breath-hover relative z-10 rounded-2xl">
           {/* Glowing Background Accent on hover */}
           <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none" />
 
           {/* Shine Effect: opacity and movement share one transition, so it never jumps. */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-[opacity,translate] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" />
 
           {/* Image Box */}
           <div className="relative h-72 overflow-hidden bg-[#050505] flex-shrink-0">
@@ -36,7 +36,7 @@ const PoetCard = ({ poet, headingLevel = 3 }: PoetCardProps) => {
               height={1000}
               sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
               style={vtShared(`poet-portrait-${poet.id}`)}
-              className="hover-media w-full h-full object-cover object-[center_18%] opacity-95 group-hover:opacity-100 group-hover:scale-[1.055] transition-[transform,opacity,filter] duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] contrast-[1.03] saturate-[1.02]"
+              className="hover-media w-full h-full object-cover object-[center_18%] opacity-95 group-hover:opacity-100 group-hover:scale-[1.055] transition-[scale,opacity,filter] duration-600 ease-[cubic-bezier(0.16,1,0.3,1)] contrast-[1.03] saturate-[1.02]"
             />
 
             {/* Top Badges */}

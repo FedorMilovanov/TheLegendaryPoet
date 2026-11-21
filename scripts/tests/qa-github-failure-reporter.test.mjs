@@ -34,3 +34,9 @@ test('diagnostic size is bounded and empty failures still report', () => {
   assert.ok(report('unexpected', [{ message: 'x'.repeat(9000) }])[0].length < 8300);
   assert.match(report('unexpected')[0], /Final test outcome: unexpected/);
 });
+
+test('a reused geometry assertion identifies its spec call site without Playwright internals', () => {
+  const [line] = report('unexpected', [{ message: 'wrong top', stack: 'Error: wrong top\n    at helper (/repo/qa/reader.mjs:9:4)\n    at /repo/qa/example.spec.mjs:42:1\n    at Worker (/repo/node_modules/worker.js:1:1)' }]);
+  assert.match(line, /qa\/example\.spec\.mjs:42:1/);
+  assert.doesNotMatch(line, /Worker/);
+});
