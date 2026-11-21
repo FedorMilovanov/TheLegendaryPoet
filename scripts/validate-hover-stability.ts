@@ -4,7 +4,9 @@ import path from 'node:path';
 const errors: string[] = [];
 
 function read(filePath: string) {
-  return fs.readFileSync(filePath, 'utf8');
+  // Source checks include exact multiline fragments; CRLF files on Windows
+  // must be compared by content, not by the checkout's line-ending style.
+  return fs.readFileSync(filePath, 'utf8').replace(/\r\n?/g, '\n');
 }
 
 function walk(directory: string): string[] {
