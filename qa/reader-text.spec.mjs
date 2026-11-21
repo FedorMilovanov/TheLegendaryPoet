@@ -183,6 +183,20 @@ test('shared poem cards retain usable mobile reading width', async ({ page }, te
       await page.goto(`${BASE_URL}/poets/${poet}`, { waitUntil: 'networkidle' });
       const surfaces = page.locator('[data-poem-text]');
       await expect(surfaces.first()).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      // The canonical and kinetic layers must finish their initial layout
+      // before evaluating clipping; a transient entrance measurement can
+      // exceed the final box even though the stable text has no overflow.
+      // This remains a strict visual requirement, not a fixed sleep or skip.
+      await expect.poll(() => surfaces.evaluateAll((nodes) => {
+        if (!nodes.length) return Number.POSITIVE_INFINITY;
+        return Math.max(...nodes.map((node) => {
+          const words = [...node.querySelectorAll('[data-poem-visual] > div > span')];
+          if (!words.length) return Number.POSITIVE_INFINITY;
+          return Math.max(...words.map((word) => word.getBoundingClientRect().bottom))
+            - node.getBoundingClientRect().bottom;
+        }));
+      }), { timeout: 10_000 }).toBeLessThanOrEqual(0);
       const columns = await surfaces.evaluateAll((nodes) => nodes.map((node) => {
         const canonical = node.querySelector('[data-poem-canonical]').getBoundingClientRect();
         const visual = node.querySelector('[data-poem-visual]').getBoundingClientRect();

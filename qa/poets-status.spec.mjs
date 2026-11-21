@@ -588,7 +588,7 @@ test.describe('poets result status accessibility', () => {
     await expect(page.locator('#poem-blok-11')).toBeVisible();
   });
 
-  test('Bryusov 1913 full-text editions preserve 12 and 20 lines without clipping', async ({ page }, testInfo) => {
+  test('Bryusov 1906/1913 full-text editions preserve 12, 20 and 28 lines without clipping', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
@@ -596,9 +596,10 @@ test.describe('poets result status accessibility', () => {
       const cases = [
         ['bryusov-yunomu-poetu-fragment', 'Юному поэту', 12, 'Юноша бледный со взором горящим,', 'Зная, что в мире оставлю поэта.'],
         ['bryusov-tvorchestvo-fragment', 'Творчество', 20, 'Тень несозданных созданий', 'На эмалевой стене.'],
+        ['bryusov-gryadushchie-gunny', 'Грядущие гунны', 28, 'Где вы, грядущие гунны,', 'Встречаю приветственным гимном.'],
       ];
       const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
-      await expect(nav.locator('a[href^="#poem-bryusov-"]')).toHaveCount(2);
+      await expect(nav.locator('a[href^="#poem-bryusov-"]')).toHaveCount(cases.length);
       for (const [id, title, lines, first, last] of cases) {
         const card = page.locator('#poem-' + id);
         await expect(card).toBeVisible();
