@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "bfd342956585035e9193684a6739a937c3ee444b7f026873dbbad37fdde29cfa"
+      "fingerprint": "4c46c63a931a2282271bc70dfff24c0c009eff5dd2c11812cd2c0eddb210fe85"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "41206e1d6a9a0121ee0e245ffca74a3ceb7ae8325457fb094b2360449734682c"
+      "fingerprint": "e3cb23ff63fadacdcff2ee2b69c4905298d76625da4693d60d4d70ae4af2b725"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "cb05cb6bff04e9caafb28bfc0793c3fffb09253cc4e87515898826c3d8a41526"
+      "fingerprint": "a466c98ef93d5370c7ffe9a235fed9092a75386f2e78d10904c0c743c6e18baf"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -370,7 +370,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "e5a95c95d6c87fd73cd99e709253001c6782f65af6eb0fb45259d495e0c06de7"
+      "fingerprint": "fac835b3f6fa13a6b9ce468fb3bcbb7b6f0b56368ff12addd977972f03d73144"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-pushkin/",
@@ -410,7 +410,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "63e87d702a3920057f6f1b326c1d0661fd9b6c3c389f8a2c268220b91188aee0"
+      "fingerprint": "4cd1e8931a84a0bf643869520d776b6451308507ddc100de98bba8ff260c2c09"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/sergei-yesenin/",
@@ -426,7 +426,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "ccff705c98f7f576c6b818ee38c60d094f7403fee7d58fe727f8f0a80d8bf183"
+      "fingerprint": "b701528764c1394d90f4d9e5577b5a4b425fb9ccaa162c71bc6cae7078004a62"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/alexander-blok/",
