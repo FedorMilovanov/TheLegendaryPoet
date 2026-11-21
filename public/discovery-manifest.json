@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d38708ee9b4dc7958a0c7b1c9cf07547960ac069e942a355882ad5359737e609"
+      "fingerprint": "cad4ed18af688416fedc5bc8c85ae6e784ee8ac3cc294850d716923ab391b622"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "24441f105a97e66eb4ffec26a3bbbadcc8ea90c53289910aea5c8e4020283584"
+      "fingerprint": "2bd41a392c2c64de1bdc30b210f9bbef175369e37f46ab8a9b9b2b2bcf9817e1"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "394f695b879686428494da097cd52316b584d7516922e83f0929c7574b353465"
+      "fingerprint": "7d0d9077948615099e34ecf8e8261159ba57022aa0d7e7b93fd236017e604ae1"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -442,7 +442,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6b9275249de0b4ff20d40d6f8c5dbb73835f8464381300ee50802ad3b5f08373"
+      "fingerprint": "4c0723eedfb1202c5f528b1c606f8946e6dbc4ab72d6f30bb075eb36a83ce024"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/osip-mandelstam/",
