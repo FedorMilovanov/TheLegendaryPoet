@@ -13,6 +13,7 @@ const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', '
 const suites = [
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'poets-status', file: 'qa/poets-status.spec.mjs' },
+  { id: 'mandelstam-fulltext-rights', file: 'qa/mandelstam-fulltext-rights.spec.mjs' },
   { id: 'rating-urlstate', file: 'qa/rating-urlstate.spec.mjs' },
   { id: 'audio-completion', file: 'qa/audio-completion.spec.mjs' },
   { id: 'community-request-topology', file: 'qa/community-request-topology.spec.mjs' },

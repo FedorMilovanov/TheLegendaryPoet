@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d38708ee9b4dc7958a0c7b1c9cf07547960ac069e942a355882ad5359737e609"
+      "fingerprint": "8e9e46d39b891a4a4fb99423f6e2514f4bcaf788cbea1b2a1fe058b7ecd2d0f7"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "24441f105a97e66eb4ffec26a3bbbadcc8ea90c53289910aea5c8e4020283584"
+      "fingerprint": "b305e14ce797046140d15c965332cee2b55883e7b06c6eeae1ba0080e10c1f84"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "394f695b879686428494da097cd52316b584d7516922e83f0929c7574b353465"
+      "fingerprint": "68278ead942c71b9c3d20af3f339417aaa7ce7e89c68deab15144f5b2f1d639b"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -450,7 +450,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "767133e7429dddfb8a37fffec2ae5c854e8f3f706b9204f075d7a332305c5107"
+      "fingerprint": "693f20576ee04bf57fef7eb9fb4c16115385c952bb129cf6f8c96859e83ccc2b"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/valery-bryusov/",
