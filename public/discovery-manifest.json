@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4c46c63a931a2282271bc70dfff24c0c009eff5dd2c11812cd2c0eddb210fe85"
+      "fingerprint": "fe328b8294b623f1f528649532bff9e174726a7ed6d6ac2894e03f6654953d40"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "e3cb23ff63fadacdcff2ee2b69c4905298d76625da4693d60d4d70ae4af2b725"
+      "fingerprint": "c8f0c9375e896b5b9224017340eef1cd7080f432ac18ea1a119aeae7f42d2f86"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "a466c98ef93d5370c7ffe9a235fed9092a75386f2e78d10904c0c743c6e18baf"
+      "fingerprint": "0204415fec25d91a46780ed0b13168878da385752422f8430bf7e133dbfe595b"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -410,7 +410,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4cd1e8931a84a0bf643869520d776b6451308507ddc100de98bba8ff260c2c09"
+      "fingerprint": "d86d1c89200ce7393cc9089871bf80e31cbc25819ade36ac83fe663d236c4bb5"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/sergei-yesenin/",
@@ -458,7 +458,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "5ef12c89219dbd0122fdc6e128517828bf36529e1459785b151f099235a263e5"
+      "fingerprint": "b638da3175f5e8d7cf62302dfe3c4b3a7a665c9768531e508902413be1154062"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-nekrasov/",
