@@ -127,8 +127,29 @@ jobs:
           pdftoppm -v 2>&1 | head -1
           ffmpeg -version | head -1
 
+      - name: Test fail-closed offline source acquisition
+        run: node --test scripts/hall-pushkin/download-exact-source.test.mjs
+
+      # Cache holds only previously SHA-256 verified owner-authorized offline
+      # evidence bytes; no rights-pending assets enter /public or /dist.
+      - name: Restore byte-verified offline source cache
+        id: exact_source_cache
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: .tools/hall-pushkin-exact-source-cache
+          key: hall-pushkin-offline-exact-v1-${{ runner.os }}-${{ hashFiles('docs/hall-v3/pushkin-acquisition.json', 'docs/hall-v3/pushkin-owner-disposition.json') }}
+
       - name: Prepare and hash exact offline source assets
+        env:
+          HALL_PUSHKIN_SOURCE_CACHE_DIR: .tools/hall-pushkin-exact-source-cache
         run: node scripts/hall-pushkin/prepare-offline-source-assets.mjs "$SOURCE_DIR"
+
+      - name: Save verified offline source bytes for the next run
+        if: ${{ success() && steps.exact_source_cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: .tools/hall-pushkin-exact-source-cache
+          key: hall-pushkin-offline-exact-v1-${{ runner.os }}-${{ hashFiles('docs/hall-v3/pushkin-acquisition.json', 'docs/hall-v3/pushkin-owner-disposition.json') }}
 
       - name: Download pinned Blender 4.5.12 LTS and vendor checksum
         run: |
