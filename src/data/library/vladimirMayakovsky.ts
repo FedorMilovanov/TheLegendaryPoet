@@ -33,6 +33,7 @@ export const vladimirMayakovsky: Poet = {
       id: 'mayak-1',
       title: 'Облако в штанах (отрывок)',
       year: 1915,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Облако_в_штанах_(Маяковский)',
       text: `Я думал — ты всесильный божище,
 а ты недоучка, крохотный божик.
 Видишь, я нагибаюсь,
@@ -61,6 +62,7 @@ export const vladimirMayakovsky: Poet = {
       id: 'mayak-2',
       title: 'Послушайте!',
       year: 1914,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Послушайте!_(Маяковский)',
       text: `Послушайте!
 Ведь, если звёзды зажигают —
 значит — это кому-нибудь нужно?
@@ -100,6 +102,7 @@ export const vladimirMayakovsky: Poet = {
       id: 'mayak-3',
       title: 'Лиличка! (Вместо письма)',
       year: 1916,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Лиличка!_(Маяковский)',
       text: `Дым табачный воздух выел.
 Комната —
 глава в крученыховском аде.

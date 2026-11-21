@@ -33,8 +33,9 @@ export const annaAkhmatova: Poet = {
   poems: [
     {
       id: 'akhmatova-1',
-      title: 'Реквием (Посвящение и X. Распятие)',
+      title: 'Реквием (фрагмент «Посвящения» и глава X «Распятие»)',
       year: 1940,
+      sourceUrl: 'https://www.culture.ru/poems/10174/rekviem',
       text: `Перед этим горем гнутся горы,
 Не течет великая река,
 Но крепки тюремные затворы,
@@ -68,6 +69,7 @@ X
       id: 'akhmatova-2',
       title: 'Сжала руки под тёмной вуалью',
       year: 1911,
+      sourceUrl: 'https://ru.wikisource.org/wiki/Сжала_руки_под_темной_вуалью_(Ахматова)',
       text: `Сжала руки под тёмной вуалью…
 «Отчего ты сегодня бледна?»
 — Оттого, что я терпкой печалью
@@ -89,6 +91,7 @@ X
       id: 'akhmatova-3',
       title: 'Мужество',
       year: 1942,
+      sourceUrl: 'https://www.culture.ru/poems/8905/muzhestvo',
       text: `Мы знаем, что ныне лежит на весах
 И что совершается ныне.
 Час мужества пробил на наших часах,

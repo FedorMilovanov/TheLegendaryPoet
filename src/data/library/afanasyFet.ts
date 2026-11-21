@@ -34,6 +34,7 @@ export const afanasyFet: Poet = {
       id: 'fet-1',
       title: 'Шепот, робкое дыханье...',
       year: 1850,
+      sourceUrl: 'https://rvb.ru/19vek/fet/bp/text/221.html',
       text: `Шепот, робкое дыханье.
 Трели соловья,
 Серебро и колыханье
@@ -55,6 +56,7 @@ export const afanasyFet: Poet = {
       id: 'fet-2',
       title: 'Я пришёл к тебе с приветом',
       year: 1843,
+      sourceUrl: 'https://rvb.ru/19vek/fet/bp/text/285.html',
       text: `Я пришёл к тебе с приветом,
 Рассказать, что солнце встало,
 Что оно горячим светом
@@ -81,6 +83,7 @@ export const afanasyFet: Poet = {
       id: 'fet-3',
       title: 'Сияла ночь. Луной был полон сад...',
       year: 1877,
+      sourceUrl: 'https://rvb.ru/19vek/fet/bp/text/174.html',
       text: `Сияла ночь. Луной был полон сад. Лежали
 Лучи у наших ног в гостиной без огней.
 Рояль был весь раскрыт, и струны в нём дрожали,

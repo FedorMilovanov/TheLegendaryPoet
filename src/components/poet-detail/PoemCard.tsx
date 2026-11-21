@@ -21,8 +21,9 @@ interface PoemCardProps {
 export default function PoemCard({ poem }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
   const facsimile = visiblePoemFacsimile(poem.id, import.meta.env.MODE);
-  // Keep editorial omissions explicit until the canonical edition is restored.
-  const isMarkedExcerpt = /(?:^|\n)[ \t]*<\.{3}>[ \t]*(?:\n|$)/u.test(poem.text);
+  // Mark standalone editorial omissions and explicitly titled excerpts as incomplete.
+  const isMarkedExcerpt = /(?:^|\n)[ \t]*(?:<\.{3}>|\.{3}|…)[ \t]*(?:\n|$)/u.test(poem.text)
+    || /\((?:[^)]*(?:фрагмент|отрывок|цитата|цитаты)[^)]*)\)/iu.test(poem.title);
   const displayTitle = poem.title.startsWith('«') && poem.title.endsWith('»')
     ? poem.title
     : `«${poem.title}»`;
@@ -103,7 +104,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
       <InteractivePoemText text={poem.text} />
       {isMarkedExcerpt && (
         <p data-poem-excerpt-notice role="note" className="-mt-6 mb-10 border-l-2 border-luxury-gold/40 pl-4 text-sm leading-7 text-luxury-gray-light">
-          Текст приведён с сокращениями: некоторые строфы пропущены. Это не полная редакция стихотворения.
+          Здесь представлен отрывок или сокращённая редакция произведения, а не его полный текст.
         </p>
       )}
       {facsimile && (

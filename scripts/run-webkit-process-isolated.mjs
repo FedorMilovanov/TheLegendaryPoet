@@ -13,6 +13,7 @@ const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', '
 const suites = [
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'poets-status', file: 'qa/poets-status.spec.mjs' },
+  { id: 'poem-source-coverage-w83', file: 'qa/poem-source-coverage-w83.spec.mjs' },
   { id: 'ak-tolstoy-fulltexts', file: 'qa/ak-tolstoy-fulltexts.spec.mjs' },
   { id: 'mandelstam-fulltext-rights', file: 'qa/mandelstam-fulltext-rights.spec.mjs' },
   { id: 'simonov-excerpts-rights', file: 'qa/simonov-excerpts-rights.spec.mjs' },
