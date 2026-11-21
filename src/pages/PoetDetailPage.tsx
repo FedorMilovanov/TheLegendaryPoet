@@ -26,30 +26,32 @@ import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 
 
 const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
-const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
-const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
+const loadVideos = () => import('../components/poet-detail/PoetVideos');
+const loadSources = () => import('../components/poet-detail/PoetSources');
+const PoetVideos = lazy(loadVideos);
+const PoetSources = lazy(loadSources);
 
 export default function PoetDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams<{ id: string }>();
   const basePoet = poets.find((candidate) => candidate.id === id);
+  const isSupplementary = supplementaryPoetIds.includes(id);
   const [loadedPoet, setLoadedPoet] = useState<{ id: string; value?: Poet } | null>(null);
   useEffect(() => {
-    if (!id || !supplementaryPoetIds.includes(id)) return;
+    if (!isSupplementary) return;
     const controller = new AbortController();
-    loadSupplementaryPoet(id, controller.signal)
-      .then((value) => {
-        if (!controller.signal.aborted) setLoadedPoet({ id, value });
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setLoadedPoet({ id });
-      });
+    const { signal } = controller;
+    const receive = (value?: Poet) => !signal.aborted && setLoadedPoet({ id, value });
+    Promise.all([
+      loadSupplementaryPoet(id, signal),
+      loadVideos(), loadSources(),
+    ]).then(([value]) => receive(value), () => receive());
     return () => controller.abort();
   }, [id]);
   const detail = loadedPoet?.id === id ? loadedPoet : null;
   const poet = detail?.value ?? basePoet;
-  const pendingBiography = !detail && !!id && supplementaryPoetIds.includes(id);
+  const pendingBiography = !detail && isSupplementary;
   const contentRef = useRef<HTMLDivElement>(null);
-  const routePath = `/poets/${id ?? ''}`;
+  const routePath = '/poets/' + id;
   const breadcrumbs: SeoBreadcrumb[] = [
     { name: 'Главная', path: '/' },
     { name: 'Поэты', path: '/poets' },
@@ -163,7 +165,8 @@ export default function PoetDetailPage() {
 
             <Suspense fallback={<ReaderLayoutPending />}><PoetSources poet={poet} /></Suspense>
 
-            {poet.moralPortrait && <Suspense fallback={<ReaderLayoutPending />}><MoralPortrait content={poet.moralPortrait} /></Suspense>}
+            <Suspense fallback={<ReaderLayoutPending />}>
+            {poet.moralPortrait && <MoralPortrait content={poet.moralPortrait} />}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
             {poet.authorCommentary && <AuthorCommentary content={poet.authorCommentary} />}
 
@@ -178,10 +181,11 @@ export default function PoetDetailPage() {
               <PoemQuickNav id={contentsId} poems={poet.poems} />
               <div className="mt-10 space-y-16">
                 {poet.poems.map((poem) => (
-                  <PoemCard key={poem.id} poem={poem} />
+                  <PoemCard key={poem.id} poem={poem} ready={!pendingBiography} />
                 ))}
               </div>
             </div>
+            </Suspense>
           </div>
         </div>
       </div>

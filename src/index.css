@@ -1408,3 +1408,6 @@ html.theme-light ::selection {
     padding-inline-end: 0.5rem;
   }
 }
+
+/* Keep shared prose glyphs stable while opacity and blur reveal. */
+.essay-body > [data-reveal-state] { transform: none !important; transition-property: opacity, filter !important; }

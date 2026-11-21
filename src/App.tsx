@@ -127,7 +127,7 @@ function SiteLayout() {
     <SmoothScroll>
       <div className="theme-page-surface relative min-h-screen overflow-x-clip selection:bg-luxury-gold/30">
         {showIntro && <WipeOverlay />}
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-full focus:bg-cyan-400 focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-black">
+        <a href="#main-content" tabIndex={0} className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[120] focus:rounded-full focus:bg-cyan-400 focus:px-5 focus:py-3 focus:text-sm focus:font-bold focus:text-black">
           Перейти к содержанию
         </a>
         <AmbientBackdrop />

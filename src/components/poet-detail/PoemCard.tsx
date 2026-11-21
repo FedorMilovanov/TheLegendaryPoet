@@ -13,9 +13,10 @@ const PoemResourceLinks = lazy(() => import('./PoemResourceLinks'));
 
 interface PoemCardProps {
   poem: Poem;
+  ready: boolean;
 }
 
-export default function PoemCard({ poem }: PoemCardProps) {
+export default function PoemCard({ poem, ready }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
@@ -85,7 +86,7 @@ export default function PoemCard({ poem }: PoemCardProps) {
         </div>
       </div>
 
-      <InteractivePoemText text={poem.text} poemId={poem.id} />
+      {ready && <InteractivePoemText text={poem.text} poemId={poem.id} />}
       {(poem.sourceUrl || poem.relatedMusicTrackIds?.length) && (
         <Suspense fallback={<ReaderLayoutPending />}>
           <PoemResourceLinks poem={poem} />

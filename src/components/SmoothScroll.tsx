@@ -37,7 +37,7 @@ function pendingAbove(target?: HTMLElement | null) {
   // Later optional sections don't affect the top of an earlier destination.
   // Font swaps above a deep anchor can move it by paragraphs, especially
   // in engines without native scroll anchoring. No DOM insertion is required.
-  return document.fonts?.status === 'loading' || Array.from(document.querySelectorAll('[data-reader-layout-pending]')).some(marker =>
+  return target?.getClientRects?.().length == 0 || document.fonts?.status == 'loading' || [...document.querySelectorAll('[data-reader-layout-pending]')].some(marker =>
     !target || Boolean(marker.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING));
 }
 
@@ -144,7 +144,7 @@ export function useRestoreRouteScroll(paintedPath: string) {
     function schedule() {
       cancelRequest?.();
       cancelRequest = requestRouteScroll({
-        current, fragmentId, apply, nativeQuote: !saved && fragmentId.startsWith('read.'),
+        current, fragmentId, apply, nativeQuote: saved ? resuming : fragmentId.startsWith('read.'),
         // The visible page is now the reader's departure, even if its delayed
         // jump never ran. A later Back/Forward must not replay the old intent.
         yieldToReader: leaveWithReader,
