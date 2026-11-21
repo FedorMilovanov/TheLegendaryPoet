@@ -97,7 +97,10 @@ env:
 
 jobs:
   blender-preflight:
-    runs-on: ubuntu-latest
+    # The accepted H3/R1/L0 GLB was certified on Ubuntu 24.04. GitHub
+    # moved ubuntu-latest to 26.04, changing evaluated Blender/glTF bytes.
+    # Pin the runner, not the historical structural hashes or fail-closed gate.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       BLENDER_ARCHIVE_URL: https://download.blender.org/release/Blender4.5/blender-4.5.12-linux-x64.tar.xz

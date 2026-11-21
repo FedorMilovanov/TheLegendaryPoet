@@ -115,7 +115,18 @@ for (const key of ['productionAsset','productionManifestAllowed','productionWebg
   expect(contract.productionBoundary?.[key] === false, `productionBoundary.${key} must remain false`);
 }
 expect(contract.productionBoundary?.humanOwnerVisualDispositionRequired === true, 'human owner visual disposition must remain required');
-expect(roadmap.includes('newly reproduced engineering defect on the then-current Product `main`'), 'owner-gated roadmap must retain engineering-defect entry condition');
+// Product #465 superseded the old defect-only Hall entry rule with an
+// explicit owner-directed web slice, while retaining documentary and scale
+// escalation boundaries. Validate the current roadmap instead of a retired
+// paragraph whose literal wording is no longer present.
+expect(
+  roadmap.includes('owner explicitly directed Hall implementation') &&
+    roadmap.includes('docs/hall-v3/web-vertical-slice-owner-direction.json') &&
+    roadmap.includes('rights-pending documentary media are excluded from production requests and manifests') &&
+    roadmap.includes('fullMuseumScaleOut') &&
+    roadmap.includes('new concrete issues'),
+  'owner-gated roadmap must retain explicit web-slice direction, documentary exclusions and future gate ownership',
+);
 expect(visualAcceptance.includes('roughness variation survives neutral light') && visualAcceptance.includes('bevels/normals read naturally'), 'visual acceptance must retain material-response requirements');
 expect(budgetPolicy.schemaVersion === 1 && budgetPolicy.laneId === 'TLP-HALL-001' && budgetPolicy.phase === 'pushkinVerticalSlice', 'existing first-slice budget policy identity drifted');
 

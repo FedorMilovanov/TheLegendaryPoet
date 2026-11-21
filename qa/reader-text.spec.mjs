@@ -148,8 +148,8 @@ for (const theme of ['dark', 'light']) for (const width of [320, 390]) {
   });
 }
 
-// Preserve the single-edition punctuation verified in
-// docs/research/PROROK_LIBRARY_COLLATION_2026-10-16.md (iLibrary witness).
+// Verify the RVB (2023) source-critical copy-text, not the retired
+// iLibrary reading (see W58 Lermontov editorial collation).
 test('Lermontov Prophet keeps the verified colon in its selectable text', async ({ page }, testInfo) => {
   useChromiumCore(testInfo);
   await page.goto(`${BASE_URL}/poets/mikhail-lermontov`, { waitUntil: 'networkidle' });
@@ -158,10 +158,10 @@ test('Lermontov Prophet keeps the verified colon in its selectable text', async 
   const text = await canonical.textContent();
   const lines = text.split('\n').filter(Boolean);
   expect(lines).toHaveLength(28);
-  expect(lines[5]).toBe('И правды чистые ученья:');
-  expect(lines[21]).toBe('Он горд был, не ужился с нами:');
-  expect(lines[23]).toBe('Что бог гласит его устами!');
-  expect(lines[25]).toBe('Как он угрюм, и худ, и бледен!');
+  expect(lines[5]).toBe('И правды чистыя ученья:');
+  expect(lines[21]).toBe('Он горд был, не ужился с нами.');
+  expect(lines[23]).toBe('Что бог гласит его устами?');
+  expect(lines[25]).toBe('Как он угрюм и худ и бледен!');
   const selected = await canonical.evaluate((node) => {
     const selection = window.getSelection();
     selection.removeAllRanges();
@@ -183,6 +183,20 @@ test('shared poem cards retain usable mobile reading width', async ({ page }, te
       await page.goto(`${BASE_URL}/poets/${poet}`, { waitUntil: 'networkidle' });
       const surfaces = page.locator('[data-poem-text]');
       await expect(surfaces.first()).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      // The canonical and kinetic layers must finish their initial layout
+      // before evaluating clipping; a transient entrance measurement can
+      // exceed the final box even though the stable text has no overflow.
+      // This remains a strict visual requirement, not a fixed sleep or skip.
+      await expect.poll(() => surfaces.evaluateAll((nodes) => {
+        if (!nodes.length) return Number.POSITIVE_INFINITY;
+        return Math.max(...nodes.map((node) => {
+          const words = [...node.querySelectorAll('[data-poem-visual] > div > span')];
+          if (!words.length) return Number.POSITIVE_INFINITY;
+          return Math.max(...words.map((word) => word.getBoundingClientRect().bottom))
+            - node.getBoundingClientRect().bottom;
+        }));
+      }), { timeout: 10_000 }).toBeLessThanOrEqual(0);
       const columns = await surfaces.evaluateAll((nodes) => nodes.map((node) => {
         const canonical = node.querySelector('[data-poem-canonical]').getBoundingClientRect();
         const visual = node.querySelector('[data-poem-visual]').getBoundingClientRect();

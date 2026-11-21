@@ -77,7 +77,14 @@
 
 .luxury-card:hover,
 .luxury-card:focus-within {
-  transform: translate3d(0, -4px, 0) scale(1.003);
+  /*
+   * The old translateY(-4px) + fractional scale(1.003) shifted the masked,
+   * blurred border onto fractional device pixels on each hover frame,
+   * exposing seams/jagged round corners. Keep the SAME composited geometry;
+   * border, ambient shadow and sheen provide the premium hover feedback.
+   * TiltCard keeps its deliberate movement on its separate inner plane.
+   */
+  transform: translate3d(0, 0, 0);
 }
 
 /*

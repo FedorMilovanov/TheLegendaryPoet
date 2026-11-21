@@ -55,3 +55,6 @@ pnpm-debug.log*
 !.env.example
 .dev.vars
 .dev.vars.*
+
+# Unlicensed facsimile candidates: local review only, never commit to public repo
+/public/images/facsimile-review/
