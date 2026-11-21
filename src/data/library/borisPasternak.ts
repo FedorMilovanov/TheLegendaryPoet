@@ -31,6 +31,7 @@ export const borisPasternak: Poet = {
       id: 'pasternak-2',
       title: 'Февраль. Достать чернил и плакать!',
       year: 1912,
+      sourceUrl: 'https://rvb.ru/20vek/silver-age/1910-e/09/093-boris-pasternak.html',
       text: `Февраль. Достать чернил и плакать!
 Писать о феврале навзрыд,
 Пока грохочущая слякоть
@@ -57,6 +58,7 @@ export const borisPasternak: Poet = {
       id: 'pasternak-3',
       title: 'Гамлет',
       year: 1946,
+      sourceUrl: 'https://www.b-pasternak.ru/vse-stixotvoreniya/1-gamlet',
       text: `Гул затих. Я вышел на подмостки.
 Прислонясь к дверному косяку,
 Я ловлю в далёком отголоске,
@@ -84,6 +86,7 @@ export const borisPasternak: Poet = {
       id: 'pasternak-4',
       title: 'Зимняя ночь',
       year: 1946,
+      sourceUrl: 'https://www.culture.ru/poems/14024/zimnyaya-noch',
       text: `Мело, мело по всей земле
 Во все пределы.
 Свеча горела на столе,

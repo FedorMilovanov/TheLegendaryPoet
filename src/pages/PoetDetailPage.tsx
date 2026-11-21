@@ -9,7 +9,6 @@ import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
 import InfoCard from '../components/poet-detail/InfoCard';
 import FamousWorks from '../components/poet-detail/FamousWorks';
-import PoemCard from '../components/poet-detail/PoemCard';
 import SpiritualPath from '../components/poet-detail/SpiritualPath';
 import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
@@ -25,6 +24,7 @@ import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 
 
 const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
+const PoemCard = lazy(() => import('../components/poet-detail/PoemCard'));
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
 
@@ -47,6 +47,15 @@ export default function PoetDetailPage() {
     return () => controller.abort();
   }, [id]);
   const poet = loadedPoet && loadedPoet.id === id ? loadedPoet.value : basePoet;
+  useEffect(() => {
+    if (!id || loadedPoet?.id !== id) return;
+    // Wait until React has committed the full poet content before asking the
+    // single native scroll coordinator to correct an existing hash anchor.
+    const frame = requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent('tlp-poet-corpus-hydrated', { detail: { poetId: id } }));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [id, loadedPoet]);
   const contentRef = useRef<HTMLDivElement>(null);
   const routePath = `/poets/${id ?? ''}`;
   const breadcrumbs: SeoBreadcrumb[] = [
@@ -113,7 +122,7 @@ export default function PoetDetailPage() {
             <ShareLine scopeRef={contentRef} />
             {biographyError && supplementaryPoetIds.includes(poet.id) && (
               <p role="status" className="text-sm text-luxury-gold">
-                Не удалось загрузить полную биографию.
+                Не удалось загрузить полный корпус стихов и биографию. Показана резервная подборка.
               </p>
             )}
             <p className="theme-text poet-bio-intro">
@@ -176,11 +185,13 @@ export default function PoetDetailPage() {
               </h2>
 
               <PoemQuickNav id={contentsId} poems={poet.poems} />
-              <div className="mt-10 space-y-16">
-                {poet.poems.map((poem) => (
-                  <PoemCard key={poem.id} poem={poem} />
-                ))}
-              </div>
+              <Suspense fallback={<p role="status" className="sr-only">Загрузка стихотворений</p>}>
+                <div className="mt-10 space-y-16">
+                  {poet.poems.map((poem) => (
+                    <PoemCard key={poem.id} poem={poem} />
+                  ))}
+                </div>
+              </Suspense>
             </div>
           </div>
         </div>

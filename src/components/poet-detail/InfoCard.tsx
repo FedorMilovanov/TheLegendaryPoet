@@ -44,13 +44,13 @@ export default function InfoCard({ poet }: InfoCardProps) {
       <div className="pt-10 flex flex-col gap-4">
         <MagneticButton
           href={youtubeUrl}
-          className="bg-white/5 border border-white/10 text-cyan-100 hover:bg-white/10 w-full text-[10px] tracking-[0.2em]"
+          className="theme-text w-full border border-luxury-gold/25 bg-luxury-gold/5 text-xs font-semibold tracking-[0.14em] hover:bg-luxury-gold/10"
         >
           Канал YouTube
         </MagneticButton>
         <MagneticButton
           href={rutubeUrl}
-          className="bg-luxury-gold/10 border border-luxury-gold/30 text-luxury-gold hover:bg-luxury-gold/20 w-full text-[10px] tracking-[0.2em] gold-border-glow"
+          className="theme-text gold-border-glow w-full border border-luxury-gold/30 bg-luxury-gold/10 text-xs font-semibold tracking-[0.14em] hover:bg-luxury-gold/20"
         >
           Смотреть Rutube
         </MagneticButton>

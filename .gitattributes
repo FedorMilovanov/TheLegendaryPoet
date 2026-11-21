@@ -1,0 +1,11 @@
+# Frozen historical Git blob evidence must keep its exact LF bytes on Windows.
+# Without these checkout attributes, global core.autocrlf=true converts files
+# to CRLF and breaks rights, Hall topology and legacy-content contracts.
+docs/hall-v3/* text eol=lf
+docs/legacy-content/*.md text eol=lf
+scripts/hall-greybox/*.py text eol=lf
+scripts/hall-camera/*.py text eol=lf
+scripts/hall-material/*.py text eol=lf
+scripts/hall-material/*.mjs text eol=lf
+scripts/validate-hall-material-decision.ts text eol=lf
+.github/workflows/hall-pushkin-source-byte-evidence.yml text eol=lf

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { essaySearchIndex } from '../src/data/essaySearchIndex.generated';
 import { musicTracks, poets } from '../src/data/poets';
+import { supplementaryPoemSearchIndex } from '../src/data/runtime/supplementaryPoemSearch.generated';
 import routeContract from '../src/routes/route-contract.json';
 import {
   buildCommandItems,
@@ -67,7 +68,8 @@ expectThrows(
   'orphan command presentation metadata must fail closed',
 );
 
-const expectedPoemCount = poets.reduce((count, poet) => count + poet.poems.length, 0);
+const expectedPoemCount = poets.reduce((count, poet) => count + poet.poems.length, 0)
+  + supplementaryPoemSearchIndex.length;
 expect(
   items.filter((item) => item.group === 'Стихи').length === expectedPoemCount,
   `command inventory must contain every canonical poem (${expectedPoemCount})`,
@@ -99,6 +101,19 @@ for (const poet of poets) {
     expect(item?.label === poem.title, `poem ${poet.id}/${poem.id} must derive its title from canonical library data`);
     expect(item?.group === 'Стихи', `poem ${poet.id}/${poem.id} must remain in the poem search group`);
   }
+}
+
+// The source-derived lightweight supplemental index covers poems intentionally
+// omitted from in-shell author stubs, not additional or duplicated publications.
+for (const poem of supplementaryPoemSearchIndex) {
+  const item = byId.get(`poem-${poem.poetId}-${poem.id}`);
+  const path = `/poets/${poem.poetId}#poem-${encodeURIComponent(poem.id)}`;
+  expect(Boolean(item), `missing deferred poem in search: ${poem.poetId}/${poem.id}`);
+  expect(item?.path === path, `deferred poem must retain deep link: ${poem.id}`);
+  expect(item?.label === poem.title, `deferred poem title mismatch: ${poem.id}`);
+  expect(item?.description === (poem.year ? `${poem.poetName} · ${poem.year}` : poem.poetName),
+    `deferred poem description mismatch: ${poem.id}`);
+  expect(item?.group === 'Стихи', `deferred poem wrong search group: ${poem.id}`);
 }
 
 for (const poet of poets) {
@@ -154,6 +169,13 @@ const fixtureItems = buildCommandItems({
     fullName: 'Фёдор Йота Тестовый',
     poems: [{ id: 'fixture-poem', title: 'Ёлочный май', year: 1901 }],
   }],
+  supplementaryPoems: [{
+    poetId: 'fixture-poet',
+    poetName: 'Фёдор Йота',
+    id: 'fixture-extra-poem',
+    title: 'Вторая Ёлка',
+    year: 1902,
+  }],
   essays: [{
     id: 'fixture-essay',
     title: 'Новая статья',
@@ -163,6 +185,20 @@ const fixtureItems = buildCommandItems({
   }],
   tracks: [{ id: 'fixture-track', title: 'Новый трек', poet: 'Фёдор Йота', duration: '1:23' }],
 });
+const extraFixture = fixtureItems.find((item) => item.id === 'poem-fixture-poet-fixture-extra-poem');
+expect(extraFixture?.path === '/poets/fixture-poet#poem-fixture-extra-poem'
+  && extraFixture?.label === 'Вторая Ёлка',
+  'supplementary metadata must derive unseen poem titles and correct deep links');
+expectThrows(
+  () => buildCommandItems({
+    poets: [{ id: 'fixture-poet', name: 'Фёдор Йота', fullName: 'Фёдор Йота Тестовый',
+      poems: [{ id: 'duplicate', title: 'Тест' }] }],
+    supplementaryPoems: [{ poetId: 'fixture-poet', poetName: 'Фёдор Йота',
+      id: 'duplicate', title: 'Повтор' }],
+    essays: [], tracks: [],
+  }),
+  'supplementary search index must fail closed on duplicated canonical poem IDs',
+);
 const fixturePoem = fixtureItems.find((item) => item.id === 'poem-fixture-poet-fixture-poem');
 expect(fixturePoem?.label === 'Ёлочный май', 'builder must derive unseen poem labels from supplied source data');
 expect(
