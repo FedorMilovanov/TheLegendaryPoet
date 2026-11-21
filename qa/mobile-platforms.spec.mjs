@@ -719,7 +719,7 @@ test('hash destinations and archive removals keep deterministic focus ownership'
   await expect(status).toBeFocused();
 });
 
-test('seek focus is visible and nested overlays isolate only the topmost accessibility environment', async ({ page }) => {
+test('seek focus is visible and nested overlays isolate only the topmost accessibility environment', async ({ page }, testInfo) => {
   await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
   await settle(page);
 
@@ -774,12 +774,74 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   expect((await readEffectiveA11yIsolation(main)).inert).toBe(true);
   expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(true);
 
+  // #343: capture actual DOM pointer dispatch before changing React ownership.
+  // Diagnostic-only, no production code, timeout or assertion changes.
+  const beforeClose = await page.evaluate(() => {
+    const root = document.querySelector('[role="dialog"][aria-labelledby="immersive-track-title"]');
+    const button = Array.from(root?.querySelectorAll('button') ?? [])
+      .find((element) => element.textContent?.includes('Выйти'));
+    window.__tlpIssue343Clicks = [];
+    for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click']) {
+      button?.addEventListener(type, (event) => {
+        window.__tlpIssue343Clicks.push({
+          type, time: Math.round(performance.now()), isTrusted: event.isTrusted,
+          target: event.target?.nodeName ?? null,
+        });
+      }, true);
+    }
+    return {
+      modalOpen: Boolean(window.__TLP_MODAL_OPEN),
+      overlay: window.__TLP_OVERLAY_DEBUG ?? null,
+      focus: document.activeElement?.tagName ?? null,
+    };
+  });
   await immersive.getByRole('button', { name: 'Выйти' }).click();
-  // Same split as above: the application's own close state first, then the DOM
-  // node once the exit animation has had a realistic window to finish.
-  await expect
-    .poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN)), { timeout: 10_000 })
-    .toBe(false);
+  // Preserve the original strict assertion and timeout. Capture proof only if it fails.
+  try {
+    await expect
+      .poll(() => page.evaluate(() => Boolean(window.__TLP_MODAL_OPEN)), { timeout: 10_000 })
+      .toBe(false);
+  } catch (error) {
+    const afterClose = await page.evaluate(() => {
+      const dialog = document.querySelector('[role="dialog"][aria-labelledby="immersive-track-title"]');
+      const style = dialog ? getComputedStyle(dialog) : null;
+      let animations = [];
+      try {
+        animations = (dialog?.getAnimations({ subtree: true }) ?? []).slice(0, 24).map((a) => ({
+          playState: a.playState, currentTime: a.currentTime, pending: a.pending,
+          duration: a.effect?.getComputedTiming()?.duration ?? null,
+        }));
+      } catch { /* Browser may restrict animation introspection. */ }
+      return {
+        time: Math.round(performance.now()),
+        currentUrl: location.pathname,
+        documentVisibility: document.visibilityState,
+        reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        modalOpen: Boolean(window.__TLP_MODAL_OPEN),
+        overlay: window.__TLP_OVERLAY_DEBUG ?? null,
+        bodyLocked: document.body.classList.contains('overlay-open'),
+        bodyPosition: getComputedStyle(document.body).position,
+        mainInert: document.querySelector('#main-content')?.inert ?? null,
+        mainAriaHidden: document.querySelector('#main-content')?.getAttribute('aria-hidden') ?? null,
+        dialog: dialog ? {
+          connected: dialog.isConnected,
+          rect: { width: dialog.getBoundingClientRect().width, height: dialog.getBoundingClientRect().height },
+          display: style?.display, visibility: style?.visibility, opacity: style?.opacity,
+          pointerEvents: style?.pointerEvents,
+          focusWithin: dialog.contains(document.activeElement),
+          activeElement: document.activeElement?.outerHTML?.slice(0, 300) ?? null,
+        } : null,
+        animations,
+        capturedNativeEvents: window.__tlpIssue343Clicks ?? [],
+      };
+    });
+    const report = JSON.stringify({ beforeClose, afterClose }, null, 2);
+    console.error('ISSUE-343-LINUX-WEBKIT-EXIT-PROOF ' + report);
+    await testInfo.attach('issue-343-immersive-exit-proof.json', {
+      body: report, contentType: 'application/json',
+    });
+    throw error;
+  }
   await expect(immersive).toBeHidden({ timeout: 15_000 });
   await expect.poll(async () => (await readEffectiveA11yIsolation(main)).inert).toBe(false);
   expect((await readEffectiveA11yIsolation(main)).ariaHidden).toBe(false);
