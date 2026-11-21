@@ -59,9 +59,17 @@ const fallbackPoemCounts: Record<string, number> = {
 const stubs: Poet[] = selected.map((poet) => ({
   ...poet,
   fullBio: poet.shortBio,
-  // The original published poems remain as an offline fallback for these authors;
-  // extended corpora load from canonical static JSON only on their detail pages.
-  poems: fallbackPoemCounts[poet.id] === undefined ? poet.poems : poet.poems.slice(0, fallbackPoemCounts[poet.id]),
+  // Keep the full source text, rights/excerpt labels, dates and provenance usable offline.
+  // Literary and biblical commentaries belong in the full, versioned per-poet JSON;
+  // bundling their duplicates into every visitor's shared JS corpus wastes payload.
+  // When JSON cannot load, the page explicitly marks the partial offline fallback.
+  poems: (fallbackPoemCounts[poet.id] === undefined
+    ? poet.poems
+    : poet.poems.slice(0, fallbackPoemCounts[poet.id])).map((poem) => ({
+    ...poem,
+    analysis: undefined,
+    biblicalPerspective: undefined,
+  })),
   historicalNote: undefined,
   spiritualSearch: undefined,
   moralPortrait: undefined,
