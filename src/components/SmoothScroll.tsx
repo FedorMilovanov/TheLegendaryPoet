@@ -70,16 +70,21 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     let observer: MutationObserver | null = null;
     let timeoutId = 0;
     let cancelHashFocus: (() => void) | null = null;
-    let hydratedFrame = 0;
+    let layoutFrame = 0;
+    let layoutTimeoutId = 0;
+    let layoutObserver: ResizeObserver | null = null;
     let lastAnchorScrollY: number | null = null;
     let readerInteractedWithHash = false;
 
     // Native scroll anchoring and layout shifts may change scrollY without
     // any reader action. Only genuine input may claim ownership of a hash jump.
-    const onReaderGesture = () => { readerInteractedWithHash = true; };
+    const onReaderGesture = () => {
+      readerInteractedWithHash = true;
+      layoutObserver?.disconnect();
+    };
     const onReaderKey = (event: KeyboardEvent) => {
       if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) {
-        readerInteractedWithHash = true;
+        onReaderGesture();
       }
     };
     if (location.hash) {
@@ -111,25 +116,40 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       return true;
     };
 
-    // A route can render a 3-poem fallback before its full 10-poem corpus
-    // arrives. Automatic scroll anchoring can change scrollY while that DOM
-    // expands; this is NOT a reader gesture and must not suppress re-alignment.
-    // Real wheel/touch/pointer/key interaction keeps native reader ownership.
+    // Reflow after async author hydration, lazy poem chunks and decoded media can
+    // move an already-correct hash target. Keep one passive, event-driven owner
+    // until layout settles, without an interpolation loop or reader-scroll theft.
+    const alignHashAfterLayout = () => {
+      if (cancelled || readerInteractedWithHash || lastAnchorScrollY === null || !location.hash) return;
+      const target = document.getElementById(decodeHash(location.hash));
+      if (!target) return;
+      const delta = target.getBoundingClientRect().top - FIXED_HEADER_OFFSET;
+      if (Math.abs(delta) < 1) return;
+      window.scrollTo({ top: Math.max(0, window.scrollY + delta), behavior: 'auto' });
+      lastAnchorScrollY = window.scrollY;
+    };
+    const scheduleHashLayoutAlignment = () => {
+      if (layoutFrame || cancelled || readerInteractedWithHash) return;
+      layoutFrame = requestAnimationFrame(() => {
+        layoutFrame = 0;
+        alignHashAfterLayout();
+      });
+    };
+
+    // First correction follows the full JSON commit. A bounded ResizeObserver
+    // also corrects later lazy geometry changes that happen after that event.
     const onPoetCorpusHydrated = (event: Event) => {
       const poetId = (event as CustomEvent<{ poetId?: string }>).detail?.poetId;
       if (!location.hash || !poetId || location.pathname !== `/poets/${poetId}`) return;
-      if (hydratedFrame) cancelAnimationFrame(hydratedFrame);
-      hydratedFrame = requestAnimationFrame(() => {
-        hydratedFrame = 0;
-        if (cancelled || readerInteractedWithHash || lastAnchorScrollY === null) return;
-        const target = document.getElementById(decodeHash(location.hash));
-        if (!target) return;
-        const top = target.getBoundingClientRect().top + window.scrollY - FIXED_HEADER_OFFSET;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
-        lastAnchorScrollY = window.scrollY;
-      });
+      scheduleHashLayoutAlignment();
     };
     window.addEventListener('tlp-poet-corpus-hydrated', onPoetCorpusHydrated);
+
+    if (location.hash && typeof ResizeObserver !== 'undefined') {
+      layoutObserver = new ResizeObserver(scheduleHashLayoutAlignment);
+      layoutObserver.observe(document.body);
+      layoutTimeoutId = window.setTimeout(() => layoutObserver?.disconnect(), HASH_OBSERVER_TIMEOUT_MS);
+    }
 
     const stopHashObserver = () => {
       observer?.disconnect();
@@ -175,7 +195,9 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       stopHashObserver();
       cancelHashFocus?.();
       window.removeEventListener('tlp-poet-corpus-hydrated', onPoetCorpusHydrated);
-      if (hydratedFrame) cancelAnimationFrame(hydratedFrame);
+      layoutObserver?.disconnect();
+      if (layoutTimeoutId) window.clearTimeout(layoutTimeoutId);
+      if (layoutFrame) cancelAnimationFrame(layoutFrame);
       if (location.hash) {
         window.removeEventListener('wheel', onReaderGesture);
         window.removeEventListener('touchstart', onReaderGesture);

@@ -17,6 +17,7 @@ const suites = [
   { id: 'poetry-first-editions-w84', file: 'qa/poetry-first-editions-w84.spec.mjs' },
   { id: 'poetry-first-edition-w85', file: 'qa/poetry-first-edition-w85.spec.mjs' },
   { id: 'poetry-stub-budget-w86', file: 'qa/poetry-stub-budget-w86.spec.mjs' },
+  { id: 'poet-hash-layout-w88', file: 'qa/poet-hash-layout-w88.spec.mjs' },
   { id: 'ak-tolstoy-fulltexts', file: 'qa/ak-tolstoy-fulltexts.spec.mjs' },
   { id: 'mandelstam-fulltext-rights', file: 'qa/mandelstam-fulltext-rights.spec.mjs' },
   { id: 'simonov-excerpts-rights', file: 'qa/simonov-excerpts-rights.spec.mjs' },
