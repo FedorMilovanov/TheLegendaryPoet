@@ -16,13 +16,14 @@ const slicePath = 'docs/hall-v3/pushkin-slice.json';
 const acquisitionPath = 'docs/hall-v3/pushkin-acquisition.json';
 const hallContractPath = 'docs/hall-v3/hall-v3-contract.json';
 const prepScriptPath = 'scripts/hall-pushkin/prepare-offline-source-assets.mjs';
+const downloaderPath = 'scripts/hall-pushkin/download-exact-source.mjs';
 const libraryScriptPath = 'scripts/hall-pushkin/generate-offline-exhibit.py';
 const runnerScriptPath = 'scripts/hall-pushkin/run-offline-exhibit.py';
 const sequenceScriptPath = 'scripts/hall-pushkin/render-offline-sequence.py';
 const validatorPath = 'scripts/validate-hall-pushkin-offline-exhibit.ts';
 const workflowPath = '.github/workflows/hall-pushkin-offline-exhibit.yml';
 
-for (const required of [contractPath, ownerPath, slicePath, acquisitionPath, hallContractPath, prepScriptPath, libraryScriptPath, runnerScriptPath, sequenceScriptPath, validatorPath]) {
+for (const required of [contractPath, ownerPath, slicePath, acquisitionPath, hallContractPath, prepScriptPath, downloaderPath, libraryScriptPath, runnerScriptPath, sequenceScriptPath, validatorPath]) {
   expect(exists(required), `missing Pushkin offline exhibit authority: ${required}`);
 }
 
@@ -34,6 +35,7 @@ const hallContract = JSON.parse(read(hallContractPath)) as any;
 const runner = read(runnerScriptPath);
 const sequenceRunner = read(sequenceScriptPath);
 const prep = read(prepScriptPath);
+const downloader = read(downloaderPath);
 const library = read(libraryScriptPath);
 const SHA256 = /^sha256:[a-f0-9]{64}$/;
 const EXPECTED_H3_LAYOUT = '5d5d0ddd8b150aa64afb73a2a3d9e00c6005e99fc935a6d4707a49ecd475fe65';
@@ -92,7 +94,16 @@ if (hallContract.phase === 'pushkinVerticalSlice') {
   );
 }
 
-expect(prep.includes("hostname !== 'upload.wikimedia.org'") && prep.includes('source hash mismatch'), 'offline source preparation must re-download exact Wikimedia bytes and verify hashes');
+expect(
+  prep.includes('acquireExactOfflineSource') &&
+    downloader.includes("url.hostname !== 'upload.wikimedia.org'") &&
+    downloader.includes('source hash mismatch') &&
+    downloader.includes('cache SHA-256 mismatch') &&
+    downloader.includes('Retry-After') &&
+    downloader.includes('offlineAuthoringAuthorized') &&
+    downloader.includes('sourceFileHash'),
+  'offline source preparation must verify owner-authorized exact Wikimedia bytes, reject tampered caches and respect upstream rate limits',
+);
 expect(prep.includes("pdftoppm") && prep.includes("'-f', '1'") && prep.includes("'-r', '240'"), 'Onegin offline title page must be deterministic page-1 240 DPI derivative');
 expect(runner.includes('bpy.ops.file.pack_all()') && runner.includes('productionManifestAllowed') && runner.includes('humanOwnerVisualApprovalRequired'), 'offline exhibit runner must pack source textures and retain fail-closed production boundary');
 expect(sequenceRunner.includes('packed blend hash does not match still evidence') && sequenceRunner.includes('offline-exhibit-generated-awaiting-human-visual-approval'), 'separate sequence runner must bind the packed still scene before final evidence');
