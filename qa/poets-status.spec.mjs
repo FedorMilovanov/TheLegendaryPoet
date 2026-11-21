@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { contrastRatio } from './contrast-helpers.mjs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 
@@ -644,4 +645,27 @@ test.describe('poets result status accessibility', () => {
     })).toBe(true);
   });
 
+});
+
+test('poet dossier outbound links retain readable CTA contrast in both themes', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${BASE_URL}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+  const dossier = page.locator('aside[aria-label="Навигация и сведения о поэте"]');
+  for (const theme of ['dark', 'light']) {
+    await page.evaluate((value) => localStorage.setItem('tlp-theme-mode', value), theme);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe(theme);
+    for (const name of ['Канал YouTube', 'Смотреть Rutube']) {
+      const link = dossier.getByRole('link', { name });
+      await expect(link).toHaveAttribute('target', '_blank');
+      await expect(link).toHaveAttribute('rel', /noopener noreferrer/);
+      const label = link.locator('span.relative');
+      const ratio = await contrastRatio(label);
+      expect(ratio, `${theme} ${name} must meet 4.5:1 for small text`).toBeGreaterThanOrEqual(4.5);
+      const fontSize = await label.evaluate((node) => parseFloat(getComputedStyle(node).fontSize));
+      expect(fontSize, `${theme} ${name} must not use tiny 10px lettering`).toBeGreaterThanOrEqual(12);
+      const overflow = await link.evaluate((node) => node.scrollWidth - node.clientWidth);
+      expect(overflow, `${theme} ${name} must fit in 390px dossier`).toBeLessThanOrEqual(1);
+    }
+  }
 });
