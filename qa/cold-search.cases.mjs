@@ -84,6 +84,29 @@ export function registerColdSearchCases() {
         // calls and the strict reading assertion; never intercept input.
         await page.addInitScript(() => {
           const trace = window.__qaColdTrace = [];
+          // Short, change-only frame witness after a saved-entry restoration.
+          // A scrollend alone cannot locate the first movement or show whether
+          // layout height, focus or a different scrollport changed with it.
+          const frames = window.__qaColdFrames = [];
+          let frameWatch = 0;
+          const watchRestoration = () => {
+            frames.length = 0;
+            const watch = ++frameWatch;
+            let previous = '', frameCount = 0;
+            const sample = () => {
+              if (watch !== frameWatch) return;
+              const root = document.documentElement, body = document.body;
+              const snapshot = { t: Math.round(performance.now()), y: scrollY,
+                root: [root.scrollTop, root.scrollHeight, root.clientHeight],
+                body: body && [body.scrollTop, body.scrollHeight, body.style.position],
+                active: document.activeElement?.id || document.activeElement?.tagName };
+              const state = JSON.stringify([snapshot.y, snapshot.root, snapshot.body, snapshot.active]);
+              if (state !== previous && frames.length < 80) frames.push(snapshot);
+              previous = state;
+              if (++frameCount < 120) requestAnimationFrame(sample);
+            };
+            sample();
+          };
           const record = (kind, extra = null) => {
             if (trace.length === 80) trace.shift();
             const body = document.body, active = document.activeElement, state = history.state;
@@ -97,6 +120,10 @@ export function registerColdSearchCases() {
               record('before ' + method, { args, stack: new Error().stack?.split('\n').slice(1, 5) });
               const result = original.apply(this, args);
               record('after ' + method);
+              // Route history uses the object form with both coordinates;
+              // the unlock path uses the separate numeric overload.
+              if (method === 'scrollTo' && args[0] && typeof args[0] === 'object' &&
+                  'left' in args[0] && 'top' in args[0] && document.body?.style.position !== 'fixed') watchRestoration();
               return result;
             };
           }
@@ -136,6 +163,7 @@ export function registerColdSearchCases() {
           try { await expectReadingAt(paragraph, part); }
           catch (error) {
             error.message += `\nCold-search geometry: ${JSON.stringify({ departure, pending, searchOpen, resized, returned: await measure() })}`;
+            error.message += `\nCold-search frames: ${JSON.stringify(await page.evaluate(() => window.__qaColdFrames))}`;
             error.message += `\nCold-search events: ${JSON.stringify(await page.evaluate(() => window.__qaColdTrace))}`;
             throw error;
           }
