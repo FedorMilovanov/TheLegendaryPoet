@@ -120,6 +120,16 @@ poets.forEach((poet: Poet, i) => {
     if (typeof poem.rating === 'number' && (poem.rating < 0 || poem.rating > 10))
       err(pwhere, `rating ${poem.rating} outside 0–10`);
 
+    // Epigraphs have distinct attribution and must not leak into the author's
+    // canonical verse text, otherwise copy/selection falsely credits the quote.
+    if (poem.epigraph) {
+      if (!isNonEmptyString(poem.epigraph.text) || !isNonEmptyString(poem.epigraph.attribution)) {
+        err(pwhere, 'epigraph must contain separately attributed non-empty text');
+      } else if (poem.text.includes(poem.epigraph.text.split('\n')[0])) {
+        err(pwhere, 'epigraph quotation is duplicated inside canonical poem text');
+      }
+    }
+
     // Explicit poem-to-music references must resolve to published tracks of the same poet.
     // Do not derive links from titles: musical "parts" and "versions" have different meanings.
     if (poem.relatedMusicTrackIds) {
