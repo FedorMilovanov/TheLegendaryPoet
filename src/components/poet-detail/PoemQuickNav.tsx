@@ -13,12 +13,12 @@ function PoemQuickRow({ poem }: { poem: Poem }) {
         {poem.yearNote && <span data-poem-year-note className="normal-case tracking-normal">{poem.yearNote}</span>}
         {poem.cycle && <span data-poem-cycle>{poem.cycle}</span>}
         {feedback.ratingCount > 0 && (
-          <span className="inline-flex items-center gap-1 text-luxury-gold">
+          <span className="poet-reading-community inline-flex items-center gap-1 text-luxury-gold">
             <Star size={11} className="fill-luxury-gold" /> {feedback.summary.overall.toFixed(1)}
           </span>
         )}
         {feedback.commentCount > 0 && (
-          <span className="inline-flex items-center gap-1">
+          <span className="poet-reading-community inline-flex items-center gap-1">
             <MessageSquare size={11} className="text-luxury-gold" /> {feedback.commentCount}
           </span>
         )}
@@ -36,7 +36,7 @@ export default function PoemQuickNav({ poems, id }: PoemQuickNavProps) {
   if (poems.length === 0) return null;
   return (
     <nav id={id} aria-label="Навигация по лирике" className="poet-reading-index rounded-3xl border p-6">
-      <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">Навигация по лирике</h3>
+      <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">Навигация по лирике <span aria-hidden="true" className="poet-reading-count">{String(poems.length).padStart(2, '0')} <small>всего</small></span></h3>
       <ol className="grid gap-3 sm:grid-cols-2">
         {poems.map((poem) => (
           <li key={poem.id}><PoemQuickRow poem={poem} /></li>

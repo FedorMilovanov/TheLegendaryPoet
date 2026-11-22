@@ -155,7 +155,7 @@ test.describe('poets result status accessibility', () => {
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
         getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length,
       );
-      expect(columnCount).toBe(width >= 640 ? 2 : 1);
+      expect(columnCount).toBe(width >= 360 ? 2 : 1);
 
       const box = await guide.boundingBox();
       expect(box).not.toBeNull();
@@ -493,7 +493,7 @@ test.describe('poets result status accessibility', () => {
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
         await expect(jump).toHaveAttribute('href', '#poem-contents');
         const columns = await nav.locator('ol').evaluate((node) => getComputedStyle(node).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
-        expect(columns).toBe(width >= 640 ? 2 : 1);
+        expect(columns).toBe(width >= 360 ? 2 : 1);
         expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
         await jump.click();
         await expect(page).toHaveURL(/#poem-contents$/);
@@ -524,6 +524,59 @@ test.describe('poets result status accessibility', () => {
       });
     }
   }
+
+
+  test('mobile twenty-work contents remains a compact, fully addressable index', async ({ page }, testInfo) => {
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`${BASE_URL}/poets/fyodor-tyutchev`, { waitUntil: 'domcontentloaded' });
+      const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+      const entries = nav.locator('ol > li > a[href^="#poem-"]');
+      await expect(entries).toHaveCount(11);
+      // Stress only the layout, without fabricating published poems in source.
+      await nav.evaluate((node) => {
+        const list = node.querySelector('ol');
+        const originals = Array.from(list.children);
+        for (let index = 0; index < 9; index += 1) {
+          const clone = originals[index].cloneNode(true);
+          clone.querySelector('a').setAttribute('href', `#poem-layout-only-${index}`);
+          list.appendChild(clone);
+        }
+      });
+      await expect(nav.locator('ol > li')).toHaveCount(20);
+      const geometry = await nav.evaluate((node) => {
+        const columns = getComputedStyle(node.querySelector('ol')).gridTemplateColumns.trim().split(/\\s+/u).length;
+        const links = Array.from(node.querySelectorAll('ol > li > a'));
+        const years = Array.from(node.querySelectorAll('[data-poem-year-note]'));
+        return {
+          height: node.getBoundingClientRect().height,
+          width: node.getBoundingClientRect().width,
+          scrollOverflow: node.scrollWidth - node.clientWidth,
+          documentOverflow: document.documentElement.scrollWidth - innerWidth,
+          columns,
+          minTouchHeight: Math.min(...links.map((link) => link.getBoundingClientRect().height)),
+          minTitleFontSize: Math.min(...links.map((link) => parseFloat(getComputedStyle(link.firstElementChild).fontSize))),
+          sourceNotesVisuallyHidden: years.every((note) => getComputedStyle(note).position === 'absolute'),
+        };
+      });
+      expect(geometry.columns).toBe(width >= 360 ? 2 : 1);
+      expect(geometry.minTouchHeight).toBeGreaterThanOrEqual(44);
+      expect(geometry.minTitleFontSize).toBeGreaterThanOrEqual(14);
+      expect(geometry.sourceNotesVisuallyHidden).toBe(true);
+      expect(geometry.scrollOverflow).toBeLessThanOrEqual(1);
+      expect(geometry.documentOverflow).toBeLessThanOrEqual(1);
+      if (width === 390) expect(geometry.height, '20 works must not recreate a multi-screen card stack').toBeLessThan(1100);
+      await nav.locator('ol > li > a').last().focus();
+      await expect(nav.locator('ol > li > a').last()).toBeFocused();
+      if (width === 390 && testInfo.project.name === 'chromium-core') {
+        mkdirSync('qa-artifacts', { recursive: true });
+        await page.evaluate(() => document.fonts.ready);
+        await nav.screenshot({ path: 'qa-artifacts/poet-reading-index-20-390-dark.png', style: READING_INDEX_CAPTURE_STYLE });
+        await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await nav.screenshot({ path: 'qa-artifacts/poet-reading-index-20-390-light.png', style: READING_INDEX_CAPTURE_STYLE });
+      }
+    }
+  });
 
   test('Blok epigraph reserves its reading space before the lazy chunk arrives', async ({ page }) => {
     // Use one navigation per isolated Playwright page: later visits can reuse
