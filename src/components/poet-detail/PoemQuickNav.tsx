@@ -3,12 +3,12 @@ import { MessageSquare, Star } from 'lucide-react';
 import { Poem } from '../../types/poet';
 import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
 
-function PoemQuickRow({ poem, current }: { poem: Poem; current: boolean }) {
+function PoemQuickRow({ poem, current, lastVisited }: { poem: Poem; current: boolean; lastVisited: boolean }) {
   const feedback = useCommunityFeedback('poem', poem.id, { mode: 'passive' });
   const yearDisplay = `${poem.yearLabel ?? (poem.year || 'год не указан')}${poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}`;
 
   return (
-    <a href={`#poem-${poem.id}`} aria-current={current ? 'location' : undefined} data-poem-date-wrap={yearDisplay.length > 7 ? 'true' : 'false'} className="poet-reading-link block min-w-0 rounded-2xl border p-3 transition">
+    <a href={`#poem-${poem.id}`} aria-current={current ? 'location' : undefined} data-last-visited={lastVisited ? 'true' : undefined} data-poem-date-wrap={yearDisplay.length > 7 ? 'true' : 'false'} className="poet-reading-link block min-w-0 rounded-2xl border p-3 transition">
       <div className="theme-text mb-1 text-sm font-semibold">{poem.title}</div>
       <div className="theme-functional-muted flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em]">
         <span data-poem-year-label>{yearDisplay}</span>
@@ -36,14 +36,23 @@ interface PoemQuickNavProps {
 
 export default function PoemQuickNav({ poems, id }: PoemQuickNavProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [atIndex, setAtIndex] = useState(false);
 
   useEffect(() => {
     const syncHash = () => {
       const hash = window.location.hash.slice(1);
       const selected = poems.find((poem) => `poem-${poem.id}` === hash);
-      if (selected) setActiveId(selected.id);
-      // Returning to this index keeps the last selected item identifiable.
-      else if (hash !== id) setActiveId(null);
+      if (selected) {
+        setActiveId(selected.id);
+        setAtIndex(false);
+      } else if (hash === id) {
+        // Remember which entry was visited, but do not claim that the URL
+        // still points to the poem: aria-current must match the fragment.
+        setAtIndex(true);
+      } else {
+        setActiveId(null);
+        setAtIndex(false);
+      }
     };
     syncHash();
     window.addEventListener('hashchange', syncHash);
@@ -56,7 +65,7 @@ export default function PoemQuickNav({ poems, id }: PoemQuickNavProps) {
       <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">Навигация по лирике <span aria-hidden="true" className="poet-reading-count">{String(poems.length).padStart(2, '0')} <small>в подборке</small></span></h3>
       <ol className="grid gap-3 sm:grid-cols-2">
         {poems.map((poem) => (
-          <li key={poem.id}><PoemQuickRow poem={poem} current={activeId === poem.id} /></li>
+          <li key={poem.id}><PoemQuickRow poem={poem} current={!atIndex && activeId === poem.id} lastVisited={atIndex && activeId === poem.id} /></li>
         ))}
       </ol>
     </nav>

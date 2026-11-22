@@ -624,10 +624,12 @@ test.describe('poets result status accessibility', () => {
     await returnLink.click();
     await expect(page).toHaveURL(/#poem-contents$/);
     await expect(nav).toBeVisible();
-    await expect(first).toHaveAttribute('aria-current', 'location');
+    await expect(first).not.toHaveAttribute('aria-current', 'location');
+    await expect(first).toHaveAttribute('data-last-visited', 'true');
     await second.click();
     await expect(page).toHaveURL(/#poem-tyutchev-2$/);
     await expect(second).toHaveAttribute('aria-current', 'location');
+    await expect(second).not.toHaveAttribute('data-last-visited', 'true');
     await expect(first).not.toHaveAttribute('aria-current', 'location');
     expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
   });
