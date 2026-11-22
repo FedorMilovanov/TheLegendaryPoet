@@ -173,7 +173,9 @@ test.describe('poets result status accessibility', () => {
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png`, style: READING_INDEX_CAPTURE_STYLE });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
         await expect(guide.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(119, 86, 23)');
-        await expect(anchors.first()).toHaveCSS('border-color', 'rgba(119, 86, 23, 0.3)');
+        await expect(anchors.first()).toHaveCSS('border-color', width < 640
+          ? 'rgba(119, 86, 23, 0.22)'
+          : 'rgba(119, 86, 23, 0.3)');
         const firstCard = cards.first();
         const analysisSurface = firstCard.getByText('Литературный анализ').locator('xpath=..');
         await expect(analysisSurface).toHaveCSS('background-color', 'rgb(244, 236, 219)');
@@ -691,7 +693,8 @@ test.describe('poets result status accessibility', () => {
       expect(geometry.gap).toBeGreaterThanOrEqual(9);
       expect(geometry.gap).toBeLessThanOrEqual(13);
       expect(geometry.overflow).toBeLessThanOrEqual(1);
-      expect(geometry.background).not.toBe('rgba(0, 0, 0, 0)');
+      expect(geometry.background, `Selected mobile rail must have a painted surface at 320px in ${light ? 'light' : 'dark'} mode`)
+        .not.toBe('rgba(0, 0, 0, 0)');
     }
   });
 

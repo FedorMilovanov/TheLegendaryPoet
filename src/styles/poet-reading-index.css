@@ -197,7 +197,9 @@ html.theme-light .poet-reading-index > ol > li > a {
      The numeral is padded inward while the title retains its alignment. */
   .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"]) {
     transform: none;
-    background: rgba(212,175,55,.075);
+    /* Explicit background-color with scoped priority: Safari's theme switch
+       can otherwise retain transparent background on hash-targeted links. */
+    background-color: rgba(212,175,55,.075) !important;
     box-shadow: none;
   }
   .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"])::after {
@@ -224,7 +226,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     border-color: rgba(119,86,23,.22);
   }
   html.theme-light .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"]) {
-    background: rgba(119,86,23,.075);
+    background-color: rgba(119,86,23,.075) !important;
     box-shadow: none;
   }
   html.theme-light .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"])::after {
