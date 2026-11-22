@@ -4,7 +4,7 @@ This document defines the interaction contract for modal surfaces, responsive im
 
 ## Modal surfaces
 
-Every modal surface must use `useDialogSurface`. Animated surfaces must also use `useDialogExitLifetime` and pass its `lockOpen` to the dialog hook, `deferReleaseUntilUnmount: true`, and `onExitComplete` to `AnimatePresence`. Focus isolation, scroll locking and overlay-stack ownership then survive until the painted dialog has exited, rather than disappearing when the logical `open` flag turns false.
+Every modal surface must use `useDialogSurface`. Animated Framer Motion surfaces use `useDialogExitLifetime`, passing its `lockOpen` to the dialog hook, `deferReleaseUntilUnmount: true`, and `onExitComplete` to `AnimatePresence`. The immersive player uses the same overlay lock with `useNativeDialogExitLifetime`, binding its exit to the painted dialog's compositor animation (`Animation.finished`) because WebKit can stall Framer's presence callback. In both cases, focus isolation, scroll locking and overlay ownership remain in force until the dialog is no longer painted; neither a fixed timer nor a second overlay manager may release them.
 
 The hook provides:
 
@@ -70,7 +70,7 @@ Pointer coordinates stay outside React state, painting is limited to one animati
 
 ## Adding a new modal
 
-1. For animated surfaces, retain the modal stack lease throughout its exit animation and release only after `AnimatePresence` reports completion; unmount still releases synchronously through effect cleanup.
+1. For animated surfaces, retain the modal stack lease throughout exit. Framer Motion surfaces release on `AnimatePresence` completion; the immersive player releases on the compositor-owned `Animation.finished` of its actual root. An already-detached, hidden or reduced-motion surface may complete immediately; unmount still releases synchronously through effect cleanup.
 2. Create refs for the dialog and preferred initial control.
 3. Call `useDialogSurface` with a stable close callback.
 4. Mark the dialog correctly and make its content independently scrollable.
