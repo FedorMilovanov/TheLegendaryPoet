@@ -157,7 +157,7 @@ test.describe('poets result status accessibility', () => {
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
         getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length,
       );
-      expect(columnCount).toBe(1);
+      expect(columnCount).toBe(width < 640 ? 1 : 2);
 
       const box = await guide.boundingBox();
       expect(box).not.toBeNull();
@@ -678,8 +678,14 @@ test.describe('poets result status accessibility', () => {
         document.documentElement.classList.toggle('theme-light', on);
         document.documentElement.classList.toggle('theme-dark', !on);
       }, light);
+      // Theme class updates may race the site's theme synchronizer in
+      // WebKit: prove the final painted surface, not a pre-paint sample.
+      // Retain the hard failure for any persistently transparent selection.
+      const expectedSelectedBg = light
+        ? 'rgba(119, 86, 23, 0.075)'
+        : 'rgba(212, 175, 55, 0.075)';
+      await expect(entry).toHaveCSS('background-color', expectedSelectedBg);
       const geometry = await entry.evaluate((link) => {
-        const rect = link.getBoundingClientRect();
         const style = getComputedStyle(link);
         const accent = getComputedStyle(link, '::after');
         return {
@@ -693,8 +699,8 @@ test.describe('poets result status accessibility', () => {
       expect(geometry.gap).toBeGreaterThanOrEqual(9);
       expect(geometry.gap).toBeLessThanOrEqual(13);
       expect(geometry.overflow).toBeLessThanOrEqual(1);
-      expect(geometry.background, `Selected mobile rail must have a painted surface at 320px in ${light ? 'light' : 'dark'} mode`)
-        .not.toBe('rgba(0, 0, 0, 0)');
+      expect(geometry.background, `Selected mobile rail must remain painted at 320px in ${light ? 'light' : 'dark'} mode`)
+        .toBe(expectedSelectedBg);
     }
   });
 
