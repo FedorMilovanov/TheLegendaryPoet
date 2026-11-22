@@ -125,8 +125,12 @@ html.theme-light .poet-reading-index > ol > li > a {
     font-size: 1rem;
     font-weight: 500;
     line-height: 1.3;
+    /* Balanced line breaks prevent a stranded closing quote on its own line.
+       Never truncate a canonical title or insert an invented abbreviation. */
     overflow-wrap: break-word;
-    hyphens: auto;
+    word-break: normal;
+    hyphens: manual;
+    text-wrap: balance;
   }
   .poet-reading-index > ol > li > a > div:last-child {
     margin-top: .22rem;
@@ -164,6 +168,11 @@ html.theme-light .poet-reading-index > ol > li > a {
     overflow-wrap: break-word;
   }
   .poet-reading-index .poet-reading-community { display: none; }
+  /* List entries do not lift into one another on touch/hybrid screens. */
+  .poet-reading-index > ol > li > a:hover {
+    transform: none;
+    box-shadow: none;
+  }
   .poet-reading-index > ol > li > a:focus-visible { border-radius: .35rem; }
   html.theme-light .poet-reading-index > ol > li > a { background: transparent; }
   html.theme-light .poet-reading-count { color: #775617; }

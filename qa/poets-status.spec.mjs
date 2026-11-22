@@ -545,11 +545,16 @@ test.describe('poets result status accessibility', () => {
         }
       });
       await expect(nav.locator('ol > li')).toHaveCount(20);
+      await nav.evaluate((node) => {
+        // The counter reflects the stress-test DOM, not the eleven real poems.
+        const textNode = node.querySelector('.poet-reading-count')?.firstChild;
+        if (textNode) textNode.textContent = '20 ';
+      });
       const historicalDate = nav.locator('ol > li').first().locator('[data-poem-year-label]');
       await expect(historicalDate).toHaveCSS('white-space', 'normal');
       await expect(historicalDate).toContainText('конец 1820-х — начало 1830-х гг.');
       const geometry = await nav.evaluate((node) => {
-        const columns = getComputedStyle(node.querySelector('ol')).gridTemplateColumns.trim().split(/\\s+/u).length;
+        const columns = getComputedStyle(node.querySelector('ol')).gridTemplateColumns.trim().split(/\s+/u).length;
         const links = Array.from(node.querySelectorAll('ol > li > a'));
         const years = Array.from(node.querySelectorAll('[data-poem-year-note]'));
         return {
@@ -561,12 +566,17 @@ test.describe('poets result status accessibility', () => {
           minTouchHeight: Math.min(...links.map((link) => link.getBoundingClientRect().height)),
           minTitleFontSize: Math.min(...links.map((link) => parseFloat(getComputedStyle(link.firstElementChild).fontSize))),
           sourceNotesVisuallyHidden: years.every((note) => getComputedStyle(note).position === 'absolute'),
+          titlesBalanced: links.every((link) => getComputedStyle(link.firstElementChild).textWrap === 'balance'),
+          datesNotTruncated: Array.from(node.querySelectorAll('[data-poem-year-label]')).every(
+            (label) => getComputedStyle(label).textOverflow !== 'ellipsis'),
         };
       });
       expect(geometry.columns).toBe(width >= 360 ? 2 : 1);
       expect(geometry.minTouchHeight).toBeGreaterThanOrEqual(44);
       expect(geometry.minTitleFontSize).toBeGreaterThanOrEqual(14);
       expect(geometry.sourceNotesVisuallyHidden).toBe(true);
+      expect(geometry.titlesBalanced).toBe(true);
+      expect(geometry.datesNotTruncated).toBe(true);
       expect(geometry.scrollOverflow).toBeLessThanOrEqual(1);
       expect(geometry.documentOverflow).toBeLessThanOrEqual(1);
       if (width === 390) expect(geometry.height, '20 works must not recreate a multi-screen card stack').toBeLessThan(1100);
