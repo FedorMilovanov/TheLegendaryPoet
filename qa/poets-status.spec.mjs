@@ -545,6 +545,9 @@ test.describe('poets result status accessibility', () => {
         }
       });
       await expect(nav.locator('ol > li')).toHaveCount(20);
+      const historicalDate = nav.locator('ol > li').first().locator('[data-poem-year-label]');
+      await expect(historicalDate).toHaveCSS('white-space', 'normal');
+      await expect(historicalDate).toContainText('конец 1820-х — начало 1830-х гг.');
       const geometry = await nav.evaluate((node) => {
         const columns = getComputedStyle(node.querySelector('ol')).gridTemplateColumns.trim().split(/\\s+/u).length;
         const links = Array.from(node.querySelectorAll('ol > li > a'));

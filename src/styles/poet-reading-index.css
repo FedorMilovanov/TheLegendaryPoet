@@ -138,9 +138,8 @@ html.theme-light .poet-reading-index > ol > li > a {
   .poet-reading-index [data-poem-year-label] {
     display: block;
     max-width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: break-word;
   }
   /* Full archival dating stays in the poem itself and remains readable to
      assistive technology from this link; it is not duplicated visually. */
@@ -161,9 +160,8 @@ html.theme-light .poet-reading-index > ol > li > a {
     display: block;
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: break-word;
   }
   .poet-reading-index .poet-reading-community { display: none; }
   .poet-reading-index > ol > li > a:focus-visible { border-radius: .35rem; }
