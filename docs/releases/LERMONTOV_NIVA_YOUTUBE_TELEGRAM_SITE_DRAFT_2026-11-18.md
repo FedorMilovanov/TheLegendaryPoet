@@ -4,7 +4,7 @@
 **project_key**: `legendary-poet`. **YouTube channel ID**: `UC-78ys2S3cQ3lpqgXfo-SvQ`.  
 **Основной литературный source**: https://rvb.ru/19vek/lermontov/ss4/vol1/poems/337.html  
 **Музыкальный source**: https://suno.com/song/24fab091-1baf-46f9-bed0-8ddbe0af5be7 (187.2 s).  
-**Соседний PR #592**: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/592 — карточка `lermontov-10` уже в редакционной работе другого агента. Не создавать дубль.
+**Литературная интеграция, сверка 22.11.2026:** PR [#592](https://github.com/FedorMilovanov/TheLegendaryPoet/pull/592) закрыт как поглощённый защищённым релизом W92 (#613). В source `main@ad8d50cd` уже есть `lermontov-10` и ссылка на существующий MP3. Не создавать дубль. Источниковая и правовая приёмка не выводится автоматически из факта слияния.
 
 Соблюдён [мастер v3.1](https://github.com/FedorMilovanov/video-channel-manager/blob/main/docs/youtube-metadata-package-master-v3.1.md) и зарегистрированный [профиль плейлистов](https://github.com/FedorMilovanov/video-channel-manager/blob/main/docs/operations/legendary-poet-description-profile.md). Пять нижеследующих блоков — проект ручного YouTube-пакета, **не поставлены провайдеру**.
 
@@ -102,11 +102,11 @@ Rutube: https://rutube.ru/channel/74579453/
 
 ## 7. Сайт — интеграция без заглушек
 
-1. **Литературный блок (интеграция ещё не завершена)**: в Draft PR #592 у `lermontov-10` уже есть литературная карточка и связь с музыкальным выпуском; ожидать его собственную редакционную/правовую приёмку и интеграцию, не копировать `Poem` и не добавлять связь повторно. В новой статье использовать проверенную академическую редакцию.
+1. **Литературный блок — ВЫПОЛНЕНО В W92:** в принятом source `main@ad8d50cd` `src/data/library/mikhailLermontov.ts` содержит `lermontov-10`, исходный текст и связь с опубликованным музыкальным выпуском. #592 сохранён как история и закрыт без повторного слияния. Дальнейшая проверка источников и прав независима от технической интеграции; не создавать вторую карточку `Poem`.
 2. **Аудио**: оригинальные файлы пользователя на Windows: `C:\Users\Fedor\Downloads\Когда волнуется желтеющая нива — Лермонтов.wav` и `C:\Users\Fedor\Downloads\Когда волнуется желтеющая нива — Лермонтов.mp3`. **Обновление 18.11.2026:** через другой, авторизованный аккаунт Desktop Commander обнаружен онлайн-компьютер DESKTOP-O3FDOA4; WAV и MP3 реально прочитаны, проверены ffprobe и SHA-256. Платные download credits Suno не расходовались.
 3. `ffprobe` и SHA-256 WAV/MP3 проверены; длительность обоих файлов **187.734792 сек**, WAV **48 кГц, 2 канала, PCM s16le**, MP3 **48 кГц, 2 канала, ~186 кбит/с**. После слияния #594 зафиксирован отдельный **20.11.2026** production receipt: скачивание полного MP3, HTTP 200, 4 825 010 байт, SHA-256 `10cc0f069970a75b49d33a95cf7bf514fc25be3f1069ddf2a5437e2ea090c3e8`; дальнейшее воспроизведение/качество звука этим не доказано.
 4. **Музыкальный каталог — ВЫПОЛНЕНО через #594**: в `src/data/library/musicTracks.ts` уже есть выпуск `lermontov-kogda-volnuetsya-zhelteyushchaya-niva` с `availability: published`; `public/audio/manifest.json` хранит точный путь MP3, SHA-256 `10cc0f069970a75b49d33a95cf7bf514fc25be3f1069ddf2a5437e2ea090c3e8`, 4 825 010 байт, длительность **187.734792**. Не добавлять вторую музыкальную карточку или вторую копию аудио. Проверенный HTTP receipt датирован **20.11.2026**.
-5. **Связь стих — музыка**: существующий Draft PR #592 уже содержит `relatedMusicTrackIds: ['lermontov-kogda-volnuetsya-zhelteyushchaya-niva']` у `lermontov-10`; повторное добавление запрещено. Финальный `main` пока зависит от приёмки/integration поэтического корпуса; не связывать по заголовку.
+5. **Связь стих — музыка — В MAIN W92:** `lermontov-10` уже содержит `relatedMusicTrackIds: ['lermontov-kogda-volnuetsya-zhelteyushchaya-niva']` (строка 228 файла `src/data/library/mikhailLermontov.ts` на `main@ad8d50cd`). Не добавлять связь повторно и не искать её по похожему заголовку. Техническая интеграция завершена; сторонние медиа и права проверяются отдельно.
 6. **SEO/видео**: отдельная карточка/метаданные по уже действующей архитектуре; 16:9 видеоряд — 25 сцен (24 уникальных исходных кадра), без анахронизмов и ложного утверждения, будто реконструкция является реальным портретом 1837 года. Не добавлять пустой видео URL.
 7. **CI и live QA**: `npm run check`, `npm run build`, `npm run validate:library` (если присутствует), регрессия music/player, проверка MP3 HTTP 200/Content-Length/sha256 в Pages после merge/deploy, ручной осмотр мобильного и desktop.
 8. **Платформы**: YouTube полный MP4 уже опубликован и подтверждён официальным readback 18.11 (см. §11; ID `dhPngN2CWRw`); **не загружать повторно**. Авторский комментарий опубликован, но не закреплён. Telegram `@thelegendarypoet`: нет подтверждённого provider receipt в этом пакете; прежде чем отправлять, проверить фактический канал и дубль.
@@ -250,7 +250,7 @@ C:\Федор\The Legendary Poet\Лермонтов - Когда волнует�
 | --- | --- | --- |
 | YouTube полный MP4, `dhPngN2CWRw` | **PUBLIC VERIFIED 18.11** по сохранённому `videos.list`/metadata receipt §11 | Не загружать повторно; правообладательская/финальная редакционная приёмка отдельно |
 | Сайт MP3, `lermontov-kogda-volnuetsya-zhelteyushchaya-niva` | **AVAILABLE/INTEGRITY VERIFIED 20.11**: #594 + полный GET 200 / 4 825 010 B / SHA-256 | При следующей волне только non-destructive live replay check, без повторной установки |
-| Литературная карточка `lermontov-10` | **ВЫПОЛНЕНО В DRAFT #592**, не в source `main` на эту дату | Проверка источников/прав, принятие интеграционного PR без дублирования |
+| Литературная карточка `lermontov-10` | **ВЫПОЛНЕНО В MAIN W92** (source `ad8d50cd`, #592 поглощён #613; статус перепроверен 22.11) | Отдельная проверка источников/прав без нового интеграционного PR и дублей |
 | YouTube Shorts `VNRwP99Umjs` | **SCHEDULED VERIFIED 18.11** на 19.11; post-schedule live status не доказан | Read-only `videos.list`, не повторный upload |
 | Telegram audio | **NO VERIFIED PROVIDER RECEIPT** в документе | Read-only поиск по каналу и только затем решение о единственной публикации |
 | YouTube pinned comment | **NOT PINNED** на дату §11 | Ручная проверка в Studio; не дублировать существующий комментарий |
