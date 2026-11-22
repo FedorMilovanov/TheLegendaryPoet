@@ -112,6 +112,7 @@ html.theme-light .poet-reading-index > ol > li > a {
   }
   .poet-reading-index > ol > li > a {
     min-height: 2.95rem;
+    position: relative;
     height: 100%;
     grid-template-columns: 1.55rem minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
@@ -190,10 +191,23 @@ html.theme-light .poet-reading-index > ol > li > a {
   }
   .poet-reading-index .poet-reading-community { display: none; }
   .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
+  /* The selected-state rule belongs in the wide left gutter, not against
+     the numerals. Its inset used to sit ~2px from 03 on small screens. */
   .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"]) {
     transform: none;
     background: rgba(212,175,55,.075);
-    box-shadow: inset 2px 0 0 rgba(212,175,55,.72);
+    box-shadow: none;
+  }
+  .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"])::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    left: -.45rem;
+    top: .48rem;
+    bottom: .48rem;
+    width: 2px;
+    border-radius: 2px;
+    background: #c6a45f;
   }
   .poet-reading-index > ol > li > a:active { background: rgba(212,175,55,.12); }
   .poet-reading-index > ol > li > a:focus-visible {
@@ -209,13 +223,21 @@ html.theme-light .poet-reading-index > ol > li > a {
   }
   html.theme-light .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"]) {
     background: rgba(119,86,23,.075);
-    box-shadow: inset 2px 0 0 rgba(119,86,23,.65);
+    box-shadow: none;
+  }
+  html.theme-light .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"])::after {
+    background: #936a25;
   }
   html.theme-light .poet-reading-index > ol > li > a:is([aria-current="location"], [data-last-visited="true"]) > div:first-child {
     color: #694912;
   }
   html.theme-light .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
   html.theme-light .poet-reading-count { color: #775617; }
+}
+@media (max-width: 359px) {
+  /* Keep the running title on one line when the device is only 320px wide:
+     the number itself still identifies the exact catalogue size. */
+  .poet-reading-count small { display: none; }
 }
 
 /* Keep quote, heading and credit geometry while their async chunk is in flight.

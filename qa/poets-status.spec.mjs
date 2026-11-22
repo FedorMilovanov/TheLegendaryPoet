@@ -611,6 +611,31 @@ test.describe('poets result status accessibility', () => {
     await expect(page).toHaveURL(/#poem-tyutchev-1$/);
     await expect(first).toHaveAttribute('aria-current', 'location');
     await expect(second).not.toHaveAttribute('aria-current', 'location');
+    // The former inset bar was almost touching 03. Keep an explicit
+    // 8px+ gutter between the separate compositor accent and the numeral.
+    const accentMetrics = await first.evaluate((link) => {
+      const box = link.getBoundingClientRect();
+      const linkStyle = getComputedStyle(link);
+      const rule = getComputedStyle(link, '::after');
+      const offset = Number.parseFloat(rule.left);
+      const stripeWidth = Number.parseFloat(rule.width);
+      return {
+        rendered: rule.content !== 'none' && rule.content !== 'normal',
+        left: box.left + offset,
+        right: box.left + offset + stripeWidth,
+        numeralLeft: box.left + Number.parseFloat(linkStyle.paddingLeft),
+        overflow: link.closest('nav').scrollWidth - link.closest('nav').clientWidth,
+        accentColor: rule.backgroundColor,
+      };
+    });
+    expect(accentMetrics.rendered).toBe(true);
+    expect(accentMetrics.numeralLeft - accentMetrics.right).toBeGreaterThanOrEqual(8);
+    expect(accentMetrics.overflow).toBeLessThanOrEqual(1);
+    await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+    await expect(first).toHaveAttribute('aria-current', 'location');
+    const lightAccent = await first.evaluate((link) => getComputedStyle(link, '::after').backgroundColor);
+    expect(lightAccent).not.toBe(accentMetrics.accentColor);
+    await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
     const accessibleName = await first.ariaSnapshot();
     expect(accessibleName).toContain('Silentium!');
     expect(accessibleName).not.toContain('Точная дата не установлена');
