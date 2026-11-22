@@ -109,6 +109,7 @@ test.describe('poets result status accessibility', () => {
       await expect(guide.locator('[data-poem-cycle]')).toHaveCount(10);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
+      if (width === 390) await expect(guide.locator('[data-poem-cycle]').first()).toBeVisible();
       await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');

@@ -144,8 +144,7 @@ html.theme-light .poet-reading-index > ol > li > a {
   }
   /* Full archival dating stays in the poem itself and remains readable to
      assistive technology from this link; it is not duplicated visually. */
-  .poet-reading-index [data-poem-year-note],
-  .poet-reading-index [data-poem-cycle] {
+  .poet-reading-index [data-poem-year-note] {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -155,6 +154,16 @@ html.theme-light .poet-reading-index > ol > li > a {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+  /* A cycle identifies the work in its literary series. Retain that
+     navigation context without reproducing the archival provenance prose. */
+  .poet-reading-index [data-poem-cycle] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .poet-reading-index .poet-reading-community { display: none; }
   .poet-reading-index > ol > li > a:focus-visible { border-radius: .35rem; }
