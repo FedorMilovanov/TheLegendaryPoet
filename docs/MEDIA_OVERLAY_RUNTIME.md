@@ -70,7 +70,7 @@ Pointer coordinates stay outside React state, painting is limited to one animati
 
 ## Adding a new modal
 
-1. For animated surfaces, retain the modal stack lease throughout exit. Framer Motion surfaces release on `AnimatePresence` completion; the immersive player releases on the compositor-owned `Animation.finished` of its actual root. An already-detached, hidden or reduced-motion surface may complete immediately; unmount still releases synchronously through effect cleanup.
+1. For animated surfaces, retain the modal stack lease throughout exit. Framer Motion surfaces release on `AnimatePresence` completion; the immersive player releases on the compositor-owned `Animation.finished` of its actual root. An already-detached or backgrounded surface may complete immediately. Reduced-motion mode preserves the opacity-only fade, matching the previous visual behavior; unmount still releases synchronously through effect cleanup.
 2. Create refs for the dialog and preferred initial control.
 3. Call `useDialogSurface` with a stable close callback.
 4. Mark the dialog correctly and make its content independently scrollable.
