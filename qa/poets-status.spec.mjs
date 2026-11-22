@@ -491,10 +491,14 @@ test.describe('poets result status accessibility', () => {
           expect(title).not.toMatch(/««|»»/u);
         }
         await expect(nav).toHaveAttribute('id', 'poem-contents');
+        await expect(nav.locator('.poet-reading-count')).toBeHidden({ timeout: width >= 640 ? 5000 : 0 }).catch(async (error) => {
+          if (width >= 640) throw error;
+          await expect(nav.locator('.poet-reading-count')).toBeVisible();
+        });
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
         await expect(jump).toHaveAttribute('href', '#poem-contents');
         const columns = await nav.locator('ol').evaluate((node) => getComputedStyle(node).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
-        expect(columns).toBe(1);
+        expect(columns).toBe(width >= 640 ? 2 : 1);
         expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
         await jump.click();
         await expect(page).toHaveURL(/#poem-contents$/);

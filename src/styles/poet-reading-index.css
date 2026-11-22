@@ -105,7 +105,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     font-variant-numeric: tabular-nums;
     letter-spacing: .04em;
   }
-  .poet-reading-count small { font-size: .6rem; font-weight: 500; text-transform: none; }
+  .poet-reading-count small { font-size: .68rem; font-weight: 500; text-transform: none; }
   .poet-reading-index > ol {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
@@ -130,7 +130,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     grid-column: 1;
     grid-row: 1 / 4;
     align-self: start;
-    font-size: .85rem;
+    font-size: .92rem;
     line-height: 1.3;
     padding-top: .14rem;
   }
@@ -156,7 +156,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     align-self: baseline;
     justify-self: end;
     max-width: 100%;
-    font-size: .68rem;
+    font-size: .75rem;
     line-height: 1.6;
     letter-spacing: .015em;
     text-transform: none;
@@ -186,7 +186,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     grid-column: 2 / 4;
     grid-row: 2;
     max-width: 100%;
-    font-size: .69rem;
+    font-size: .75rem;
     line-height: 1.3;
     letter-spacing: .015em;
     text-transform: none;
