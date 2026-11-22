@@ -61,7 +61,7 @@ export default function PoemQuickNav({ poems, id }: PoemQuickNavProps) {
 
   if (poems.length === 0) return null;
   return (
-    <nav id={id} aria-label="Навигация по лирике" className="poet-reading-index rounded-3xl border p-6">
+    <nav id={id} tabIndex={-1} aria-label="Навигация по лирике" className="poet-reading-index rounded-3xl border p-6">
       <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">Навигация по лирике <span aria-hidden="true" className="poet-reading-count">{String(poems.length).padStart(2, '0')} <small>в подборке</small></span></h3>
       <ol className="grid gap-3 sm:grid-cols-2">
         {poems.map((poem) => (

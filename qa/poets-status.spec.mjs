@@ -494,6 +494,9 @@ test.describe('poets result status accessibility', () => {
           expect(title).not.toMatch(/««|»»/u);
         }
         await expect(nav).toHaveAttribute('id', 'poem-contents');
+        // Native/WebKit fragment focus must not depend on a transient tabindex
+        // added and then removed by the shared scroll coordinator.
+        await expect(nav).toHaveAttribute('tabindex', '-1');
         if (width >= 640) await expect(nav.locator('.poet-reading-count')).toBeHidden();
         else await expect(nav.locator('.poet-reading-count')).toBeVisible();
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
