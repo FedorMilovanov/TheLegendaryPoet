@@ -1,13 +1,14 @@
+import { useEffect, useState } from 'react';
 import { MessageSquare, Star } from 'lucide-react';
 import { Poem } from '../../types/poet';
 import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
 
-function PoemQuickRow({ poem }: { poem: Poem }) {
+function PoemQuickRow({ poem, current }: { poem: Poem; current: boolean }) {
   const feedback = useCommunityFeedback('poem', poem.id, { mode: 'passive' });
   const yearDisplay = `${poem.yearLabel ?? (poem.year || 'год не указан')}${poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}`;
 
   return (
-    <a href={`#poem-${poem.id}`} data-poem-date-wrap={yearDisplay.length > 7 ? 'true' : 'false'} className="poet-reading-link block min-w-0 rounded-2xl border p-3 transition">
+    <a href={`#poem-${poem.id}`} aria-current={current ? 'location' : undefined} data-poem-date-wrap={yearDisplay.length > 7 ? 'true' : 'false'} className="poet-reading-link block min-w-0 rounded-2xl border p-3 transition">
       <div className="theme-text mb-1 text-sm font-semibold">{poem.title}</div>
       <div className="theme-functional-muted flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em]">
         <span data-poem-year-label>{yearDisplay}</span>
@@ -34,13 +35,28 @@ interface PoemQuickNavProps {
 }
 
 export default function PoemQuickNav({ poems, id }: PoemQuickNavProps) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const syncHash = () => {
+      const hash = window.location.hash.slice(1);
+      const selected = poems.find((poem) => `poem-${poem.id}` === hash);
+      if (selected) setActiveId(selected.id);
+      // Returning to this index keeps the last selected item identifiable.
+      else if (hash !== id) setActiveId(null);
+    };
+    syncHash();
+    window.addEventListener('hashchange', syncHash);
+    return () => window.removeEventListener('hashchange', syncHash);
+  }, [id, poems]);
+
   if (poems.length === 0) return null;
   return (
     <nav id={id} aria-label="Навигация по лирике" className="poet-reading-index rounded-3xl border p-6">
       <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">Навигация по лирике <span aria-hidden="true" className="poet-reading-count">{String(poems.length).padStart(2, '0')} <small>в подборке</small></span></h3>
       <ol className="grid gap-3 sm:grid-cols-2">
         {poems.map((poem) => (
-          <li key={poem.id}><PoemQuickRow poem={poem} /></li>
+          <li key={poem.id}><PoemQuickRow poem={poem} current={activeId === poem.id} /></li>
         ))}
       </ol>
     </nav>

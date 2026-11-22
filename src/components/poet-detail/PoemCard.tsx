@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Star, Award, Heart, ChevronDown } from 'lucide-react';
+import { Star, Award, Heart, ChevronDown, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Poem } from '../../types/poet';
 import { visiblePoemFacsimile } from '../../data/poemFacsimiles';
@@ -16,9 +16,10 @@ const PoemEpigraph = lazy(() => import('./PoemEpigraph'));
 
 interface PoemCardProps {
   poem: Poem;
+  contentsId?: string;
 }
 
-export default function PoemCard({ poem }: PoemCardProps) {
+export default function PoemCard({ poem, contentsId }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
   const facsimile = visiblePoemFacsimile(poem.id, import.meta.env.MODE);
   // Mark standalone editorial omissions and explicitly titled excerpts as incomplete.
@@ -167,6 +168,17 @@ export default function PoemCard({ poem }: PoemCardProps) {
           dimensions={poemRatingDimensions}
         />
       </div>
+      {contentsId && (
+        <div className="mt-4 flex justify-end border-t border-luxury-gold/10 pt-2 sm:hidden">
+          <a
+            href={`#${contentsId}`}
+            className="theme-functional-muted inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-xs font-semibold tracking-[0.04em] transition-colors hover:bg-luxury-gold/10 hover:text-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold"
+          >
+            <ArrowUp size={14} aria-hidden="true" />
+            К оглавлению
+          </a>
+        </div>
+      )}
     </div>
   );
 }

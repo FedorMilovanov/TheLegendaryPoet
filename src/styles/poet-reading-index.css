@@ -197,14 +197,31 @@ html.theme-light .poet-reading-index > ol > li > a {
     grid-row: 3;
   }
   .poet-reading-index .poet-reading-community { display: none; }
-  .poet-reading-index > ol > li > a:hover {
+  .poet-reading-index > ol > li > a:last-child { text-decoration: none; }
+  .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
+  .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"]) {
     transform: none;
-    box-shadow: none;
+    background: rgba(212,175,55,.075);
+    box-shadow: inset 2px 0 0 rgba(212,175,55,.72);
   }
-  .poet-reading-index > ol > li > a:focus-visible { border-radius: .35rem; }
+  .poet-reading-index > ol > li > a:active { background: rgba(212,175,55,.12); }
+  .poet-reading-index > ol > li > a:focus-visible {
+    border-radius: .35rem;
+    outline-offset: -2px;
+  }
+  .poet-reading-index > ol > li > a[aria-current="location"] > div:first-child {
+    color: #f3db9b;
+  }
   html.theme-light .poet-reading-index > ol > li > a {
     background: transparent;
     border-color: rgba(119,86,23,.22);
+  }
+  html.theme-light .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"]) {
+    background: rgba(119,86,23,.075);
+    box-shadow: inset 2px 0 0 rgba(119,86,23,.65);
+  }
+  html.theme-light .poet-reading-index > ol > li > a[aria-current="location"] > div:first-child {
+    color: #694912;
   }
   html.theme-light .poet-reading-count { color: #775617; }
 }

@@ -125,6 +125,7 @@ test.describe('poets result status accessibility', () => {
       await expect(page.locator('#poem-blok-10')).toContainText('Опять с вековою тоскою');
       await expect(page.locator('#poem-blok-11')).toContainText('Вл. Соловьев');
       const finalCard = page.locator('#poem-blok-11');
+      await expect(finalCard.getByRole('link', { name: 'К оглавлению', includeHidden: true })).toHaveAttribute('href', '#blok-contents');
       const epigraph = finalCard.locator('[data-poem-epigraph]');
       await expect(epigraph).toBeVisible();
       await expect(epigraph).toHaveAttribute('aria-label', 'Эпиграф к стихотворению');
@@ -599,6 +600,31 @@ test.describe('poets result status accessibility', () => {
         await nav.screenshot({ path: 'qa-artifacts/poet-reading-index-20-390-light.png', style: READING_INDEX_CAPTURE_STYLE });
       }
     }
+  });
+
+
+  test('mobile contents marks the chosen poem and supports returning from its card', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.goto(`${BASE_URL}/poets/fyodor-tyutchev`, { waitUntil: 'domcontentloaded' });
+    const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+    const first = nav.locator('a[href="#poem-tyutchev-1"]');
+    const second = nav.locator('a[href="#poem-tyutchev-2"]');
+    await expect(first).not.toHaveAttribute('aria-current', 'location');
+    await first.click();
+    await expect(page).toHaveURL(/#poem-tyutchev-1$/);
+    await expect(first).toHaveAttribute('aria-current', 'location');
+    await expect(second).not.toHaveAttribute('aria-current', 'location');
+    const returnLink = page.locator('#poem-tyutchev-1').getByRole('link', { name: 'К оглавлению' });
+    await expect(returnLink).toHaveAttribute('href', '#poem-contents');
+    await returnLink.click();
+    await expect(page).toHaveURL(/#poem-contents$/);
+    await expect(nav).toBeVisible();
+    await expect(first).toHaveAttribute('aria-current', 'location');
+    await second.click();
+    await expect(page).toHaveURL(/#poem-tyutchev-2$/);
+    await expect(second).toHaveAttribute('aria-current', 'location');
+    await expect(first).not.toHaveAttribute('aria-current', 'location');
+    expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
   });
 
   test('Blok epigraph reserves its reading space before the lazy chunk arrives', async ({ page }) => {
