@@ -163,3 +163,56 @@ export function useDialogExitLifetime(logicalOpen: boolean) {
 
   return { lockOpen: logicalOpen || retained, onExitComplete };
 }
+
+/**
+ * Use a compositor-owned Web Animations exit for the immersive player.
+ * Framer's presence completion may be starved in WebKit even after Escape was
+ * received. The painted dialog and its shared overlay lease remain together:
+ * only native animation completion (or immediate non-visual removal) releases
+ * the root. No timeout, extra scroll lock or focus-owner is introduced.
+ */
+export function useNativeDialogExitLifetime(
+  logicalOpen: boolean,
+  dialogRef: RefObject<HTMLElement | null>,
+) {
+  const [retained, setRetained] = useState(logicalOpen);
+  const latestOpen = useRef(logicalOpen);
+  latestOpen.current = logicalOpen;
+
+  useEffect(() => {
+    if (logicalOpen) {
+      setRetained(true);
+      return;
+    }
+    if (!retained) return;
+
+    const surface = dialogRef.current;
+    // An already-detached dialog has no painted exit to preserve. Hidden
+    // documents and reduced-motion users must not wait for animation frames.
+    if (!surface?.isConnected || document.visibilityState === 'hidden' ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        typeof surface.animate !== 'function') {
+      setRetained(false);
+      return;
+    }
+
+    const exit = surface.animate(
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 450, easing: 'ease-in-out', fill: 'forwards' },
+    );
+    let active = true;
+    void exit.finished.then(() => {
+      if (active && !latestOpen.current) setRetained(false);
+    }, () => {
+      // A deliberate cancel during rapid reopen must not close the new dialog.
+      // Keep the overlay lease if the browser cancels a still-painted exit.
+      if (active && !latestOpen.current && !surface.isConnected) setRetained(false);
+    });
+    return () => {
+      active = false;
+      exit.cancel();
+    };
+  }, [logicalOpen, retained, dialogRef]);
+
+  return { lockOpen: logicalOpen || retained };
+}
