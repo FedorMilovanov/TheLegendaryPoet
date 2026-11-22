@@ -187,10 +187,9 @@ export function useNativeDialogExitLifetime(
     if (!retained) return;
 
     const surface = dialogRef.current;
-    // An already-detached dialog has no painted exit to preserve. Hidden
-    // documents and reduced-motion users must not wait for animation frames.
+    // An already-detached or backgrounded dialog has no painted exit to
+    // preserve. Opacity-only fading also remains accessible in reduced motion.
     if (!surface?.isConnected || document.visibilityState === 'hidden' ||
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
         typeof surface.animate !== 'function') {
       setRetained(false);
       return;
