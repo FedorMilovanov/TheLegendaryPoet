@@ -548,17 +548,14 @@ test.describe('poets result status accessibility', () => {
         }
       });
       await expect(nav.locator('ol > li')).toHaveCount(20);
-      await nav.evaluate((node) => {
-        // The counter reflects the stress-test DOM, not the eleven real poems.
-        const textNode = node.querySelector('.poet-reading-count')?.firstChild;
-        if (textNode) textNode.textContent = '20 ';
-      });
+      // Stress fixtures must not rewrite the React-owned real catalog counter.
+      await expect(nav.locator('.poet-reading-count')).toContainText('11');
       const historicalDate = nav.locator('ol > li').first().locator('[data-poem-year-label]');
       const secondLink = nav.locator('ol > li > a').nth(1);
       await expect(secondLink).toHaveAttribute('data-poem-date-wrap', 'false');
       await expect(nav.locator('ol > li > a').first()).toHaveAttribute('data-poem-date-wrap', 'true');
       await expect(nav.locator('.poet-reading-count')).toBeVisible();
-      await expect(nav.locator('.poet-reading-count')).toContainText('20');
+      await expect(nav.locator('.poet-reading-count')).toContainText('11');
       await expect(historicalDate).toHaveCSS('white-space', 'normal');
       await expect(historicalDate).toContainText('конец 1820-х — начало 1830-х гг.');
       const geometry = await nav.evaluate((node) => {
@@ -573,7 +570,7 @@ test.describe('poets result status accessibility', () => {
           columns,
           minTouchHeight: Math.min(...links.map((link) => link.getBoundingClientRect().height)),
           minTitleFontSize: Math.min(...links.map((link) => parseFloat(getComputedStyle(link.firstElementChild).fontSize))),
-          sourceNotesVisuallyHidden: years.every((note) => getComputedStyle(note).position === 'absolute'),
+          sourceNotesVisuallyHidden: years.every((note) => getComputedStyle(note).display === 'none'),
           titlesUnbroken: links.every((link) => getComputedStyle(link.firstElementChild).wordBreak === 'normal' && getComputedStyle(link.firstElementChild).hyphens === 'none'),
           datesNotTruncated: Array.from(node.querySelectorAll('[data-poem-year-label]')).every(
             (label) => getComputedStyle(label).textOverflow !== 'ellipsis'),
@@ -614,6 +611,14 @@ test.describe('poets result status accessibility', () => {
     await expect(page).toHaveURL(/#poem-tyutchev-1$/);
     await expect(first).toHaveAttribute('aria-current', 'location');
     await expect(second).not.toHaveAttribute('aria-current', 'location');
+    const accessibleName = await first.ariaSnapshot();
+    expect(accessibleName).toContain('Silentium!');
+    expect(accessibleName).not.toContain('Точная дата не установлена');
+    const last = nav.locator('ol > li > a').last();
+    await expect(last).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+    await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+    await expect(last).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+    await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
     const returnLink = page.locator('#poem-tyutchev-1').getByRole('link', { name: 'К оглавлению' });
     await expect(returnLink).toHaveAttribute('href', '#poem-contents');
     await returnLink.click();

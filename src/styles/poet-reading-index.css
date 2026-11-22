@@ -171,17 +171,9 @@ html.theme-light .poet-reading-index > ol > li > a {
     line-height: 1.35;
     margin-top: .05rem;
   }
-  .poet-reading-index [data-poem-year-note] {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
+  /* Complete provenance is presented with the poem, not read aloud
+     as part of every quick-link accessible name on mobile. */
+  .poet-reading-index [data-poem-year-note] { display: none; }
   .poet-reading-index [data-poem-cycle] {
     grid-column: 2 / 4;
     grid-row: 2;
@@ -197,7 +189,6 @@ html.theme-light .poet-reading-index > ol > li > a {
     grid-row: 3;
   }
   .poet-reading-index .poet-reading-community { display: none; }
-  .poet-reading-index > ol > li > a:last-child { text-decoration: none; }
   .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
   .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"]) {
     transform: none;
@@ -223,6 +214,7 @@ html.theme-light .poet-reading-index > ol > li > a {
   html.theme-light .poet-reading-index > ol > li > a[aria-current="location"] > div:first-child {
     color: #694912;
   }
+  html.theme-light .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
   html.theme-light .poet-reading-count { color: #775617; }
 }
 
