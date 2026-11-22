@@ -664,6 +664,15 @@ test.describe('poets result status accessibility', () => {
     await expect(second).toHaveAttribute('aria-current', 'location');
     await expect(second).not.toHaveAttribute('data-last-visited', 'true');
     await expect(first).not.toHaveAttribute('aria-current', 'location');
+    if (await page.evaluate(() => matchMedia('(hover: none)').matches)) {
+      // Touch browsers can retain a synthetic :hover after moving selection.
+      // Only the current poem may keep a painted gold rail.
+      await expect(first).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      await expect.poll(() => first.evaluate((node) =>
+        getComputedStyle(node, '::after').content)).toBe('none');
+      await expect.poll(() => second.evaluate((node) =>
+        getComputedStyle(node, '::after').content)).not.toBe('none');
+    }
     expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
   });
 

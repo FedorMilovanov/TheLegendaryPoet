@@ -243,6 +243,18 @@ html.theme-light .poet-reading-index > ol > li > a {
      the number itself still identifies the exact catalogue size. */
   .poet-reading-count small { display: none; }
 }
+@media (max-width: 639px) and (hover: none) {
+  /* WebKit and Android may keep :hover on a previously tapped anchor.
+     A stale hover must not paint a second gold rail after hash navigation.
+     Keep true :active feedback, keyboard focus, and actual selection intact. */
+  .poet-reading-index > ol > li > a:hover:not(:active):not(:focus-visible):not([aria-current="location"]):not([data-last-visited="true"]) {
+    background-color: transparent !important;
+  }
+  .poet-reading-index > ol > li > a:hover:not(:active):not(:focus-visible):not([aria-current="location"]):not([data-last-visited="true"])::after {
+    content: none;
+  }
+}
+
 
 /* Keep quote, heading and credit geometry while their async chunk is in flight.
    The literal credit is measured by the browser, including text zoom wrapping. */
