@@ -78,6 +78,13 @@ html.theme-light .poet-reading-index > ol > li > a {
 /* Mobile contents is an editorial index, not a stack of archival cards.
    Even twenty works occupy ten short paired rows; all targets remain visible
    and directly reachable without disclosure, filtering or a nested scroll. */
+/* The document count is a mobile-only navigation affordance; desktop
+   editorial heading remains identical to the released version. */
+.poet-reading-count { display: none; }
+
+/* Mobile contents behaves like a book index. Dates use a right-aligned
+   column when short, and a full-width second line when historical/complex.
+   Complete Russian titles never suffer the narrow two-column word breaks. */
 @media (max-width: 639px) {
   .poet-reading-index { padding: 1.05rem 1rem 1.1rem; }
   .poet-reading-index > h3 {
@@ -90,6 +97,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     letter-spacing: .11em;
   }
   .poet-reading-count {
+    display: inline;
     flex-shrink: 0;
     color: #cbb579;
     font-family: var(--font-sans);
@@ -99,54 +107,70 @@ html.theme-light .poet-reading-index > ol > li > a {
   }
   .poet-reading-count small { font-size: .6rem; font-weight: 500; text-transform: none; }
   .poet-reading-index > ol {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 .65rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
   }
   .poet-reading-index > ol > li > a {
-    min-height: 3.5rem;
+    min-height: 2.95rem;
     height: 100%;
-    grid-template-columns: 1.25rem minmax(0, 1fr);
-    column-gap: .28rem;
-    align-content: start;
+    grid-template-columns: 1.55rem minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: .45rem;
+    align-content: center;
+    align-items: baseline;
     border-width: 0;
     border-bottom-width: 1px;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    padding: .65rem .05rem .6rem;
+    padding: .39rem .22rem;
     scroll-margin-bottom: calc(var(--tlp-mobile-dock-clearance, 4.75rem) + var(--tlp-mobile-dock-bottom, 1rem) + 1rem);
   }
   .poet-reading-index > ol > li > a::before {
-    font-size: .93rem;
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: start;
+    font-size: .85rem;
     line-height: 1.3;
-    padding-top: .03rem;
+    padding-top: .14rem;
   }
   .poet-reading-index > ol > li > a > div:first-child {
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.3;
-    /* Balanced line breaks prevent a stranded closing quote on its own line.
-       Never truncate a canonical title or insert an invented abbreviation. */
+    grid-column: 2;
+    grid-row: 1;
+    font-size: .97rem;
+    font-weight: 400;
+    line-height: 1.34;
     overflow-wrap: break-word;
     word-break: normal;
-    hyphens: manual;
-    text-wrap: balance;
+    hyphens: none;
+    text-wrap: pretty;
   }
+  /* Presentational wrapper only. Keep the original spans, real dates and
+     literary cycles, but align them without a metadata column squeezing text. */
   .poet-reading-index > ol > li > a > div:last-child {
-    margin-top: .22rem;
-    font-size: .75rem;
-    line-height: 1.35;
+    display: contents;
+  }
+  .poet-reading-index > ol > li > a [data-poem-year-label] {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: baseline;
+    justify-self: end;
+    max-width: 100%;
+    font-size: .68rem;
+    line-height: 1.6;
     letter-spacing: .015em;
     text-transform: none;
+    white-space: nowrap;
   }
-  .poet-reading-index [data-poem-year-label] {
-    display: block;
-    max-width: 100%;
+  .poet-reading-index > ol > li > a[data-poem-date-wrap="true"] [data-poem-year-label] {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    justify-self: start;
     white-space: normal;
     overflow-wrap: break-word;
+    line-height: 1.35;
+    margin-top: .05rem;
   }
-  /* Full archival dating stays in the poem itself and remains readable to
-     assistive technology from this link; it is not duplicated visually. */
   .poet-reading-index [data-poem-year-note] {
     position: absolute;
     width: 1px;
@@ -158,32 +182,31 @@ html.theme-light .poet-reading-index > ol > li > a {
     white-space: nowrap;
     border: 0;
   }
-  /* A cycle identifies the work in its literary series. Retain that
-     navigation context without reproducing the archival provenance prose. */
   .poet-reading-index [data-poem-cycle] {
-    display: block;
-    width: 100%;
+    grid-column: 2 / 4;
+    grid-row: 2;
     max-width: 100%;
+    font-size: .69rem;
+    line-height: 1.3;
+    letter-spacing: .015em;
+    text-transform: none;
     white-space: normal;
     overflow-wrap: break-word;
   }
+  .poet-reading-index > ol > li > a[data-poem-date-wrap="true"] [data-poem-cycle] {
+    grid-row: 3;
+  }
   .poet-reading-index .poet-reading-community { display: none; }
-  /* List entries do not lift into one another on touch/hybrid screens. */
   .poet-reading-index > ol > li > a:hover {
     transform: none;
     box-shadow: none;
   }
   .poet-reading-index > ol > li > a:focus-visible { border-radius: .35rem; }
-  html.theme-light .poet-reading-index > ol > li > a { background: transparent; }
-  html.theme-light .poet-reading-count { color: #775617; }
-}
-@media (max-width: 359px) {
-  .poet-reading-index > ol { grid-template-columns: minmax(0, 1fr); }
-  .poet-reading-index > ol > li > a {
-    min-height: 3rem;
-    grid-template-columns: 1.55rem minmax(0, 1fr);
-    padding: .55rem .1rem;
+  html.theme-light .poet-reading-index > ol > li > a {
+    background: transparent;
+    border-color: rgba(119,86,23,.22);
   }
+  html.theme-light .poet-reading-count { color: #775617; }
 }
 
 /* Keep quote, heading and credit geometry while their async chunk is in flight.

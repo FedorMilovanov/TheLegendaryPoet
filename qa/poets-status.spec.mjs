@@ -156,7 +156,7 @@ test.describe('poets result status accessibility', () => {
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
         getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length,
       );
-      expect(columnCount).toBe(width >= 360 ? 2 : 1);
+      expect(columnCount).toBe(1);
 
       const box = await guide.boundingBox();
       expect(box).not.toBeNull();
@@ -494,7 +494,7 @@ test.describe('poets result status accessibility', () => {
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
         await expect(jump).toHaveAttribute('href', '#poem-contents');
         const columns = await nav.locator('ol').evaluate((node) => getComputedStyle(node).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
-        expect(columns).toBe(width >= 360 ? 2 : 1);
+        expect(columns).toBe(1);
         expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
         await jump.click();
         await expect(page).toHaveURL(/#poem-contents$/);
@@ -551,6 +551,11 @@ test.describe('poets result status accessibility', () => {
         if (textNode) textNode.textContent = '20 ';
       });
       const historicalDate = nav.locator('ol > li').first().locator('[data-poem-year-label]');
+      const secondLink = nav.locator('ol > li > a').nth(1);
+      await expect(secondLink).toHaveAttribute('data-poem-date-wrap', 'false');
+      await expect(nav.locator('ol > li > a').first()).toHaveAttribute('data-poem-date-wrap', 'true');
+      await expect(nav.locator('.poet-reading-count')).toBeVisible();
+      await expect(nav.locator('.poet-reading-count')).toContainText('20');
       await expect(historicalDate).toHaveCSS('white-space', 'normal');
       await expect(historicalDate).toContainText('конец 1820-х — начало 1830-х гг.');
       const geometry = await nav.evaluate((node) => {
@@ -566,16 +571,18 @@ test.describe('poets result status accessibility', () => {
           minTouchHeight: Math.min(...links.map((link) => link.getBoundingClientRect().height)),
           minTitleFontSize: Math.min(...links.map((link) => parseFloat(getComputedStyle(link.firstElementChild).fontSize))),
           sourceNotesVisuallyHidden: years.every((note) => getComputedStyle(note).position === 'absolute'),
-          titlesBalanced: links.every((link) => getComputedStyle(link.firstElementChild).textWrap === 'balance'),
+          titlesUnbroken: links.every((link) => getComputedStyle(link.firstElementChild).wordBreak === 'normal' && getComputedStyle(link.firstElementChild).hyphens === 'none'),
           datesNotTruncated: Array.from(node.querySelectorAll('[data-poem-year-label]')).every(
             (label) => getComputedStyle(label).textOverflow !== 'ellipsis'),
         };
       });
-      expect(geometry.columns).toBe(width >= 360 ? 2 : 1);
+      expect(geometry.columns).toBe(1);
       expect(geometry.minTouchHeight).toBeGreaterThanOrEqual(44);
+      await expect(secondLink.locator('[data-poem-year-label]')).toHaveCSS('grid-column-start', '3');
+      await expect(historicalDate).toHaveCSS('grid-column-start', '2');
       expect(geometry.minTitleFontSize).toBeGreaterThanOrEqual(14);
       expect(geometry.sourceNotesVisuallyHidden).toBe(true);
-      expect(geometry.titlesBalanced).toBe(true);
+      expect(geometry.titlesUnbroken).toBe(true);
       expect(geometry.datesNotTruncated).toBe(true);
       expect(geometry.scrollOverflow).toBeLessThanOrEqual(1);
       expect(geometry.documentOverflow).toBeLessThanOrEqual(1);

@@ -4,12 +4,13 @@ import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
 
 function PoemQuickRow({ poem }: { poem: Poem }) {
   const feedback = useCommunityFeedback('poem', poem.id, { mode: 'passive' });
+  const yearDisplay = `${poem.yearLabel ?? (poem.year || 'год не указан')}${poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}`;
 
   return (
-    <a href={`#poem-${poem.id}`} className="poet-reading-link block min-w-0 rounded-2xl border p-3 transition">
+    <a href={`#poem-${poem.id}`} data-poem-date-wrap={yearDisplay.length > 7 ? 'true' : 'false'} className="poet-reading-link block min-w-0 rounded-2xl border p-3 transition">
       <div className="theme-text mb-1 text-sm font-semibold">{poem.title}</div>
       <div className="theme-functional-muted flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.14em]">
-        <span data-poem-year-label>{poem.yearLabel ?? (poem.year || 'год не указан')}{poem.editionYear ? ` · редакция ${poem.editionYear} г.` : ''}</span>
+        <span data-poem-year-label>{yearDisplay}</span>
         {poem.yearNote && <span data-poem-year-note className="normal-case tracking-normal">{poem.yearNote}</span>}
         {poem.cycle && <span data-poem-cycle>{poem.cycle}</span>}
         {feedback.ratingCount > 0 && (
