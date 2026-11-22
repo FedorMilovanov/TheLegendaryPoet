@@ -611,25 +611,31 @@ test.describe('poets result status accessibility', () => {
     await expect(page).toHaveURL(/#poem-tyutchev-1$/);
     await expect(first).toHaveAttribute('aria-current', 'location');
     await expect(second).not.toHaveAttribute('aria-current', 'location');
-    // The former inset bar was almost touching 03. Keep an explicit
-    // 8px+ gutter between the separate compositor accent and the numeral.
+    // The gold rail must join the highlighted surface, not float outside it.
+    // Separately keep breathing room before 03 without shifting the title
+    // compared with unselected rows.
     const accentMetrics = await first.evaluate((link) => {
       const box = link.getBoundingClientRect();
-      const linkStyle = getComputedStyle(link);
-      const rule = getComputedStyle(link, '::after');
-      const offset = Number.parseFloat(rule.left);
-      const stripeWidth = Number.parseFloat(rule.width);
+      const style = getComputedStyle(link);
+      const rail = getComputedStyle(link, '::after');
+      const firstTitle = link.firstElementChild?.getBoundingClientRect();
+      const nearestOther = link.closest('li')?.nextElementSibling?.querySelector('a > div:first-child')?.getBoundingClientRect();
+      const railLeft = box.left + Number.parseFloat(rail.left);
+      const railRight = railLeft + Number.parseFloat(rail.width);
       return {
-        rendered: rule.content !== 'none' && rule.content !== 'normal',
-        left: box.left + offset,
-        right: box.left + offset + stripeWidth,
-        numeralLeft: box.left + Number.parseFloat(linkStyle.paddingLeft),
+        rendered: rail.content !== 'none' && rail.content !== 'normal',
+        railToBackgroundEdge: railLeft - box.left,
+        numeralGap: box.left + Number.parseFloat(style.paddingLeft) - railRight,
+        titleAlignment: firstTitle && nearestOther ? firstTitle.left - nearestOther.left : NaN,
         overflow: link.closest('nav').scrollWidth - link.closest('nav').clientWidth,
-        accentColor: rule.backgroundColor,
+        accentColor: rail.backgroundColor,
       };
     });
     expect(accentMetrics.rendered).toBe(true);
-    expect(accentMetrics.numeralLeft - accentMetrics.right).toBeGreaterThanOrEqual(8);
+    expect(Math.abs(accentMetrics.railToBackgroundEdge)).toBeLessThanOrEqual(0.5);
+    expect(accentMetrics.numeralGap).toBeGreaterThanOrEqual(9);
+    expect(accentMetrics.numeralGap).toBeLessThanOrEqual(13);
+    expect(Math.abs(accentMetrics.titleAlignment)).toBeLessThanOrEqual(1);
     expect(accentMetrics.overflow).toBeLessThanOrEqual(1);
     await page.evaluate(() => document.documentElement.classList.add('theme-light'));
     await expect(first).toHaveAttribute('aria-current', 'location');
@@ -657,6 +663,36 @@ test.describe('poets result status accessibility', () => {
     await expect(second).not.toHaveAttribute('data-last-visited', 'true');
     await expect(first).not.toHaveAttribute('aria-current', 'location');
     expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
+  });
+
+  test('mobile selection rail meets its highlight and numeral stays readable at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto(`${BASE_URL}/poets/fyodor-tyutchev#poem-tyutchev-3`, { waitUntil: 'domcontentloaded' });
+    const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+    const entry = nav.locator('a[href="#poem-tyutchev-3"]');
+    await expect(entry).toHaveAttribute('aria-current', 'location');
+    for (const light of [false, true]) {
+      await page.evaluate((on) => {
+        document.documentElement.classList.toggle('theme-light', on);
+        document.documentElement.classList.toggle('theme-dark', !on);
+      }, light);
+      const geometry = await entry.evaluate((link) => {
+        const rect = link.getBoundingClientRect();
+        const style = getComputedStyle(link);
+        const accent = getComputedStyle(link, '::after');
+        return {
+          railLeft: Number.parseFloat(accent.left),
+          gap: Number.parseFloat(style.paddingLeft) - Number.parseFloat(accent.left) - Number.parseFloat(accent.width),
+          overflow: link.closest('nav').scrollWidth - link.closest('nav').clientWidth,
+          background: style.backgroundColor,
+        };
+      });
+      expect(Math.abs(geometry.railLeft)).toBeLessThanOrEqual(0.5);
+      expect(geometry.gap).toBeGreaterThanOrEqual(9);
+      expect(geometry.gap).toBeLessThanOrEqual(13);
+      expect(geometry.overflow).toBeLessThanOrEqual(1);
+      expect(geometry.background).not.toBe('rgba(0, 0, 0, 0)');
+    }
   });
 
   test('Blok epigraph reserves its reading space before the lazy chunk arrives', async ({ page }) => {

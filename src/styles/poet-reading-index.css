@@ -114,9 +114,11 @@ html.theme-light .poet-reading-index > ol > li > a {
     min-height: 2.95rem;
     position: relative;
     height: 100%;
-    grid-template-columns: 1.55rem minmax(0, 1fr) auto;
+    /* Compensate increased numeral inset with a narrower numeric track:
+       titles retain their previous horizontal origin at 320/390px. */
+    grid-template-columns: 1.15rem minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
-    column-gap: .45rem;
+    column-gap: .30rem;
     align-content: center;
     align-items: baseline;
     border-width: 0;
@@ -124,7 +126,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    padding: .39rem .22rem;
+    padding: .39rem .22rem .39rem .75rem;
     scroll-margin-bottom: calc(var(--tlp-mobile-dock-clearance, 4.75rem) + var(--tlp-mobile-dock-bottom, 1rem) + 1rem);
   }
   .poet-reading-index > ol > li > a::before {
@@ -191,8 +193,8 @@ html.theme-light .poet-reading-index > ol > li > a {
   }
   .poet-reading-index .poet-reading-community { display: none; }
   .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
-  /* The selected-state rule belongs in the wide left gutter, not against
-     the numerals. Its inset used to sit ~2px from 03 on small screens. */
+  /* Accent attaches directly to the selected background's left boundary.
+     The numeral is padded inward while the title retains its alignment. */
   .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"]) {
     transform: none;
     background: rgba(212,175,55,.075);
@@ -202,7 +204,7 @@ html.theme-light .poet-reading-index > ol > li > a {
     content: '';
     position: absolute;
     pointer-events: none;
-    left: -.45rem;
+    left: 0;
     top: .48rem;
     bottom: .48rem;
     width: 2px;
