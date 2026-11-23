@@ -510,3 +510,28 @@ html.theme-light .poet-poem-picker-menu a:is(:hover,:focus-visible,[aria-current
     max-height: min(60dvh, calc(100dvh - 14.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   }
 }
+
+/* Text resize keeps the entire picker between the scaled fixed header and the
+   live measured mobile dock. The dock clearance variable is written by MobileDock;
+   a raw rem-only max-height can otherwise overlap it at 150%–200% text scale. */
+@media (max-width: 767px) and (min-height: 401px) {
+  .poet-poem-picker[data-hero-visible="true"] {
+    --poet-resized-hero-top: clamp(5.0625rem, 9.2rem, calc(100dvh - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, .8rem) - 9rem));
+    top: var(--poet-resized-hero-top);
+  }
+  .poet-poem-picker-menu { box-sizing: border-box; }
+  .poet-poem-picker[data-hero-visible="true"] .poet-poem-picker-menu {
+    max-height: min(60dvh, calc(100dvh - var(--poet-resized-hero-top) - 4rem - .7rem - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, .8rem) - .5rem));
+  }
+  .poet-poem-picker[data-hero-visible="false"] .poet-poem-picker-menu {
+    max-height: min(60dvh, calc(100dvh - 5.5rem - 4rem - .7rem - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, .8rem) - .5rem));
+  }
+}
+/* At large text sizes narrow controls must wrap without stealing height from
+   the only available scroll sheet; the 48px target minimum remains unchanged. */
+@media (max-width: 420px) {
+  .poet-poem-picker > summary {
+    gap: min(.55rem, 8px);
+    padding: .3rem .5rem;
+  }
+}

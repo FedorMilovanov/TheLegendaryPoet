@@ -284,6 +284,58 @@ test.describe('poets result status accessibility', () => {
     }
   });
 
+  // Reload between hero and deep-scroll variants: each represents a separate
+  // reader journey, rather than interrupting a previous long hash scroll.
+  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 667 }]) {
+    for (const scale of [1.5, 2]) {
+      test('resized poem picker ' + viewport.width + 'px at ' + scale * 100 + '% text', async ({ page }, testInfo) => {
+        test.skip(!['chromium-core', 'iphone-safari'].includes(testInfo.project.name),
+          'Text-resize geometry belongs to Chromium and Safari');
+        for (const phase of ['hero', 'scrolled']) {
+          await page.setViewportSize(viewport);
+          await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+          await page.evaluate((value) => {
+            document.documentElement.style.fontSize = String(16 * value) + 'px';
+            document.documentElement.classList.toggle('theme-light', value === 2);
+          }, scale);
+          const picker = page.locator('[data-poem-picker]');
+          const trigger = picker.locator('summary');
+          await expect(trigger).toBeVisible();
+          if (phase === 'scrolled') {
+            await page.evaluate(() => window.scrollTo({ top: 4000, behavior: 'instant' }));
+            await expect(picker).toHaveAttribute('data-hero-visible', 'false');
+          }
+          await trigger.click();
+          const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+          await expect(nav).toBeVisible();
+          const geometry = await page.evaluate(() => {
+            const rect = (selector) => document.querySelector(selector)?.getBoundingClientRect();
+            const menu = rect('.poet-poem-picker-menu');
+            const header = rect('.site-header');
+            const dock = rect('.mobile-dock');
+            const summary = rect('[data-poem-picker] summary');
+            return {
+              menuHeight: menu?.height ?? 0,
+              belowHeader: Boolean(menu && header && summary &&
+                menu.top >= header.bottom - 1 && summary.top >= header.bottom - 1),
+              dockGap: menu && dock ? dock.top - menu.bottom : -1,
+              overflow: document.documentElement.scrollWidth > innerWidth + 1,
+            };
+          });
+          expect(geometry.menuHeight, 'Resized menu must retain a usable scroll area').toBeGreaterThanOrEqual(48);
+          expect(geometry.belowHeader, 'Resized picker must clear the fixed header').toBe(true);
+          expect(geometry.dockGap, 'Resized menu must clear the measured mobile dock').toBeGreaterThanOrEqual(8);
+          expect(geometry.overflow).toBe(false);
+          const last = nav.locator('a[href^="#poem-"]').last();
+          const hash = await last.getAttribute('href');
+          await last.click();
+          await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(hash);
+          await expect(picker).not.toHaveAttribute('open', '');
+        }
+      });
+    }
+  }
+
   test('result changes use one stable polite status without stealing search focus', async ({ page }) => {
     await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
 
