@@ -10,12 +10,23 @@ interface PoemPickerProps {
 export default function PoemPicker({ poems }: PoemPickerProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const [currentHash, setCurrentHash] = useState('');
+  const [heroVisible, setHeroVisible] = useState(true);
 
   useEffect(() => {
     const sync = () => setCurrentHash(window.location.hash);
     sync();
     window.addEventListener('hashchange', sync);
     return () => window.removeEventListener('hashchange', sync);
+  }, []);
+
+  useEffect(() => {
+    const hero = document.querySelector('.poet-hero-surface');
+    if (!hero) { setHeroVisible(false); return; }
+    const observer = new IntersectionObserver(([entry]) => {
+      setHeroVisible(Boolean(entry?.isIntersecting));
+    });
+    observer.observe(hero);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -46,7 +57,7 @@ export default function PoemPicker({ poems }: PoemPickerProps) {
   };
 
   return (
-    <details ref={detailsRef} className="poet-poem-picker" data-poem-picker>
+    <details ref={detailsRef} className="poet-poem-picker" data-poem-picker data-hero-visible={heroVisible ? 'true' : 'false'}>
       <summary>
         <BookOpen size={17} aria-hidden="true" />
         <span>Выбрать стих</span>

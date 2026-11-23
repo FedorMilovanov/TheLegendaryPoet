@@ -467,3 +467,16 @@ html.theme-light .poet-poem-picker-menu a:is(:hover,:focus-visible,[aria-current
 @media (prefers-reduced-motion: reduce) {
   .poet-poem-picker-chevron { transition: none; }
 }
+
+/* Keep the floating picker clear of the hero title on mobile.
+   Restore the dock-safe lower position as soon as the hero leaves view. */
+@media (max-width: 767px) {
+  .poet-poem-picker[data-hero-visible="true"] {
+    top: 9.2rem;
+    bottom: auto;
+  }
+  .poet-poem-picker[data-hero-visible="true"] .poet-poem-picker-menu {
+    top: calc(100% + .7rem);
+    bottom: auto;
+  }
+}

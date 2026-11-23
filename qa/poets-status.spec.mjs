@@ -55,6 +55,17 @@ test.describe('poets result status accessibility', () => {
         expect(position).not.toBeNull();
         expect(position.y).toBeGreaterThanOrEqual(0);
         expect(position.y + position.height).toBeLessThanOrEqual(901);
+        if (width === 390) {
+          await expect(picker).toHaveAttribute('data-hero-visible', 'true');
+          const clearHero = await page.evaluate(() => {
+            const title = document.querySelector('.poet-hero-surface h1')?.getBoundingClientRect();
+            const button = document.querySelector('[data-poem-picker] summary')?.getBoundingClientRect();
+            if (!title || !button) return false;
+            return button.right <= title.left || button.left >= title.right
+              || button.bottom <= title.top || button.top >= title.bottom;
+          });
+          expect(clearHero, 'Closed poem picker must not obscure the hero title').toBe(true);
+        }
         await trigger.click();
         await expect(picker).toHaveAttribute('open', '');
         const choices = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' }).locator('a[href^="#poem-"]');
@@ -74,6 +85,7 @@ test.describe('poets result status accessibility', () => {
         await expect(page).toHaveURL(new RegExp(hash + '$'));
         await expect(picker).not.toHaveAttribute('open', '');
         await expect(page.locator(hash)).toBeVisible();
+        if (width === 390) await expect(picker).toHaveAttribute('data-hero-visible', 'false');
         await expect.poll(() => page.locator(hash).evaluate((node) => {
           const { top } = node.getBoundingClientRect();
           return top >= 0 && top < 300;
