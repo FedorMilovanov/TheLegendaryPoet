@@ -372,7 +372,9 @@ html.theme-light .poet-reading-index > ol > li > a {
   right: 0;
   bottom: calc(100% + .7rem);
   width: min(27rem, calc(100vw - 1.5rem));
-  max-height: min(64dvh, 39rem);
+  /* On landscape/short-height desktops leave room for the 81px site header,
+     picker control, fixed bottom inset and popup gap. */
+  max-height: min(64dvh, 39rem, calc(100dvh - 11rem));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: .8rem;

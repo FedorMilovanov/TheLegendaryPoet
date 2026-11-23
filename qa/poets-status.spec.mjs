@@ -179,6 +179,53 @@ test.describe('poets result status accessibility', () => {
     }
   });
 
+  test('landscape poem sheet clears header and reaches the last work', async ({ page }, testInfo) => {
+    test.skip(!['chromium-core', 'iphone-safari'].includes(testInfo.project.name), 'Landscape regression belongs to Chrome and WebKit');
+    for (const viewport of [
+      { width: 667, height: 375 },
+      { width: 768, height: 360 },
+      { width: 844, height: 390 },
+      { width: 932, height: 430 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+      const picker = page.locator('[data-poem-picker]');
+      await expect(picker.locator('summary')).toBeVisible();
+      await picker.locator('summary').click();
+      await expect(picker).toHaveAttribute('open', '');
+      const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+      const last = nav.locator('a[href^="#poem-"]').last();
+      await expect(last).toHaveCount(1);
+      const geometry = await page.evaluate(() => {
+        const header = document.querySelector('.site-header')?.getBoundingClientRect();
+        const menu = document.querySelector('.poet-poem-picker-menu')?.getBoundingClientRect();
+        return {
+          headerBottom: header?.bottom ?? null,
+          menuTop: menu?.top ?? null,
+          menuBottom: menu?.bottom ?? null,
+          menuHeight: menu?.height ?? null,
+          overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        };
+      });
+      expect(geometry.menuTop).not.toBeNull();
+      expect(geometry.headerBottom).not.toBeNull();
+      expect(geometry.menuTop).toBeGreaterThanOrEqual(geometry.headerBottom + 8);
+      expect(geometry.menuBottom).toBeLessThanOrEqual(viewport.height);
+      expect(geometry.menuHeight).toBeGreaterThanOrEqual(48);
+      expect(geometry.overflow).toBe(false);
+      await nav.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+      await expect.poll(() => last.evaluate((node) => {
+        const item = node.getBoundingClientRect();
+        const sheet = node.closest('nav')?.getBoundingClientRect();
+        return Boolean(sheet && item.top >= sheet.top - 1 && item.bottom <= sheet.bottom + 1);
+      }), { message: 'Last work remains reachable in landscape menu' }).toBe(true);
+      const hash = await last.getAttribute('href');
+      await last.click();
+      await expect(page).toHaveURL(new RegExp(hash + '$'));
+      await expect(picker).not.toHaveAttribute('open', '');
+    }
+  });
+
   test('result changes use one stable polite status without stealing search focus', async ({ page }) => {
     await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
 
