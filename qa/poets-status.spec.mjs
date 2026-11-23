@@ -50,6 +50,11 @@ test.describe('poets result status accessibility', () => {
         const trigger = picker.locator('summary');
         await expect(trigger).toBeVisible();
         await expect(trigger).toContainText('Выбрать стих');
+        // Absolute-positioned descendants of closed <details> must have no
+        // visible geometry, even when a pixel scanner walks the entire DOM.
+        const sheet = picker.locator('nav.poet-poem-picker-menu');
+        await expect(sheet).toBeHidden();
+        expect(await sheet.boundingBox()).toBeNull();
         // The control is usable without first scrolling to the editorial index.
         const position = await trigger.boundingBox();
         expect(position).not.toBeNull();
@@ -68,6 +73,7 @@ test.describe('poets result status accessibility', () => {
         }
         await trigger.click();
         await expect(picker).toHaveAttribute('open', '');
+        await expect(sheet).toBeVisible();
         const choices = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' }).locator('a[href^="#poem-"]');
         await expect(choices).toHaveCount(total);
         if (testInfo.project.name === 'chromium-core') {
@@ -95,6 +101,8 @@ test.describe('poets result status accessibility', () => {
         await expect(picker.locator('a[href="' + hash + '"]')).toHaveAttribute('aria-current', 'location');
         await page.keyboard.press('Escape');
         await expect(picker).not.toHaveAttribute('open', '');
+        await expect(sheet).toBeHidden();
+        expect(await sheet.boundingBox()).toBeNull();
         await expect(trigger).toBeFocused();
       });
     }

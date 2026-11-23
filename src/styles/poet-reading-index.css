@@ -482,3 +482,9 @@ html.theme-light .poet-poem-picker-menu a:is(:hover,:focus-visible,[aria-current
     max-height: min(60dvh, calc(100dvh - 19rem - env(safe-area-inset-bottom)));
   }
 }
+
+/* Native closed details can still lay out absolutely-positioned descendants.
+   Remove the hidden picker sheet from layout, hit-testing and contrast scans. */
+.poet-poem-picker:not([open]) > .poet-poem-picker-menu {
+  display: none;
+}
