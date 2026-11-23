@@ -770,6 +770,12 @@ test.describe('poets result status accessibility', () => {
     // can precede CommandPalette's effect subscription in mobile WebKit.
     const mobileSearch = page.getByRole('button', { name: 'Открыть поиск и все разделы' });
     const desktopSearch = page.getByRole('button', { name: 'Открыть поиск — Ctrl K' });
+    // WebKit can expose neither control immediately after domcontentloaded.
+    // Wait for the real responsive search trigger before choosing a branch;
+    // isVisible() alone is an instantaneous probe, not a hydration wait.
+    await expect.poll(async () =>
+      (await mobileSearch.isVisible()) || (await desktopSearch.isVisible()),
+    ).toBe(true);
     if (await mobileSearch.isVisible()) {
       await mobileSearch.click();
     } else {
