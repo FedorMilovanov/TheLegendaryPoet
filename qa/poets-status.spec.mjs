@@ -302,7 +302,14 @@ test.describe('poets result status accessibility', () => {
           const trigger = picker.locator('summary');
           await expect(trigger).toBeVisible();
           if (phase === 'scrolled') {
-            await page.evaluate(() => window.scrollTo({ top: 4000, behavior: 'instant' }));
+            // The full poem corpus loads asynchronously and changes document height.
+            // Scroll to a real reading card rather than assuming 4000px clears the hero.
+            const firstPoem = page.locator('.luxury-card[id^="poem-"]').first();
+            await expect(firstPoem).toBeAttached();
+            await firstPoem.scrollIntoViewIfNeeded();
+            await expect.poll(() => page.locator('.poet-hero-surface').evaluate(
+              (hero) => hero.getBoundingClientRect().bottom,
+            )).toBeLessThan(0);
             await expect(picker).toHaveAttribute('data-hero-visible', 'false');
           }
           await trigger.click();
