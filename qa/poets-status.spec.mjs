@@ -100,6 +100,44 @@ test.describe('poets result status accessibility', () => {
     }
   }
 
+  test('short mobile poem picker stays clear of bottom dock and header', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'webkit-reader-desktop', 'Poet mobile picker belongs to core and mobile browsers');
+    for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 667 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-pushkin/', { waitUntil: 'domcontentloaded' });
+      const picker = page.locator('[data-poem-picker]');
+      await expect(picker).toHaveAttribute('data-hero-visible', 'true');
+      await picker.locator('summary').click();
+      await expect(picker).toHaveAttribute('open', '');
+      const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+      await expect(nav.locator('a[href^="#poem-"]')).toHaveCount(10);
+      const geometry = await page.evaluate(() => {
+        const menu = document.querySelector('[data-poem-picker] nav')?.getBoundingClientRect();
+        const dock = document.querySelector('.mobile-dock')?.getBoundingClientRect();
+        const header = document.querySelector('.site-header')?.getBoundingClientRect();
+        return {
+          menuTop: menu?.top ?? null,
+          menuBottom: menu?.bottom ?? null,
+          dockTop: dock?.top ?? null,
+          headerBottom: header?.bottom ?? null,
+          overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        };
+      });
+      expect(geometry.menuTop).not.toBeNull();
+      expect(geometry.dockTop).not.toBeNull();
+      expect(geometry.menuBottom, 'Open poem menu must not overlap mobile dock').toBeLessThanOrEqual(geometry.dockTop - 8);
+      expect(geometry.menuTop, 'Open poem menu must remain below site header').toBeGreaterThanOrEqual(geometry.headerBottom);
+      expect(geometry.overflow, 'No horizontal overflow on narrow phones').toBe(false);
+      await nav.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+      const last = nav.locator('a[href^="#poem-"]').last();
+      await expect.poll(() => last.evaluate((node) => {
+        const item = node.getBoundingClientRect();
+        const container = node.closest('nav')?.getBoundingClientRect();
+        return Boolean(container && item.top >= container.top - 1 && item.bottom <= container.bottom + 1);
+      }), { message: 'Last poem remains reachable within the scrolling menu' }).toBe(true);
+    }
+  });
+
   test('result changes use one stable polite status without stealing search focus', async ({ page }) => {
     await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
 
