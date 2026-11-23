@@ -322,7 +322,9 @@ html.theme-light .poet-reading-index > ol > li > a {
 .poet-poem-picker {
   position: fixed;
   z-index: 45;
-  right: max(1.25rem, env(safe-area-inset-right));
+  /* The existing scroll-top control occupies the desktop bottom-right corner.
+     Reserve its 44px footprint plus a visible gap, in the same horizontal row. */
+  right: calc(max(1.25rem, env(safe-area-inset-right)) + 4.25rem);
   bottom: max(1.25rem, env(safe-area-inset-bottom));
   max-width: calc(100vw - 1.5rem);
   font-family: var(--font-sans);

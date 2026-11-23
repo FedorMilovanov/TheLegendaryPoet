@@ -146,6 +146,39 @@ test.describe('poets result status accessibility', () => {
     }
   });
 
+  test('desktop floating poem picker never occludes the existing scroll-to-top control', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-core', 'Desktop shared-controls geometry belongs to Chromium QA');
+    for (const viewport of [{ width: 768, height: 720 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-pushkin/', { waitUntil: 'domcontentloaded' });
+      const picker = page.locator('[data-poem-picker]');
+      const trigger = picker.locator('summary');
+      const scrollTop = page.locator('.scroll-top-btn');
+      await expect(trigger).toBeVisible();
+      await page.evaluate(() => window.scrollTo(0, 3200));
+      await expect(scrollTop).toBeVisible();
+
+      const gap = await page.evaluate(() => {
+        const triggerRect = document.querySelector('[data-poem-picker] summary')?.getBoundingClientRect();
+        const scrollTopRect = document.querySelector('.scroll-top-btn')?.getBoundingClientRect();
+        if (!triggerRect || !scrollTopRect) return null;
+        return {
+          horizontal: scrollTopRect.left - triggerRect.right,
+          verticallyAligned: triggerRect.top < scrollTopRect.bottom && triggerRect.bottom > scrollTopRect.top,
+        };
+      });
+      expect(gap).not.toBeNull();
+      expect(gap.verticallyAligned).toBe(true);
+      expect(gap.horizontal, 'Floating poem picker must leave an 8px+ gap before scroll-to-top').toBeGreaterThanOrEqual(8);
+      await trigger.click();
+      await expect(picker).toHaveAttribute('open', '');
+      await page.keyboard.press('Escape');
+      await expect(picker).not.toHaveAttribute('open', '');
+      await scrollTop.click();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(10);
+    }
+  });
+
   test('result changes use one stable polite status without stealing search focus', async ({ page }) => {
     await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
 
