@@ -492,3 +492,21 @@ html.theme-light .poet-poem-picker-menu a:is(:hover,:focus-visible,[aria-current
 .poet-poem-picker:not([open]) > .poet-poem-picker-menu {
   display: none;
 }
+
+/* On very short phones and landscape devices, place the whole floating
+   control in the available strip between the fixed header and mobile dock.
+   This applies both near the hero and after scrolling: the normal hero-only
+   position otherwise leaves an unusably shallow 28px sheet at 320px height. */
+@media (max-width: 767px) and (max-height: 400px) {
+  .poet-poem-picker,
+  .poet-poem-picker[data-hero-visible="true"] {
+    top: calc(5.5rem + env(safe-area-inset-top));
+    bottom: auto;
+  }
+  .poet-poem-picker-menu,
+  .poet-poem-picker[data-hero-visible="true"] .poet-poem-picker-menu {
+    top: calc(100% + .7rem);
+    bottom: auto;
+    max-height: min(60dvh, calc(100dvh - 14.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  }
+}
