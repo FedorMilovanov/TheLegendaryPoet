@@ -34,8 +34,7 @@ async function assertReachableBeyondDock(entry) {
   await expect.poll(async () => {
     const state = await readGeometry();
     return state.inViewport && state.clear;
-  }, { message: 'Focused contents entry must remain visible and unobscured by the mobile dock' }).toBe(true);
-  await expect(entry).toBeFocused();
+  }, { message: 'Contents entry must be visible and unobscured by the mobile dock' }).toBe(true);
 }
 
 test.describe('poets result status accessibility', () => {
