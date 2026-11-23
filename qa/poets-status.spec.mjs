@@ -38,6 +38,56 @@ async function assertReachableBeyondDock(entry) {
 }
 
 test.describe('poets result status accessibility', () => {
+  // Permanent selection must be reachable before the 8–16k px biography
+  // and throughout long poem cards, without rewriting canonical fragments.
+  for (const [poetId, total] of [['alexander-pushkin', 10], ['alexander-blok', 11]]) {
+    for (const width of [390, 1440]) {
+      test('persistent poem picker ' + poetId + ' at ' + width + 'px', async ({ page }, testInfo) => {
+        test.skip(width === 1440 && testInfo.project.name !== 'chromium-core', 'Desktop belongs to Chromium QA');
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(BASE_URL + '/poets/' + poetId, { waitUntil: 'domcontentloaded' });
+        const picker = page.locator('[data-poem-picker]');
+        const trigger = picker.locator('summary');
+        await expect(trigger).toBeVisible();
+        await expect(trigger).toContainText('Выбрать стих');
+        // The control is usable without first scrolling to the editorial index.
+        const position = await trigger.boundingBox();
+        expect(position).not.toBeNull();
+        expect(position.y).toBeGreaterThanOrEqual(0);
+        expect(position.y + position.height).toBeLessThanOrEqual(901);
+        await trigger.click();
+        await expect(picker).toHaveAttribute('open', '');
+        const choices = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' }).locator('a[href^="#poem-"]');
+        await expect(choices).toHaveCount(total);
+        if (testInfo.project.name === 'chromium-core') {
+          mkdirSync('qa-artifacts', { recursive: true });
+          await page.evaluate(() => document.fonts.ready);
+          await page.screenshot({ path: 'qa-artifacts/poem-picker-' + poetId + '-' + width + '-dark.png' });
+          await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+          await page.screenshot({ path: 'qa-artifacts/poem-picker-' + poetId + '-' + width + '-light.png' });
+          await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+        }
+        const last = choices.last();
+        const hash = await last.getAttribute('href');
+        expect(hash).toMatch(/^#poem-/);
+        await last.click();
+        await expect(page).toHaveURL(new RegExp(hash + '$'));
+        await expect(picker).not.toHaveAttribute('open', '');
+        await expect(page.locator(hash)).toBeVisible();
+        await expect.poll(() => page.locator(hash).evaluate((node) => {
+          const { top } = node.getBoundingClientRect();
+          return top >= 0 && top < 300;
+        })).toBe(true);
+        await trigger.click();
+        await expect(picker).toHaveAttribute('open', '');
+        await expect(picker.locator('a[href="' + hash + '"]')).toHaveAttribute('aria-current', 'location');
+        await page.keyboard.press('Escape');
+        await expect(picker).not.toHaveAttribute('open', '');
+        await expect(trigger).toBeFocused();
+      });
+    }
+  }
+
   test('result changes use one stable polite status without stealing search focus', async ({ page }) => {
     await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
 
