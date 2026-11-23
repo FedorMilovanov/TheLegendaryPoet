@@ -13,17 +13,29 @@ const READING_INDEX_CAPTURE_STYLE = `
 `;
 
 async function assertReachableBeyondDock(entry) {
-  await entry.scrollIntoViewIfNeeded();
-  const state = await entry.evaluate((node) => {
+  // WebKit can keep a moving focused link "unstable" during native hash-layout
+  // correction. Playwright's scrollIntoViewIfNeeded waits for stability before
+  // even issuing the scroll; verify the reader-visible outcome instead.
+  await entry.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  const readGeometry = () => entry.evaluate((node) => {
     const link = node.getBoundingClientRect();
     const dock = document.querySelector('.mobile-dock');
     const box = dock?.getBoundingClientRect();
-    const visible = dock && box && getComputedStyle(dock).display !== 'none'
-      && box.bottom > 0 && box.top < innerHeight;
-    return { linkTop: link.top, linkBottom: link.bottom, dockTop: visible ? box.top : null,
-      clear: !visible || link.bottom < box.top - 2 || link.top > box.bottom + 2 };
+    const visible = Boolean(dock && box && getComputedStyle(dock).display !== 'none'
+      && box.bottom > 0 && box.top < innerHeight);
+    return {
+      linkTop: link.top,
+      linkBottom: link.bottom,
+      dockTop: visible ? box.top : null,
+      inViewport: link.top >= -1 && link.bottom <= innerHeight + 1,
+      clear: !visible || link.bottom < box.top - 2 || link.top > box.bottom + 2,
+    };
   });
-  expect(state.clear, `Focused contents entry obscured by the mobile dock: ${JSON.stringify(state)}`).toBe(true);
+  await expect.poll(async () => {
+    const state = await readGeometry();
+    return state.inViewport && state.clear;
+  }, { message: 'Focused contents entry must remain visible and unobscured by the mobile dock' }).toBe(true);
+  await expect(entry).toBeFocused();
 }
 
 test.describe('poets result status accessibility', () => {
