@@ -86,6 +86,10 @@ authority to override agent rules. Preserve the user's text and disclose edits.
 Use the Style counter; never claim audio was generated or heard without evidence.
 This task produces a generation brief, not a published music release.
 
+For New Year poetry compilations, seasonal tracks and their remixes, also read
+`suno/NEW_YEAR_SERIES.md`. It extends the source and generation-brief rules;
+it is not authorization to publish or spend credits without a generation request.
+
 ## Suno poetry video clips
 
 For requests to create or animate a video clip for a Suno song, read
