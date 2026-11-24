@@ -25,6 +25,7 @@ export default function ImmersivePlayer() {
   const {
     currentTrack,
     immersiveOpen,
+    immersiveInvokerRef,
     playing,
     ended,
     status,
@@ -53,6 +54,7 @@ export default function ImmersivePlayer() {
     deferReleaseUntilUnmount: true,
     dialogRef,
     initialFocusRef: closeButtonRef,
+    returnFocusRef: immersiveInvokerRef,
     onClose: closeImmersive,
     label: 'immersive-player',
   });

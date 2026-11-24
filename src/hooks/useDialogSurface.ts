@@ -5,6 +5,7 @@ import {
   type OverlayLockHandle,
 } from '../utils/overlayRuntime';
 import { startNativeDialogExit } from '../utils/nativeDialogExit';
+import { scheduleProgrammaticFocus } from '../utils/focusRuntime';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -35,6 +36,7 @@ interface DialogSurfaceOptions {
   closeOnEscape?: boolean;
   restoreFocus?: boolean;
   restoreFocusRef?: RefObject<boolean | null>;
+  returnFocusRef?: RefObject<HTMLElement | null>;
   /** Animated dialogs retain their overlay lease until AnimatePresence exit completion. */
   deferReleaseUntilUnmount?: boolean;
 }
@@ -53,6 +55,7 @@ export function useDialogSurface({
   closeOnEscape = true,
   restoreFocus = true,
   restoreFocusRef,
+  returnFocusRef,
   deferReleaseUntilUnmount = false,
 }: DialogSurfaceOptions) {
   const handleRef = useRef<OverlayLockHandle | null>(null);
@@ -66,9 +69,9 @@ export function useDialogSurface({
   useEffect(() => {
     if (!open) return;
 
-    const previouslyFocused = document.activeElement instanceof HTMLElement
+    const previouslyFocused = returnFocusRef?.current ?? (document.activeElement instanceof HTMLElement
       ? document.activeElement
-      : null;
+      : null);
     const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
     handle.setEscapeHandler(closeOnEscape ? () => {
@@ -127,14 +130,14 @@ export function useDialogSurface({
 
       const shouldRestoreFocus = restoreFocusRef?.current ?? restoreFocus;
       if (shouldRestoreFocus && previouslyFocused) {
-        window.requestAnimationFrame(() => {
-          if (previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)) {
-            previouslyFocused.focus({ preventScroll: true });
-          }
-        });
+        scheduleProgrammaticFocus(() =>
+          previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)
+            ? previouslyFocused
+            : null,
+        );
       }
     };
-  }, [closeOnEscape, deferReleaseUntilUnmount, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef]);
+  }, [closeOnEscape, deferReleaseUntilUnmount, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef, returnFocusRef]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),

@@ -16,7 +16,7 @@ The hook provides:
 - initial focus placement;
 - focus containment with Tab and Shift+Tab;
 - Escape handling only for the topmost surface;
-- focus restoration with `preventScroll`.
+- focus restoration with `preventScroll`, using an explicit invoker ref when activation can move browser focus before opening; delayed restoration yields to any newer focus owner.
 
 A component must still provide:
 

@@ -148,6 +148,37 @@ expect(escapeOrder.join(',') === 'upper,lower', 'the second Escape must close th
 expect(!overlay.hasOpenOverlay(), 'central Escape routing must leave no phantom overlay entries');
 expect(scrollCalls.length === 4, 'a complete centrally-routed overlay session must restore scroll once');
 
+let writes = 0;
+function branch() {
+  let inert = false;
+  const attributes = new Map<string, string>();
+  return {
+    isConnected: true, tagName: 'DIV',
+    get inert() { return inert; },
+    set inert(value: boolean) { writes++; inert = value; },
+    getAttribute: (name: string) => attributes.get(name) ?? null,
+    setAttribute: (name: string, value: string) => { writes++; attributes.set(name, value); },
+    removeAttribute: (name: string) => { writes++; attributes.delete(name); },
+    contains: () => false,
+    parentElement: fakeDocument.body,
+  };
+}
+const background = branch();
+const dialogBranch = branch();
+const extra = branch();
+Object.assign(fakeDocument.body, { children: [background, dialogBranch] });
+const stable = overlay.acquireOverlayLock('stable', dialogBranch as unknown as HTMLElement);
+expect(background.inert && background.getAttribute('aria-hidden') === 'true', 'initial branch isolation is required');
+writes = 0;
+stable.setRoot(dialogBranch as unknown as HTMLElement);
+expect(writes === 0, 'unchanged overlay branches must not toggle accessibility attributes');
+Object.assign(fakeDocument.body, { children: [background, dialogBranch, extra] });
+writes = 0;
+stable.setRoot(dialogBranch as unknown as HTMLElement);
+expect(extra.inert && extra.getAttribute('aria-hidden') === 'true' && writes === 2, 'new siblings must be isolated without disturbing existing branches');
+stable.release();
+expect(!background.inert && !extra.inert && background.getAttribute('aria-hidden') === null && extra.getAttribute('aria-hidden') === null, 'final release must restore all original branch states');
+
 const { startNativeDialogExit } = await import('../src/utils/nativeDialogExit');
 
 async function checkNativeExit(kind: string) {
