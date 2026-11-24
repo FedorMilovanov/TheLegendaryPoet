@@ -77,6 +77,13 @@ for (const suite of preservedSuites) expect(manual.includes(suite), `Manual Brow
 expect(webkitRunner.includes("id: 'community-request-topology'"), 'base iPhone Safari suite must retain community request topology');
 expect(webkitRunner.includes("file: 'qa/community-request-topology.spec.mjs'"), 'base iPhone Safari suite must execute the shared community topology file');
 expect(webkitRunner.includes("id: 'reader-journeys'"), 'base iPhone Safari suite must retain reader outcome journeys');
+expect(webkitRunner.includes("const animatedLifetime = 'animated modal exit lifetime'") &&
+  webkitRunner.includes("id: 'animated-modal-exit-lifetime', file: 'qa/reader-journeys.spec.mjs', grep: animatedLifetime") &&
+  webkitRunner.includes("id: 'reader-journeys', file: 'qa/reader-journeys.spec.mjs', grep: `^(?!.*${animatedLifetime})`"),
+  'natural animated lifetime and remaining reader journeys must run as complementary fresh-process Safari groups');
+expect(readerJourneys.includes("expect(frames.length, 'exit must have connected frames with a live lease').toBeGreaterThan(2)") &&
+  readerJourneys.includes("'no frame may expose focus or unlock a still-painted modal'"),
+  'natural exit frame count and ownership assertions must not be weakened');
 expect(webkitRunner.includes("file: 'qa/reader-journeys.spec.mjs'"), 'base iPhone Safari suite must execute the shared reader journey file');
 expect(playwrightConfig.includes('reader-journeys'), 'Android and iPhone project matching must include reader journeys');
 

@@ -535,6 +535,32 @@ test.describe('animated modal exit lifetime', () => {
           // The detector and the assertion share one DOM-unmount event. A
           // repeated Node->WebKit RPC poll can race WebKit's animation/event
           // delivery under CI load even when the modal is still correct.
+          const trace = window.__tlpExitTiming = {
+            installed: performance.now(), keydown: null, unmounted: null,
+            visibility: document.visibilityState, animations: [],
+          };
+          const onEscape = event => {
+            if (event.key === 'Escape' && trace.keydown === null) trace.keydown = performance.now();
+          };
+          window.addEventListener('keydown', onEscape, { capture: true });
+          // Observe the actual native animation without pausing, extending or
+          // replacing its completion channels. Keep the natural frame gate.
+          const animate = dialogNode.animate.bind(dialogNode);
+          dialogNode.animate = (...args) => {
+            const animation = animate(...args);
+            const entry = {
+              started: performance.now(), duration: animation.effect?.getComputedTiming().duration,
+              keyframes: animation.effect?.getKeyframes().map(frame => ({ opacity: frame.opacity, offset: frame.offset })),
+              finishEvent: null, finished: null, cancelled: null,
+            };
+            trace.animations.push(entry);
+            animation.addEventListener('finish', () => { entry.finishEvent = performance.now(); }, { once: true });
+            void animation.finished.then(
+              () => { entry.finished = performance.now(); },
+              () => { entry.cancelled = performance.now(); },
+            );
+            return animation;
+          };
           let resolveUnmount;
           window.__tlpExitCompletion = new Promise((resolve) => {
             resolveUnmount = resolve;
@@ -542,7 +568,9 @@ test.describe('animated modal exit lifetime', () => {
           const finishUnmount = () => {
             if (window.__tlpExitDone) return;
             window.__tlpExitDone = true;
+            trace.unmounted = performance.now();
             observer.disconnect();
+            window.removeEventListener('keydown', onEscape, { capture: true });
             resolveUnmount();
           };
           const observer = new MutationObserver(() => {
@@ -557,6 +585,9 @@ test.describe('animated modal exit lifetime', () => {
             }
             const root = document.getElementById('root');
             window.__tlpExitProof.push({
+              t: performance.now(),
+              opacity: getComputedStyle(dialogNode).opacity,
+              visibility: document.visibilityState,
               depth:window.__TLP_OVERLAY_DEBUG?.depth,
               inert:root?.inert,
               hidden:root?.getAttribute('aria-hidden'),
@@ -586,6 +617,7 @@ test.describe('animated modal exit lifetime', () => {
                     focusTag: document.activeElement?.tagName,
                     samples: window.__tlpExitProof?.length,
                     frames: window.__tlpExitProof?.slice(-2),
+                    timing: window.__tlpExitTiming,
                   })));
                 }, 5000);
               }),
@@ -596,7 +628,17 @@ test.describe('animated modal exit lifetime', () => {
         });
         const escapeCountAfter = await page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.escapeCount);
         expect(escapeCountAfter, 'Escape must be received by the topmost dialog').toBeGreaterThan(escapeCountBefore);
-        const frames = await page.evaluate(() => window.__tlpExitProof);
+        const evidence = await page.evaluate(() => ({
+          frames: window.__tlpExitProof,
+          timing: window.__tlpExitTiming,
+        }));
+        const { frames, timing } = evidence;
+        const gaps = frames.slice(1).map((frame, index) => frame.t - frames[index].t);
+        console.log('NATURAL_EXIT_TIMING', JSON.stringify({
+          surface, reduced, timing, sampleCount: frames.length,
+          maxSampleGap: Math.max(0, ...gaps),
+          first: frames.slice(0, 3), last: frames.slice(-3),
+        }));
         expect(frames.length, 'exit must have connected frames with a live lease').toBeGreaterThan(2);
         expect(frames.filter(f => f.depth !== 1 || f.inert !== true || f.hidden !== 'true' || f.position !== 'fixed' || !f.focusInside),
           'no frame may expose focus or unlock a still-painted modal').toEqual([]);

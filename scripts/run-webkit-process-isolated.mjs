@@ -10,7 +10,9 @@ const common = [
 
 const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', 'ratings'];
 
+const animatedLifetime = 'animated modal exit lifetime';
 const suites = [
+  { id: 'animated-modal-exit-lifetime', file: 'qa/reader-journeys.spec.mjs', grep: animatedLifetime },
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'poets-status', file: 'qa/poets-status.spec.mjs' },
   { id: 'poem-source-coverage-w83', file: 'qa/poem-source-coverage-w83.spec.mjs' },
@@ -24,7 +26,7 @@ const suites = [
   { id: 'rating-urlstate', file: 'qa/rating-urlstate.spec.mjs' },
   { id: 'audio-completion', file: 'qa/audio-completion.spec.mjs' },
   { id: 'community-request-topology', file: 'qa/community-request-topology.spec.mjs' },
-  { id: 'reader-journeys', file: 'qa/reader-journeys.spec.mjs' },
+  { id: 'reader-journeys', file: 'qa/reader-journeys.spec.mjs', grep: `^(?!.*${animatedLifetime})` },
   { id: 'fragment-navigation', file: 'qa/fragment-navigation.spec.mjs' },
   { id: 'premium-reader-certification', file: 'qa/premium-reader-certification.spec.mjs' },
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },
