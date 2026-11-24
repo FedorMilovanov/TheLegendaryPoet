@@ -4,7 +4,7 @@ This document defines the interaction contract for modal surfaces, responsive im
 
 ## Modal surfaces
 
-Every modal surface must use `useDialogSurface`. Animated Framer Motion surfaces use `useDialogExitLifetime`, passing its `lockOpen` to the dialog hook, `deferReleaseUntilUnmount: true`, and `onExitComplete` to `AnimatePresence`. The immersive player uses the same overlay lock with `useNativeDialogExitLifetime`, binding its exit to the painted dialog's compositor animation (`Animation.finished`) because WebKit can stall Framer's presence callback. In both cases, focus isolation, scroll locking and overlay ownership remain in force until the dialog is no longer painted; neither a fixed timer nor a second overlay manager may release them.
+Every modal surface must use `useDialogSurface`. Animated Framer Motion surfaces use `useDialogExitLifetime`, passing its `lockOpen` to the dialog hook, `deferReleaseUntilUnmount: true`, and `onExitComplete` to `AnimatePresence`. The immersive player uses the same overlay lock with `useNativeDialogExitLifetime`, binding its exit to the painted dialog's compositor animation (`Animation.finished`) because WebKit can stall Framer's presence callback. Both the native finish event and finished promise are observed. In both cases, focus isolation, scroll locking and overlay ownership remain in force until the dialog is no longer painted; no timer or second overlay manager may directly release them. If both native signals stall, the single exit owner forces terminal opacity (0, important) after four authored durations (1.8s for the 450ms fade), then removes the portal through the same React lifetime. Normal animation duration is unchanged.
 
 The hook provides:
 
@@ -70,7 +70,7 @@ Pointer coordinates stay outside React state, painting is limited to one animati
 
 ## Adding a new modal
 
-1. For animated surfaces, retain the modal stack lease throughout exit. Framer Motion surfaces release on `AnimatePresence` completion; the immersive player releases on the compositor-owned `Animation.finished` of its actual root. An already-detached or backgrounded surface may complete immediately. Cancellation of the current native exit or a transition to a hidden document also completes that exit; cleanup invalidates stale operations before cancelling on rapid reopen. Reduced-motion mode preserves the opacity-only fade, matching the previous visual behavior; unmount still releases synchronously through effect cleanup.
+1. For animated surfaces, retain the modal stack lease throughout exit. Framer Motion surfaces release on `AnimatePresence` completion; the immersive player releases on the compositor-owned `Animation.finished` of its actual root. An already-detached or backgrounded surface may complete immediately. Cancellation of the current native exit or a transition to a hidden document also completes that exit; synchronous animation failure and a stalled native completion have a non-painted fallback; cleanup invalidates stale operations before cancelling on rapid reopen. Reduced-motion mode preserves the opacity-only fade, matching the previous visual behavior; unmount still releases synchronously through effect cleanup.
 2. Create refs for the dialog and preferred initial control.
 3. Call `useDialogSurface` with a stable close callback.
 4. Mark the dialog correctly and make its content independently scrollable.

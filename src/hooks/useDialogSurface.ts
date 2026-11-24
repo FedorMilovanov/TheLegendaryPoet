@@ -4,6 +4,7 @@ import {
   canRestoreOverlayFocus,
   type OverlayLockHandle,
 } from '../utils/overlayRuntime';
+import { startNativeDialogExit } from '../utils/nativeDialogExit';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -168,8 +169,8 @@ export function useDialogExitLifetime(logicalOpen: boolean) {
  * Use a compositor-owned Web Animations exit for the immersive player.
  * Framer's presence completion may be starved in WebKit even after Escape was
  * received. The painted dialog and its shared overlay lease remain together:
- * only native animation completion (or immediate non-visual removal) releases
- * the root. No timeout, extra scroll lock or focus-owner is introduced.
+ * native completion or explicit terminal visual removal ends the exit.
+ * The bounded liveness guard never releases the overlay lock independently.
  */
 export function useNativeDialogExitLifetime(
   logicalOpen: boolean,
@@ -195,26 +196,7 @@ export function useNativeDialogExitLifetime(
       return;
     }
 
-    const exit = surface.animate(
-      [{ opacity: 1 }, { opacity: 0 }],
-      { duration: 450, easing: 'ease-in-out', fill: 'forwards' },
-    );
-    let active = true;
-    const complete = () => {
-      if (active && !latestOpen.current) setRetained(false);
-    };
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') complete();
-    };
-    // Completion and interruption both end this exit. Cleanup invalidates
-    // the old operation before cancelling it on reopen or unmount.
-    void exit.finished.then(complete, complete);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => {
-      active = false;
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      exit.cancel();
-    };
+    return startNativeDialogExit(surface, () => !latestOpen.current, () => setRetained(false));
   }, [logicalOpen, retained, dialogRef]);
 
   return { lockOpen: logicalOpen || retained };

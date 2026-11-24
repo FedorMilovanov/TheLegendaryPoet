@@ -148,6 +148,90 @@ expect(escapeOrder.join(',') === 'upper,lower', 'the second Escape must close th
 expect(!overlay.hasOpenOverlay(), 'central Escape routing must leave no phantom overlay entries');
 expect(scrollCalls.length === 4, 'a complete centrally-routed overlay session must restore scroll once');
 
+const { startNativeDialogExit } = await import('../src/utils/nativeDialogExit');
+
+async function checkNativeExit(kind: string) {
+  let now = 0;
+  let nextId = 0;
+  let current = true;
+  let completions = 0;
+  let finishCalls = 0;
+  let opacity = '0.8';
+  let priority = '';
+  const tasks = new Map<number, { callback: () => void; at: number }>();
+  Object.assign(fakeWindow, {
+    setTimeout: (callback: () => void, delay: number) => {
+      tasks.set(++nextId, { callback, at: now + delay });
+      return nextId;
+    },
+    clearTimeout: (id: number) => tasks.delete(id),
+  });
+  Object.assign(fakeDocument, { visibilityState: 'visible' });
+  let resolve!: () => void;
+  let reject!: (reason: Error) => void;
+  const finished = new Promise<void>((yes, no) => { resolve = yes; reject = no; });
+  const animation = Object.assign(new EventTarget(), {
+    finished,
+    finish() {
+      finishCalls++;
+      if (kind === 'finishThrows') throw new Error('injected compositor failure');
+      this.dispatchEvent(new Event('finish'));
+    },
+    cancel() {},
+  });
+  const surface = {
+    style: {
+      getPropertyValue: () => opacity,
+      getPropertyPriority: () => priority,
+      setProperty: (_name: string, value: string, p: string) => { opacity = value; priority = p; },
+      removeProperty: () => { opacity = ''; priority = ''; },
+    },
+    animate: () => {
+      if (kind === 'animateThrows') throw new Error('injected animate failure');
+      return animation;
+    },
+  } as unknown as HTMLElement;
+  const cleanup = startNativeDialogExit(surface, () => current, () => { completions++; });
+  const advance = (ms: number) => {
+    now += ms;
+    for (const [id, task] of tasks) {
+      if (task.at <= now) { tasks.delete(id); task.callback(); }
+    }
+  };
+  if (kind === 'normal') {
+    resolve(); await Promise.resolve();
+    animation.dispatchEvent(new Event('finish'));
+    advance(2000);
+    expect(completions === 1 && opacity === '0.8' && tasks.size === 0, 'normal native exit must settle once and cancel the watchdog');
+  } else if (kind === 'eventOnly') {
+    animation.dispatchEvent(new Event('finish'));
+    expect(completions === 1 && opacity === '0.8' && tasks.size === 0, 'finish event must settle even when the finished promise never resolves');
+  } else if (kind === 'stalled' || kind === 'finishThrows') {
+    advance(1799);
+    expect(completions === 0 && opacity === '0.8', 'stalled exit must retain ownership until its liveness deadline');
+    advance(1);
+    expect(completions === 1 && opacity === '0' && priority === 'important' && finishCalls === 1, 'stalled exit must force terminal visual state before completing, even if finish throws');
+  } else if (kind === 'cancel') {
+    reject(new Error('cancel')); await Promise.resolve();
+    expect(completions === 1 && tasks.size === 0, 'cancelled native animation must settle and clear its watchdog');
+  } else if (kind === 'hidden') {
+    Object.assign(fakeDocument, { visibilityState: 'hidden' });
+    for (const listener of documentListeners.get('visibilitychange') ?? []) listener({} as KeyboardEvent);
+    expect(completions === 1 && tasks.size === 0, 'hidden document must settle and clear its watchdog');
+  } else if (kind === 'reopen') {
+    current = false; cleanup(); advance(5000); resolve(); await Promise.resolve();
+    expect(completions === 0 && opacity === '0.8', 'old native exit must not close a reopened dialog');
+  } else if (kind === 'animateThrows') {
+    expect(completions === 1 && opacity === '0' && priority === 'important', 'synchronous native animation failure must be nonvisual and complete');
+  }
+  cleanup();
+  expect(opacity === '0.8' && priority === '' && tasks.size === 0 && !(documentListeners.get('visibilitychange')?.size), 'exit cleanup must restore prior opacity and remove all callbacks');
+}
+for (const kind of ['normal', 'eventOnly', 'stalled', 'finishThrows', 'cancel', 'hidden', 'reopen', 'animateThrows']) {
+  await checkNativeExit(kind);
+}
+Object.assign(fakeDocument, { visibilityState: 'visible' });
+
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
 const commandSource = read('src/components/command/CommandPalette.tsx');
@@ -198,7 +282,8 @@ expect(dialogSource.includes('useDialogExitLifetime'), 'animated dialogs must sh
 expect(dialogSource.includes('if (!deferReleaseUntilUnmount) handle.release()'), 'Escape must retain animated dialog ownership until exit completion');
 expect(immersiveSource.includes('useNativeDialogExitLifetime(immersiveOpen && Boolean(currentTrack), dialogRef)'), 'immersive playback must attach its native exit to the painted dialog');
 expect(immersiveSource.includes('open: lifetime.lockOpen') && immersiveSource.includes('deferReleaseUntilUnmount: true'), 'immersive overlay lock must follow painted presence, not logical open');
-expect(dialogSource.includes('exit.finished.then') && dialogSource.includes("typeof surface.animate !== 'function'"), 'immersive overlay must release after compositor exit completion, without relying on Framer presence');
+const nativeExitSource = read('src/utils/nativeDialogExit.ts');
+expect(dialogSource.includes('startNativeDialogExit(surface') && dialogSource.includes("typeof surface.animate !== 'function'") && nativeExitSource.includes('exit.finished.then') && nativeExitSource.includes("exit.addEventListener('finish', complete)"), 'immersive overlay must observe both native completion channels through one visual owner');
 expect(immersiveSource.includes('{lifetime.lockOpen && currentTrack'), 'immersive dialog DOM must remain mounted throughout native exit');
 expect(immersiveSource.includes('isTopmost()'), 'background media shortcuts must pause beneath another dialog');
 expect(!immersiveSource.includes("document.body.style.overflow = 'hidden'"), 'immersive playback must not duplicate body locking');

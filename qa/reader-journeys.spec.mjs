@@ -658,3 +658,44 @@ for (const interruption of ['cancel', 'hidden']) {
     expect(runtime.pageErrors).toEqual([]);
   });
 }
+
+test('immersive exit survives lost native completion without early overlay release', async ({ page }) => {
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await waitForRoute(page);
+  const opener = page.getByRole('button', { name: 'Погружение' }).first();
+  await opener.press('Enter');
+  const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
+  await dialog.evaluate(node => {
+    const nativeAnimate = node.animate.bind(node);
+    node.animate = (...args) => {
+      const animation = nativeAnimate(...args);
+      if (!Array.isArray(args[0]) || args[0][1]?.opacity !== 0) return animation;
+      animation.pause();
+      Object.defineProperty(animation, 'finished', { configurable: true, value: new Promise(() => {}) });
+      const finish = animation.finish.bind(animation);
+      window.__qaStalledNativeExit = { start: performance.now(), forced: null };
+      animation.finish = () => {
+        window.__qaStalledNativeExit.forced = {
+          elapsed: performance.now() - window.__qaStalledNativeExit.start,
+          connected: node.isConnected,
+          opacity: getComputedStyle(node).opacity,
+          depth: window.__TLP_OVERLAY_DEBUG?.depth,
+          inert: document.getElementById('root').inert,
+        };
+        finish();
+      };
+      return animation;
+    };
+  });
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0, { timeout: 5000 });
+  const proof = await page.evaluate(() => window.__qaStalledNativeExit?.forced);
+  expect(proof).toBeTruthy();
+  expect(proof.elapsed).toBeGreaterThanOrEqual(1750);
+  expect(proof).toMatchObject({ connected: true, opacity: '0', depth: 1, inert: true });
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+  await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(false);
+  await expect(opener).toBeFocused();
+});
