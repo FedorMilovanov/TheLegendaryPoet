@@ -80,10 +80,13 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     // any reader action. Only genuine input may claim ownership of a hash jump.
     const onReaderGesture = () => {
       readerInteractedWithHash = true;
+      cancelHashFocus?.();
+      cancelHashFocus = null;
+      stopHashObserver();
       layoutObserver?.disconnect();
     };
     const onReaderKey = (event: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) {
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Tab'].includes(event.key)) {
         onReaderGesture();
       }
     };
@@ -161,7 +164,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     };
 
     const restore = () => {
-      if (cancelled) return;
+      if (cancelled || readerInteractedWithHash) return;
       if (location.hash) {
         if (findAndScrollToHash()) return;
 

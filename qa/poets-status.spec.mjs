@@ -13,17 +13,28 @@ const READING_INDEX_CAPTURE_STYLE = `
 `;
 
 async function assertReachableBeyondDock(entry) {
-  await entry.scrollIntoViewIfNeeded();
-  const state = await entry.evaluate((node) => {
+  // WebKit can keep a moving focused link "unstable" during native hash-layout
+  // correction. Playwright's scrollIntoViewIfNeeded waits for stability before
+  // even issuing the scroll; verify the reader-visible outcome instead.
+  await entry.evaluate((node) => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  const readGeometry = () => entry.evaluate((node) => {
     const link = node.getBoundingClientRect();
     const dock = document.querySelector('.mobile-dock');
     const box = dock?.getBoundingClientRect();
-    const visible = dock && box && getComputedStyle(dock).display !== 'none'
-      && box.bottom > 0 && box.top < innerHeight;
-    return { linkTop: link.top, linkBottom: link.bottom, dockTop: visible ? box.top : null,
-      clear: !visible || link.bottom < box.top - 2 || link.top > box.bottom + 2 };
+    const visible = Boolean(dock && box && getComputedStyle(dock).display !== 'none'
+      && box.bottom > 0 && box.top < innerHeight);
+    return {
+      linkTop: link.top,
+      linkBottom: link.bottom,
+      dockTop: visible ? box.top : null,
+      inViewport: link.top >= -1 && link.bottom <= innerHeight + 1,
+      clear: !visible || link.bottom < box.top - 2 || link.top > box.bottom + 2,
+    };
   });
-  expect(state.clear, `Focused contents entry obscured by the mobile dock: ${JSON.stringify(state)}`).toBe(true);
+  await expect.poll(async () => {
+    const state = await readGeometry();
+    return state.inViewport && state.clear;
+  }, { message: 'Contents entry must be visible and unobscured by the mobile dock' }).toBe(true);
 }
 
 test.describe('poets result status accessibility', () => {
@@ -109,6 +120,7 @@ test.describe('poets result status accessibility', () => {
       await expect(guide.locator('[data-poem-cycle]')).toHaveCount(10);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
+      if (width === 390) await expect(guide.locator('[data-poem-cycle]').first()).toBeVisible();
       await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
@@ -124,6 +136,7 @@ test.describe('poets result status accessibility', () => {
       await expect(page.locator('#poem-blok-10')).toContainText('Опять с вековою тоскою');
       await expect(page.locator('#poem-blok-11')).toContainText('Вл. Соловьев');
       const finalCard = page.locator('#poem-blok-11');
+      await expect(finalCard.getByRole('link', { name: 'К оглавлению', includeHidden: true })).toHaveAttribute('href', '#blok-contents');
       const epigraph = finalCard.locator('[data-poem-epigraph]');
       await expect(epigraph).toBeVisible();
       await expect(epigraph).toHaveAttribute('aria-label', 'Эпиграф к стихотворению');
@@ -155,7 +168,7 @@ test.describe('poets result status accessibility', () => {
       const columnCount = await guide.locator('.grid').first().evaluate((element) =>
         getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length,
       );
-      expect(columnCount).toBe(width >= 640 ? 2 : 1);
+      expect(columnCount).toBe(width < 640 ? 1 : 2);
 
       const box = await guide.boundingBox();
       expect(box).not.toBeNull();
@@ -171,7 +184,9 @@ test.describe('poets result status accessibility', () => {
         await guide.screenshot({ path: `qa-artifacts/blok-reading-index-${width}-dark.png`, style: READING_INDEX_CAPTURE_STYLE });
         await page.evaluate(() => document.documentElement.classList.add('theme-light'));
         await expect(guide.getByRole('heading', { name: 'Навигация по лирике' })).toHaveCSS('color', 'rgb(119, 86, 23)');
-        await expect(anchors.first()).toHaveCSS('border-color', 'rgba(119, 86, 23, 0.3)');
+        await expect(anchors.first()).toHaveCSS('border-color', width < 640
+          ? 'rgba(119, 86, 23, 0.22)'
+          : 'rgba(119, 86, 23, 0.3)');
         const firstCard = cards.first();
         const analysisSurface = firstCard.getByText('Литературный анализ').locator('xpath=..');
         await expect(analysisSurface).toHaveCSS('background-color', 'rgb(244, 236, 219)');
@@ -490,6 +505,11 @@ test.describe('poets result status accessibility', () => {
           expect(title).not.toMatch(/««|»»/u);
         }
         await expect(nav).toHaveAttribute('id', 'poem-contents');
+        // Native/WebKit fragment focus must not depend on a transient tabindex
+        // added and then removed by the shared scroll coordinator.
+        await expect(nav).toHaveAttribute('tabindex', '-1');
+        if (width >= 640) await expect(nav.locator('.poet-reading-count')).toBeHidden();
+        else await expect(nav.locator('.poet-reading-count')).toBeVisible();
         const jump = page.getByRole('link', { name: 'К оглавлению стихов' });
         await expect(jump).toHaveAttribute('href', '#poem-contents');
         const columns = await nav.locator('ol').evaluate((node) => getComputedStyle(node).gridTemplateColumns.trim().split(/\s+/u).filter(Boolean).length);
@@ -524,6 +544,188 @@ test.describe('poets result status accessibility', () => {
       });
     }
   }
+
+
+  test('mobile twenty-work contents remains a compact, fully addressable index', async ({ page }, testInfo) => {
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(`${BASE_URL}/poets/fyodor-tyutchev`, { waitUntil: 'domcontentloaded' });
+      const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+      const entries = nav.locator('ol > li > a[href^="#poem-"]');
+      await expect(entries).toHaveCount(11);
+      // Stress only the layout, without fabricating published poems in source.
+      await nav.evaluate((node) => {
+        const list = node.querySelector('ol');
+        const originals = Array.from(list.children);
+        for (let index = 0; index < 9; index += 1) {
+          const clone = originals[index].cloneNode(true);
+          clone.querySelector('a').setAttribute('href', `#poem-layout-only-${index}`);
+          list.appendChild(clone);
+        }
+      });
+      await expect(nav.locator('ol > li')).toHaveCount(20);
+      // Stress fixtures must not rewrite the React-owned real catalog counter.
+      await expect(nav.locator('.poet-reading-count')).toContainText('11');
+      const historicalDate = nav.locator('ol > li').first().locator('[data-poem-year-label]');
+      const secondLink = nav.locator('ol > li > a').nth(1);
+      await expect(secondLink).toHaveAttribute('data-poem-date-wrap', 'false');
+      await expect(nav.locator('ol > li > a').first()).toHaveAttribute('data-poem-date-wrap', 'true');
+      await expect(nav.locator('.poet-reading-count')).toBeVisible();
+      await expect(nav.locator('.poet-reading-count')).toContainText('11');
+      await expect(historicalDate).toHaveCSS('white-space', 'normal');
+      await expect(historicalDate).toContainText('конец 1820-х — начало 1830-х гг.');
+      const geometry = await nav.evaluate((node) => {
+        const columns = getComputedStyle(node.querySelector('ol')).gridTemplateColumns.trim().split(/\s+/u).length;
+        const links = Array.from(node.querySelectorAll('ol > li > a'));
+        const years = Array.from(node.querySelectorAll('[data-poem-year-note]'));
+        return {
+          height: node.getBoundingClientRect().height,
+          width: node.getBoundingClientRect().width,
+          scrollOverflow: node.scrollWidth - node.clientWidth,
+          documentOverflow: document.documentElement.scrollWidth - innerWidth,
+          columns,
+          minTouchHeight: Math.min(...links.map((link) => link.getBoundingClientRect().height)),
+          minTitleFontSize: Math.min(...links.map((link) => parseFloat(getComputedStyle(link.firstElementChild).fontSize))),
+          sourceNotesVisuallyHidden: years.every((note) => getComputedStyle(note).display === 'none'),
+          titlesUnbroken: links.every((link) => getComputedStyle(link.firstElementChild).wordBreak === 'normal' && getComputedStyle(link.firstElementChild).hyphens === 'none'),
+          datesNotTruncated: Array.from(node.querySelectorAll('[data-poem-year-label]')).every(
+            (label) => getComputedStyle(label).textOverflow !== 'ellipsis'),
+        };
+      });
+      expect(geometry.columns).toBe(1);
+      expect(geometry.minTouchHeight).toBeGreaterThanOrEqual(44);
+      await expect(secondLink.locator('[data-poem-year-label]')).toHaveCSS('grid-column-start', '3');
+      await expect(historicalDate).toHaveCSS('grid-column-start', '2');
+      expect(geometry.minTitleFontSize).toBeGreaterThanOrEqual(14);
+      expect(geometry.sourceNotesVisuallyHidden).toBe(true);
+      expect(geometry.titlesUnbroken).toBe(true);
+      expect(geometry.datesNotTruncated).toBe(true);
+      expect(geometry.scrollOverflow).toBeLessThanOrEqual(1);
+      expect(geometry.documentOverflow).toBeLessThanOrEqual(1);
+      if (width === 390) expect(geometry.height, '20 works must not recreate a multi-screen card stack').toBeLessThan(1100);
+      await nav.locator('ol > li > a').last().focus();
+      await expect(nav.locator('ol > li > a').last()).toBeFocused();
+      if (width === 390 && testInfo.project.name === 'chromium-core') {
+        mkdirSync('qa-artifacts', { recursive: true });
+        await page.evaluate(() => document.fonts.ready);
+        await nav.screenshot({ path: 'qa-artifacts/poet-reading-index-20-390-dark.png', style: READING_INDEX_CAPTURE_STYLE });
+        await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+        await nav.screenshot({ path: 'qa-artifacts/poet-reading-index-20-390-light.png', style: READING_INDEX_CAPTURE_STYLE });
+      }
+    }
+  });
+
+
+  test('mobile contents marks the chosen poem and supports returning from its card', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.goto(`${BASE_URL}/poets/fyodor-tyutchev`, { waitUntil: 'domcontentloaded' });
+    const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+    const first = nav.locator('a[href="#poem-tyutchev-1"]');
+    const second = nav.locator('a[href="#poem-tyutchev-2"]');
+    await expect(first).not.toHaveAttribute('aria-current', 'location');
+    await first.click();
+    await expect(page).toHaveURL(/#poem-tyutchev-1$/);
+    await expect(first).toHaveAttribute('aria-current', 'location');
+    await expect(second).not.toHaveAttribute('aria-current', 'location');
+    // The gold rail must join the highlighted surface, not float outside it.
+    // Separately keep breathing room before 03 without shifting the title
+    // compared with unselected rows.
+    const accentMetrics = await first.evaluate((link) => {
+      const box = link.getBoundingClientRect();
+      const style = getComputedStyle(link);
+      const rail = getComputedStyle(link, '::after');
+      const firstTitle = link.firstElementChild?.getBoundingClientRect();
+      const nearestOther = link.closest('li')?.nextElementSibling?.querySelector('a > div:first-child')?.getBoundingClientRect();
+      const railLeft = box.left + Number.parseFloat(rail.left);
+      const railRight = railLeft + Number.parseFloat(rail.width);
+      return {
+        rendered: rail.content !== 'none' && rail.content !== 'normal',
+        railToBackgroundEdge: railLeft - box.left,
+        numeralGap: box.left + Number.parseFloat(style.paddingLeft) - railRight,
+        titleAlignment: firstTitle && nearestOther ? firstTitle.left - nearestOther.left : NaN,
+        overflow: link.closest('nav').scrollWidth - link.closest('nav').clientWidth,
+        accentColor: rail.backgroundColor,
+      };
+    });
+    expect(accentMetrics.rendered).toBe(true);
+    expect(Math.abs(accentMetrics.railToBackgroundEdge)).toBeLessThanOrEqual(0.5);
+    expect(accentMetrics.numeralGap).toBeGreaterThanOrEqual(9);
+    expect(accentMetrics.numeralGap).toBeLessThanOrEqual(13);
+    expect(Math.abs(accentMetrics.titleAlignment)).toBeLessThanOrEqual(1);
+    expect(accentMetrics.overflow).toBeLessThanOrEqual(1);
+    await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+    await expect(first).toHaveAttribute('aria-current', 'location');
+    const lightAccent = await first.evaluate((link) => getComputedStyle(link, '::after').backgroundColor);
+    expect(lightAccent).not.toBe(accentMetrics.accentColor);
+    await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+    const accessibleName = await first.ariaSnapshot();
+    expect(accessibleName).toContain('Silentium!');
+    expect(accessibleName).not.toContain('Точная дата не установлена');
+    const last = nav.locator('ol > li > a').last();
+    await expect(last).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+    await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+    await expect(last).toHaveCSS('border-bottom-color', 'rgba(0, 0, 0, 0)');
+    await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+    const returnLink = page.locator('#poem-tyutchev-1').getByRole('link', { name: 'К оглавлению' });
+    await expect(returnLink).toHaveAttribute('href', '#poem-contents');
+    await returnLink.click();
+    await expect(page).toHaveURL(/#poem-contents$/);
+    await expect(nav).toBeVisible();
+    await expect(first).not.toHaveAttribute('aria-current', 'location');
+    await expect(first).toHaveAttribute('data-last-visited', 'true');
+    await second.click();
+    await expect(page).toHaveURL(/#poem-tyutchev-2$/);
+    await expect(second).toHaveAttribute('aria-current', 'location');
+    await expect(second).not.toHaveAttribute('data-last-visited', 'true');
+    await expect(first).not.toHaveAttribute('aria-current', 'location');
+    if (await page.evaluate(() => matchMedia('(hover: none)').matches)) {
+      // Touch browsers can retain a synthetic :hover after moving selection.
+      // Only the current poem may keep a painted gold rail.
+      await expect(first).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      await expect.poll(() => first.evaluate((node) =>
+        getComputedStyle(node, '::after').content)).toBe('none');
+      await expect.poll(() => second.evaluate((node) =>
+        getComputedStyle(node, '::after').content)).not.toBe('none');
+    }
+    expect(await nav.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(1);
+  });
+
+  test('mobile selection rail meets its highlight and numeral stays readable at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto(`${BASE_URL}/poets/fyodor-tyutchev#poem-tyutchev-3`, { waitUntil: 'domcontentloaded' });
+    const nav = page.getByRole('navigation', { name: 'Навигация по лирике' });
+    const entry = nav.locator('a[href="#poem-tyutchev-3"]');
+    await expect(entry).toHaveAttribute('aria-current', 'location');
+    for (const light of [false, true]) {
+      await page.evaluate((on) => {
+        document.documentElement.classList.toggle('theme-light', on);
+        document.documentElement.classList.toggle('theme-dark', !on);
+      }, light);
+      // Theme class updates may race the site's theme synchronizer in
+      // WebKit: prove the final painted surface, not a pre-paint sample.
+      // Retain the hard failure for any persistently transparent selection.
+      const expectedSelectedBg = light
+        ? 'rgba(119, 86, 23, 0.075)'
+        : 'rgba(212, 175, 55, 0.075)';
+      await expect(entry).toHaveCSS('background-color', expectedSelectedBg);
+      const geometry = await entry.evaluate((link) => {
+        const style = getComputedStyle(link);
+        const accent = getComputedStyle(link, '::after');
+        return {
+          railLeft: Number.parseFloat(accent.left),
+          gap: Number.parseFloat(style.paddingLeft) - Number.parseFloat(accent.left) - Number.parseFloat(accent.width),
+          overflow: link.closest('nav').scrollWidth - link.closest('nav').clientWidth,
+          background: style.backgroundColor,
+        };
+      });
+      expect(Math.abs(geometry.railLeft)).toBeLessThanOrEqual(0.5);
+      expect(geometry.gap).toBeGreaterThanOrEqual(9);
+      expect(geometry.gap).toBeLessThanOrEqual(13);
+      expect(geometry.overflow).toBeLessThanOrEqual(1);
+      expect(geometry.background, `Selected mobile rail must remain painted at 320px in ${light ? 'light' : 'dark'} mode`)
+        .toBe(expectedSelectedBg);
+    }
+  });
 
   test('Blok epigraph reserves its reading space before the lazy chunk arrives', async ({ page }) => {
     // Use one navigation per isolated Playwright page: later visits can reuse
@@ -568,6 +770,12 @@ test.describe('poets result status accessibility', () => {
     // can precede CommandPalette's effect subscription in mobile WebKit.
     const mobileSearch = page.getByRole('button', { name: 'Открыть поиск и все разделы' });
     const desktopSearch = page.getByRole('button', { name: 'Открыть поиск — Ctrl K' });
+    // WebKit can expose neither control immediately after domcontentloaded.
+    // Wait for the real responsive search trigger before choosing a branch;
+    // isVisible() alone is an instantaneous probe, not a hydration wait.
+    await expect.poll(async () =>
+      (await mobileSearch.isVisible()) || (await desktopSearch.isVisible()),
+    ).toBe(true);
     if (await mobileSearch.isVisible()) {
       await mobileSearch.click();
     } else {
