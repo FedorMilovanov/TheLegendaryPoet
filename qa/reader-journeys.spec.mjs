@@ -611,3 +611,50 @@ test.describe('animated modal exit lifetime', () => {
     }
   }
 });
+
+for (const interruption of ['cancel', 'hidden']) {
+  test(`immersive native exit interruption releases the actual dialog and overlay lease: ${interruption}`, async ({ page }, testInfo) => {
+    const runtime = attachRuntimeDiagnostics(page);
+    await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+    const opener = page.getByRole('button', { name: 'Погружение' }).first();
+    await opener.scrollIntoViewIfNeeded();
+    await opener.focus();
+    const touch = testInfo.project.name === 'android-pixel7' || testInfo.project.name === 'iphone-safari';
+    if (touch) await opener.tap(); else await opener.click();
+    const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+    await expect(dialog).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
+
+    await dialog.evaluate(node => {
+      const animate = node.animate.bind(node);
+      node.animate = (...args) => {
+        const animation = animate(...args);
+        const frames = args[0];
+        if (Array.isArray(frames) && frames[0]?.opacity === 1 && frames[1]?.opacity === 0) {
+          animation.pause();
+          window.__qaInterruptedExit = animation;
+        }
+        return animation;
+      };
+    });
+    const close = dialog.getByRole('button', { name: 'Выйти' });
+    if (touch) await close.tap(); else await close.click();
+    await expect.poll(() => page.evaluate(() => Boolean(window.__qaInterruptedExit))).toBe(true);
+    await expect(dialog).toBeAttached();
+    await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
+    await page.evaluate(kind => {
+      if (kind === 'cancel') window.__qaInterruptedExit.cancel();
+      else {
+        // Inject the visibility transition; the animation and portal are real.
+        Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+    }, interruption);
+    await expect(dialog).toHaveCount(0, { timeout: 5000 });
+    await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+    await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(false);
+    await expect(opener).toBeFocused();
+    expect(runtime.pageErrors).toEqual([]);
+  });
+}

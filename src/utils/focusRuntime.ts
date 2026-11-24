@@ -32,11 +32,18 @@ export function focusProgrammatically(target: HTMLElement | null, preventScroll 
 }
 
 export function scheduleProgrammaticFocus(resolveTarget: () => HTMLElement | null) {
+  // A deferred arrival must not reclaim focus after the reader has moved it.
+  const previousFocus = document.activeElement;
   let cancelled = false;
   let secondFrame = 0;
   const firstFrame = window.requestAnimationFrame(() => {
     secondFrame = window.requestAnimationFrame(() => {
-      if (!cancelled) focusProgrammatically(resolveTarget());
+      if (cancelled) return;
+      const target = resolveTarget();
+      const active = document.activeElement;
+      const ownerRemoved = previousFocus && !previousFocus.isConnected && active === document.body;
+      if (!target?.isConnected || target.contains(active) || (active !== previousFocus && !ownerRemoved)) return;
+      focusProgrammatically(target);
     });
   });
 

@@ -200,15 +200,19 @@ export function useNativeDialogExitLifetime(
       { duration: 450, easing: 'ease-in-out', fill: 'forwards' },
     );
     let active = true;
-    void exit.finished.then(() => {
+    const complete = () => {
       if (active && !latestOpen.current) setRetained(false);
-    }, () => {
-      // A deliberate cancel during rapid reopen must not close the new dialog.
-      // Keep the overlay lease if the browser cancels a still-painted exit.
-      if (active && !latestOpen.current && !surface.isConnected) setRetained(false);
-    });
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') complete();
+    };
+    // Completion and interruption both end this exit. Cleanup invalidates
+    // the old operation before cancelling it on reopen or unmount.
+    void exit.finished.then(complete, complete);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       active = false;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       exit.cancel();
     };
   }, [logicalOpen, retained, dialogRef]);
