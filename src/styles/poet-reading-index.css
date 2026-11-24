@@ -75,13 +75,186 @@ html.theme-light .poet-reading-index > ol > li > a {
   border-color: rgba(119,86,23,.3);
   background: linear-gradient(145deg, rgba(255,252,245,.92), rgba(246,237,220,.95));
 }
+/* Mobile contents is an editorial index, not a stack of archival cards.
+   Even twenty works occupy ten short paired rows; all targets remain visible
+   and directly reachable without disclosure, filtering or a nested scroll. */
+/* The document count is a mobile-only navigation affordance; desktop
+   editorial heading remains identical to the released version. */
+.poet-reading-count { display: none; }
+
+/* Mobile contents behaves like a book index. Dates use a right-aligned
+   column when short, and a full-width second line when historical/complex.
+   Complete Russian titles never suffer the narrow two-column word breaks. */
 @media (max-width: 639px) {
-  .poet-reading-index { padding: 1.1rem; }
+  .poet-reading-index { padding: 1.05rem 1rem 1.1rem; }
+  .poet-reading-index > h3 {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .6rem;
+    margin-bottom: .45rem;
+    font-size: .75rem;
+    letter-spacing: .11em;
+  }
+  .poet-reading-count {
+    display: inline;
+    flex-shrink: 0;
+    color: #cbb579;
+    font-family: var(--font-sans);
+    font-size: .74rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+  }
+  .poet-reading-count small { font-size: .68rem; font-weight: 500; text-transform: none; }
+  .poet-reading-index > ol {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
   .poet-reading-index > ol > li > a {
-    min-height: 4.75rem;
+    min-height: 2.95rem;
+    position: relative;
+    height: 100%;
+    /* Compensate increased numeral inset with a narrower numeric track:
+       titles retain their previous horizontal origin at 320/390px. */
+    grid-template-columns: 1.15rem minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: .30rem;
+    align-content: center;
+    align-items: baseline;
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: .39rem .22rem .39rem .75rem;
     scroll-margin-bottom: calc(var(--tlp-mobile-dock-clearance, 4.75rem) + var(--tlp-mobile-dock-bottom, 1rem) + 1rem);
   }
+  .poet-reading-index > ol > li > a::before {
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: start;
+    font-size: .92rem;
+    line-height: 1.3;
+    padding-top: .14rem;
+  }
+  .poet-reading-index > ol > li > a > div:first-child {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: .97rem;
+    font-weight: 400;
+    line-height: 1.34;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+    text-wrap: pretty;
+  }
+  /* Presentational wrapper only. Keep the original spans, real dates and
+     literary cycles, but align them without a metadata column squeezing text. */
+  .poet-reading-index > ol > li > a > div:last-child {
+    display: contents;
+  }
+  .poet-reading-index > ol > li > a [data-poem-year-label] {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: baseline;
+    justify-self: end;
+    max-width: 100%;
+    font-size: .75rem;
+    line-height: 1.6;
+    letter-spacing: .015em;
+    text-transform: none;
+    white-space: nowrap;
+  }
+  .poet-reading-index > ol > li > a[data-poem-date-wrap="true"] [data-poem-year-label] {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    justify-self: start;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.35;
+    margin-top: .05rem;
+  }
+  /* Complete provenance is presented with the poem, not read aloud
+     as part of every quick-link accessible name on mobile. */
+  .poet-reading-index [data-poem-year-note] { display: none; }
+  .poet-reading-index [data-poem-cycle] {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    max-width: 100%;
+    font-size: .75rem;
+    line-height: 1.3;
+    letter-spacing: .015em;
+    text-transform: none;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .poet-reading-index > ol > li > a[data-poem-date-wrap="true"] [data-poem-cycle] {
+    grid-row: 3;
+  }
+  .poet-reading-index .poet-reading-community { display: none; }
+  .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
+  /* Accent attaches directly to the selected background's left boundary.
+     The numeral is padded inward while the title retains its alignment. */
+  .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"]) {
+    transform: none;
+    /* Explicit background-color with scoped priority: Safari's theme switch
+       can otherwise retain transparent background on hash-targeted links. */
+    background-color: rgba(212,175,55,.075) !important;
+    box-shadow: none;
+  }
+  .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"])::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    left: 0;
+    top: .48rem;
+    bottom: .48rem;
+    width: 2px;
+    border-radius: 2px;
+    background: #c6a45f;
+  }
+  .poet-reading-index > ol > li > a:active { background: rgba(212,175,55,.12); }
+  .poet-reading-index > ol > li > a:focus-visible {
+    border-radius: .35rem;
+    outline-offset: -2px;
+  }
+  .poet-reading-index > ol > li > a:is([aria-current="location"], [data-last-visited="true"]) > div:first-child {
+    color: #f3db9b;
+  }
+  html.theme-light .poet-reading-index > ol > li > a {
+    background: transparent;
+    border-color: rgba(119,86,23,.22);
+  }
+  html.theme-light .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"]) {
+    background-color: rgba(119,86,23,.075) !important;
+    box-shadow: none;
+  }
+  html.theme-light .poet-reading-index > ol > li > a:is(:hover, :focus-visible, [aria-current="location"], [data-last-visited="true"])::after {
+    background: #936a25;
+  }
+  html.theme-light .poet-reading-index > ol > li > a:is([aria-current="location"], [data-last-visited="true"]) > div:first-child {
+    color: #694912;
+  }
+  html.theme-light .poet-reading-index > ol > li:last-child > a { border-bottom-color: transparent; }
+  html.theme-light .poet-reading-count { color: #775617; }
 }
+@media (max-width: 359px) {
+  /* Keep the running title on one line when the device is only 320px wide:
+     the number itself still identifies the exact catalogue size. */
+  .poet-reading-count small { display: none; }
+}
+@media (max-width: 639px) and (hover: none) {
+  /* WebKit and Android may keep :hover on a previously tapped anchor.
+     A stale hover must not paint a second gold rail after hash navigation.
+     Keep true :active feedback, keyboard focus, and actual selection intact. */
+  .poet-reading-index > ol > li > a:hover:not(:active):not(:focus-visible):not([aria-current="location"]):not([data-last-visited="true"]) {
+    background-color: transparent !important;
+  }
+  .poet-reading-index > ol > li > a:hover:not(:active):not(:focus-visible):not([aria-current="location"]):not([data-last-visited="true"])::after {
+    content: none;
+  }
+}
+
 
 /* Keep quote, heading and credit geometry while their async chunk is in flight.
    The literal credit is measured by the browser, including text zoom wrapping. */

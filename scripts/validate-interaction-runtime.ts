@@ -196,9 +196,10 @@ expect(!commandSource.includes('onKeyDown={onDialogKeyDown}'), 'the command dial
 expect(immersiveSource.includes('useDialogSurface'), 'immersive playback must use the shared dialog lifecycle');
 expect(dialogSource.includes('useDialogExitLifetime'), 'animated dialogs must share a presence-aware lock lifetime');
 expect(dialogSource.includes('if (!deferReleaseUntilUnmount) handle.release()'), 'Escape must retain animated dialog ownership until exit completion');
-expect(immersiveSource.includes('useDialogExitLifetime(immersiveOpen && Boolean(currentTrack))'), 'immersive playback must retain focus isolation throughout visual exit');
+expect(immersiveSource.includes('useNativeDialogExitLifetime(immersiveOpen && Boolean(currentTrack), dialogRef)'), 'immersive playback must attach its native exit to the painted dialog');
 expect(immersiveSource.includes('open: lifetime.lockOpen') && immersiveSource.includes('deferReleaseUntilUnmount: true'), 'immersive overlay lock must follow painted presence, not logical open');
-expect(immersiveSource.includes('onExitComplete={lifetime.onExitComplete}'), 'immersive overlay must release after AnimatePresence exit completion');
+expect(dialogSource.includes('exit.finished.then') && dialogSource.includes("typeof surface.animate !== 'function'"), 'immersive overlay must release after compositor exit completion, without relying on Framer presence');
+expect(immersiveSource.includes('{lifetime.lockOpen && currentTrack'), 'immersive dialog DOM must remain mounted throughout native exit');
 expect(immersiveSource.includes('isTopmost()'), 'background media shortcuts must pause beneath another dialog');
 expect(!immersiveSource.includes("document.body.style.overflow = 'hidden'"), 'immersive playback must not duplicate body locking');
 expect(ratingFormSource.includes('dirtyRef.current'), 'late community hydration must not erase an in-progress rating draft');
