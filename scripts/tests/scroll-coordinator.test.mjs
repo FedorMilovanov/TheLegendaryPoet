@@ -13,7 +13,8 @@ const compiled = ts.transpileModule(source, { compilerOptions: {
 // explicitly delayed animation frame. No browser timing or source-string check.
 function coordinator() {
   const refs = [], effects = [], frames = new Map(), calls = [], events = [], listeners = new Map();
-  let anchorDocumentY = 300;
+  let anchorDocumentY = 300, anchorAvailable = true, activeObserver = null;
+  let focusRequests = 0, focusCancels = 0;
   let refIndex = 0, effectIndex = 0, nextFrame = 0;
   let location = { key: 'first', pathname: '/essay', hash: '' }, navigation = 'POP';
   const window = {
@@ -24,18 +25,20 @@ function coordinator() {
       listeners.get(type).add(callback);
     },
     removeEventListener(type, callback) { listeners.get(type)?.delete(callback); },
-    emit(type, detail) { for (const callback of listeners.get(type) ?? []) callback({ type, detail }); },
+    emit(type, detail) { for (const callback of listeners.get(type) ?? []) callback({ type, detail, ...detail }); },
+    setTimeout() { return 1; }, clearTimeout() {},
     dispatchEvent(event) { events.push(event.type); return true; },
     scrollTo(options) { calls.push(options.top); this.scrollY = options.top; },
   };
   const document = {
     documentElement: { classList: { remove() {} } },
-    getElementById: (id) => id === 'target' ? { isConnected: true, getBoundingClientRect: () => ({ top: anchorDocumentY - window.scrollY }) } : null,
+    getElementById: (id) => id === 'target' && anchorAvailable ? { isConnected: true, getBoundingClientRect: () => ({ top: anchorDocumentY - window.scrollY }) } : null,
   };
   const exports = {};
   vm.runInNewContext(compiled, {
     exports, window, document,
     Event: class { constructor(type) { this.type = type; } },
+    MutationObserver: class { constructor(callback) { this.callback = callback; } observe() { activeObserver = this; } disconnect() { if (activeObserver === this) activeObserver = null; } },
     requestAnimationFrame: (callback) => { frames.set(++nextFrame, callback); return nextFrame; },
     cancelAnimationFrame: (id) => frames.delete(id),
     require: (name) => {
@@ -50,12 +53,14 @@ function coordinator() {
       };
       if (name === 'react-router') return { useLocation: () => location, useNavigationType: () => navigation };
       if (name === 'react/jsx-runtime') return { Fragment: 'fragment', jsx: (_type, props) => props.children };
-      if (name.endsWith('/focusRuntime')) return { scheduleProgrammaticFocus: () => () => {} };
+      if (name.endsWith('/focusRuntime')) return { scheduleProgrammaticFocus: () => { focusRequests++; return () => { focusCancels++; }; } };
       throw new Error(`Unexpected coordinator import: ${name}`);
     },
   });
   return {
     window, calls, events, setAnchorDocumentY(value) { anchorDocumentY = value; },
+    setAnchorAvailable(value) { anchorAvailable = value; }, mutate() { activeObserver?.callback(); },
+    focusStats() { return { focusRequests, focusCancels }; }, hasObserver() { return Boolean(activeObserver); },
     render(nextLocation = location, nextNavigation = navigation) {
       location = nextLocation; navigation = nextNavigation; refIndex = effectIndex = 0;
       exports.default({ children: null });
@@ -138,4 +143,33 @@ test('touch input blocks post-hydration auto-scroll correction', () => {
   app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'sergei-yesenin' });
   app.frame();
   assert.equal(app.window.scrollY, 204);
+});
+
+test('reader pointer gesture before first hash frame cancels pending placement and focus', () => {
+  const app = coordinator();
+  app.render({ key: 'gesture', pathname: '/poets/a', hash: '#target' }, 'POP');
+  app.window.emit('pointerdown'); app.frame();
+  assert.deepEqual(app.calls, []);
+  assert.deepEqual(app.focusStats(), { focusRequests: 0, focusCancels: 0 });
+});
+test('Tab after hash placement cancels the queued focus and yields layout ownership', () => {
+  const app = coordinator();
+  app.render({ key: 'gesture', pathname: '/poets/a', hash: '#target' }, 'POP'); app.frame();
+  assert.equal(app.focusStats().focusRequests, 1);
+  app.window.emit('keydown', { key: 'Tab' });
+  assert.equal(app.focusStats().focusCancels, 1);
+  app.setAnchorDocumentY(500);
+  app.window.emit('tlp-poet-corpus-hydrated', { poetId: 'a' }); app.frame();
+  assert.deepEqual(app.calls, [204]);
+});
+test('a reader wheel before lazy target arrives retires the observer and pending focus', () => {
+  const app = coordinator();
+  app.setAnchorAvailable(false);
+  app.render({ key: 'late', pathname: '/poets/a', hash: '#target' }, 'POP'); app.frame();
+  assert.equal(app.hasObserver(), true);
+  app.window.emit('wheel');
+  assert.equal(app.hasObserver(), false);
+  app.setAnchorAvailable(true); app.mutate(); app.frame();
+  assert.deepEqual(app.calls, []);
+  assert.equal(app.focusStats().focusRequests, 0);
 });
