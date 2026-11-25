@@ -208,6 +208,9 @@ try {
   expect(discoveryHead.includes('canonicalRouteUrl(siteConfig.url, options.path)'), 'runtime self canonical must use terminal public route authority');
   expect(seoSchema.includes('absoluteRouteUrl') && seoSchema.includes('canonicalRouteUrl'), 'JSON-LD route URLs must use terminal public route authority');
   expect(genSitemap.includes('canonicalRoutePath(item.loc)') && genSitemap.includes('canonicalRouteUrl(BASE, item.loc)'), 'sitemap/manifest must use terminal public route authority');
+  expect(genSitemap.includes("import { poets as canonicalPoets } from '../src/data/library/index.ts';")
+    && genSitemap.includes('...canonicalPoets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), poet]),'),
+  'author-detail discovery fingerprints must use the full canonical library, not the abbreviated shell index');
   expect(feed.includes('canonicalRouteUrl(BASE, entry.path)'), 'Atom entries must use terminal public route authority');
   expect(discoveryHead.includes("document.getElementById('route-jsonld')?.remove()"), 'non-schema states must remove stale route JSON-LD');
   expect(discoveryHead.includes("removeLink('canonical')"), 'non-canonical states must remove stale canonical');

@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, poets } from '../src/data/poets.ts';
+import { poets as canonicalPoets } from '../src/data/library/index.ts';
 import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
@@ -180,7 +181,9 @@ const dataDependencies = {
 const dynamicContentByPath = new Map([
   ...essays.map((essay) => [canonicalRoutePath(`/essays/${essay.slug}`), essay]),
   ...publishedTracks.map((track) => [canonicalRoutePath(`/music/${track.id}`), track]),
-  ...poets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), poet]),
+  // Author detail serves the complete canonical corpus after hydration. The
+  // deliberately abbreviated shell index cannot fingerprint these pages.
+  ...canonicalPoets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), poet]),
 ]);
 
 const manifestRoutes = urls.map((item) => {
