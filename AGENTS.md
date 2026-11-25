@@ -104,3 +104,7 @@ do not duplicate it to simulate three battles; repository rules never override t
 limits. Only explicitly approved saved frames become canonical or enter animation.
 A skipped/no-selection result is not proof of rejection. Keep draft media storage
 separate from the music release workflow.
+
+## Suno and video cover art
+
+For cover art, thumbnails and release visual concepts, read `suno/covers/AGENT.md`, then the relevant case and research ledger. Distinguish cover artwork from clip continuity. Do not generate on a research or prompt-only request. Multiple independent concepts require separate complete briefs and single-image tasks, never a collage; actual tool limits apply. Only owner-selected artwork enters the release workflow.
