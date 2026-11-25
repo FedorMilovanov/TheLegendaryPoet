@@ -75,7 +75,7 @@ jobs:
           exit $status
       - name: Upload interaction runtime diagnostics
         if: ${{ failure() && steps.interaction_runtime.outcome == 'failure' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: interaction-runtime-diagnostics
           path: interaction-runtime.log
@@ -91,7 +91,7 @@ jobs:
           exit $status
       - name: Upload hover stability diagnostics
         if: ${{ failure() && steps.hover_stability.outcome == 'failure' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: hover-stability-diagnostics
           path: hover-stability.log
@@ -109,7 +109,7 @@ jobs:
           exit $status
       - name: Upload typecheck diagnostics
         if: ${{ failure() && steps.typecheck.outcome == 'failure' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: typecheck-diagnostics
           path: typecheck.log
@@ -151,7 +151,7 @@ jobs:
           exit $status
       - name: Upload brand validation diagnostics
         if: ${{ failure() && steps.brand_validation.outcome == 'failure' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: brand-validation-diagnostics
           path: brand-validation.log
@@ -169,7 +169,7 @@ jobs:
           VITE_BASE: /
       - name: Upload production build diagnostics
         if: ${{ failure() && steps.production_build.outcome == 'failure' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: production-build-diagnostics
           path: production-build.log
@@ -185,7 +185,7 @@ jobs:
           exit $status
       - name: Upload exact build budget evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: build-output-budget-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
