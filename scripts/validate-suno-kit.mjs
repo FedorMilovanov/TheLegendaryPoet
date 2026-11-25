@@ -14,10 +14,18 @@ export const clipDocuments = [
   'suno/clips/references/yesenin-epic/README.md',
   'suno/clips/projects/yesenin-chto-eto-takoe.md',
 ];
+export const coverDocuments = [
+  'suno/covers/AGENT.md', 'suno/covers/RESEARCH.md', 'suno/covers/projects/fet-new-year.md',
+];
+export const coverReferenceAssets = [
+  'public/images/fet-480.jpg', 'public/images/music/blok-night-loop-cover.webp',
+  'public/images/music/yesenin-ya-ustalym-cover.webp', 'public/images/music/lermontov-niva-cover.webp',
+];
 export const documents = ['suno/README.md', 'suno/AGENT.md', 'suno/CASES.md',
   'suno/PRONUNCIATION_AND_REPAIR.md', 'suno/RESEARCH_2026-10-25.md',
-  'suno/WORKBENCH.md', 'suno/EXPERIENCE.md', 'suno/NEW_YEAR_SERIES.md', ...clipDocuments];
+  'suno/WORKBENCH.md', 'suno/EXPERIENCE.md', 'suno/NEW_YEAR_SERIES.md', ...clipDocuments, ...coverDocuments];
 export const referenceAssets = [
+  ...coverReferenceAssets,
   ...[
     'action-two-guns.jpg', 'creature-root-giant.jpg', 'expression-calm-alert-daylight.jpg',
     'expression-full-shout-night.jpg', 'expression-startled-night.jpg',
@@ -102,7 +110,7 @@ export function validateKit(directory = root) {
   }
   const agents = fs.readFileSync(path.join(directory, 'AGENTS.md'), 'utf8');
   for (const file of ['suno/AGENT.md', 'suno/CASES.md', 'suno/PRONUNCIATION_AND_REPAIR.md',
-    'suno/WORKBENCH.md', 'suno/NEW_YEAR_SERIES.md', 'suno/clips/AGENT.md', 'suno/clips/README.md']) {
+    'suno/WORKBENCH.md', 'suno/NEW_YEAR_SERIES.md', 'suno/clips/AGENT.md', 'suno/clips/README.md', 'suno/covers/AGENT.md']) {
     if (!agents.includes(file)) errors.push(`missing agent routing: ${file}`);
   }
   if (errors.length) throw new Error(errors.join('\n'));
