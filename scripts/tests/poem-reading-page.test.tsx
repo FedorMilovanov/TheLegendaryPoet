@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildPoemPageModel, type PoemRouteRow } from '../../src/lib/poemPageModel';
 import PoemReadingBody from '../../src/components/poet-detail/PoemReadingBody';
@@ -20,7 +21,7 @@ const track = (id: string, availability: MusicTrack['availability']): MusicTrack
 const render = (item: PoemRouteRow, catalog = [item], tracks: MusicTrack[] = []) => {
   const page = buildPoemPageModel(item, catalog, tracks);
   assert.ok(page);
-  return { page, html: renderToStaticMarkup(<PoemReadingBody page={page} />) };
+  return { page, html: renderToStaticMarkup(createElement(PoemReadingBody, { page })) };
 };
 
 test('static shared reading body has one H1, one canonical verse, real source and author links', () => {

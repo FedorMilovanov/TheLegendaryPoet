@@ -1,3 +1,4 @@
+/** @jsxRuntime automatic */
 import type { PoemPageModel, ReadingLink } from '../../lib/poemPageModel';
 
 const linkClass = 'theme-text inline-flex min-h-11 items-center underline decoration-current underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';

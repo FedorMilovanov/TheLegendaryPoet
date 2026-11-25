@@ -65,7 +65,7 @@ try {
   }
   console.log(poemFixtures.stdout.trim());
   const readingFixtures = spawnSync(process.execPath, ['--import', 'tsx', '--test', 'scripts/tests/poem-reading-page.test.tsx'], {
-    cwd: root, encoding: 'utf8',
+    cwd: root, encoding: 'utf8', env: { ...process.env, TSX_TSCONFIG_PATH: path.join(root, 'tsconfig.json') },
   });
   if (readingFixtures.status !== 0) {
     throw new Error('Poem reading body fixtures failed:\n' + [readingFixtures.stdout, readingFixtures.stderr].filter(Boolean).join('\n'));
