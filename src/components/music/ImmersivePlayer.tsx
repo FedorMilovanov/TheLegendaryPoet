@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,7 +14,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useDialogExitLifetime, useDialogSurface } from '../../hooks/useDialogSurface';
+import { useNativeDialogExitLifetime, useDialogSurface } from '../../hooks/useDialogSurface';
 import ResilientImage from '../media/ResilientImage';
 import { Link } from '../ui/Link';
 import { useAudioPlayer } from './AudioPlayerProvider';
@@ -47,7 +47,7 @@ export default function ImmersivePlayer() {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const lifetime = useDialogExitLifetime(immersiveOpen && Boolean(currentTrack));
+  const lifetime = useNativeDialogExitLifetime(immersiveOpen && Boolean(currentTrack), dialogRef);
   const { isTopmost } = useDialogSurface({
     open: lifetime.lockOpen,
     deferReleaseUntilUnmount: true,
@@ -94,8 +94,8 @@ export default function ImmersivePlayer() {
   if (typeof document === 'undefined') return null;
 
   const content = (
-    <AnimatePresence onExitComplete={lifetime.onExitComplete}>
-      {immersiveOpen && currentTrack && (() => {
+    <>
+      {lifetime.lockOpen && currentTrack && (() => {
         const theme = getTrackTheme(currentTrack);
         const totalDuration = duration || currentTrack.durationSeconds || 0;
         const progress = totalDuration > 0 ? Math.min(1, currentTime / totalDuration) : 0;
@@ -109,7 +109,6 @@ export default function ImmersivePlayer() {
             key={currentTrack.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.45 }}
             className="theme-dark-island fixed inset-0 z-[110] isolate overflow-y-auto overscroll-contain bg-[#030405] text-white outline-none"
             role="dialog"
@@ -232,7 +231,7 @@ export default function ImmersivePlayer() {
           </motion.div>
         );
       })()}
-    </AnimatePresence>
+    </>
   );
 
   return createPortal(content, document.body);
