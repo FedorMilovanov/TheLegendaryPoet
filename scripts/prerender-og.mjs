@@ -5,7 +5,11 @@ import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, musicTracks, poets } from '../src/data/poets.ts';
 import { siteConfig } from '../src/config/site.ts';
-import { canonicalRouteUrl } from '../src/routes/publicUrl.ts';
+import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
+import { poets as canonicalPoets } from '../src/data/library/index.ts';
+import { buildPoemRouteCatalog } from './lib/poem-discovery.mjs';
+import { buildPoemPageModel } from '../src/lib/poemPageModel.ts';
+import { assertPoemStaticAdmission, renderPoemStaticBody } from './lib/poem-static-document.tsx';
 import {
   buildArticlePageSchema,
   buildMusicPageSchema,
@@ -227,6 +231,24 @@ async function main() {
         poet,
       }),
     }));
+    count++;
+  }
+
+  const poemPolicy = JSON.parse(fs.readFileSync(path.resolve('src/data/poem-route-policy.json'), 'utf8'));
+  const poemCatalog = buildPoemRouteCatalog(canonicalPoets, poemPolicy, canonicalRoutePath);
+  const poemPages = poemCatalog.filter(row => row.eligible).map(row => {
+    const page = buildPoemPageModel(row, poemCatalog, allMusicTracks);
+    if (!page) throw new Error('Eligible poem has no reading model: ' + row.poemId);
+    return page;
+  });
+  const inventory = JSON.parse(fs.readFileSync(path.join(PUBLIC, 'discovery-manifest.json'), 'utf8'));
+  assertPoemStaticAdmission(poemPages, routeContract.routes, inventory.canonicalUrls);
+  for (const page of poemPages) {
+    const head = renderPage({
+      title: page.title, description: page.description, routePath: page.path,
+      image: page.image, imageAlt: 'Портрет: ' + page.authorName, jsonLd: page.schema,
+    });
+    writeRoute(page.path, renderPoemStaticBody(head, page));
     count++;
   }
 

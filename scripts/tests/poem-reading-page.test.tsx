@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildPoemPageModel, type PoemRouteRow } from '../../src/lib/poemPageModel';
 import PoemReadingBody from '../../src/components/poet-detail/PoemReadingBody';
 import type { MusicTrack } from '../../src/types/poet';
+import { assertPoemStaticAdmission, renderPoemStaticBody } from '../lib/poem-static-document';
 
 const poet = { id: 'test-author', name: 'Автор', fullName: 'Имя Автора', photo: '/images/test.webp' };
 const makeRow = (id: string, eligible = true): PoemRouteRow => ({
@@ -77,4 +78,30 @@ test('text is escaped by React and unsafe edition links cannot render', () => {
   for (const sourceUrl of ['javascript:alert(1)', 'http://example.org', 'https://secret@example.org/']) {
     assert.throws(() => render({ ...row, poem: { ...row.poem, sourceUrl } }), /Non-public poem source URL/);
   }
+});
+
+test('static full document owns exactly one visible H1 and verse before JavaScript', () => {
+  const item = { ...row, poem: { ...row.poem, text: 'Строка $& $1 $$\nВторая строка' } };
+  const { page } = render(item);
+  const shell = '<!doctype html><html lang="ru"><head><title>Title</title></head><body><div id="root"></div><script type="module" src="/assets/app.js"></script></body></html>';
+  const html = renderPoemStaticBody(shell, page);
+  assert.ok(html.includes('Строка $&amp; $1 $$\nВторая строка'));
+  assert.equal((html.match(/<h1\b/g) || []).length, 1);
+  assert.equal((html.match(/data-poem-canonical=/g) || []).length, 1);
+  assert.ok(html.includes('<div id="root"><main id="main-content">'));
+  assert.ok(html.includes('src="/assets/app.js"'));
+  assert.throws(() => renderPoemStaticBody('<div id="root">old</div>', page), /exactly one empty/);
+  assert.throws(() => renderPoemStaticBody(shell + '<div id="root"></div>', page), /exactly one empty/);
+});
+test('static admission is fail-closed until runtime route and discovery inventory agree', () => {
+  const { page } = render(row);
+  const route = { id: 'poem-detail', path: '/poets/:id/:slug', discoveryState: 'ready', sitemap: false };
+  const entry = { path: page.path, state: 'ready', routeId: route.id };
+  assert.doesNotThrow(() => assertPoemStaticAdmission([], [], []));
+  assert.throws(() => assertPoemStaticAdmission([], [route], [entry]), /Unapproved poem/);
+  assert.throws(() => assertPoemStaticAdmission([page], [], [entry]), /not registered/);
+  assert.throws(() => assertPoemStaticAdmission([page], [route], []), /does not match/);
+  assert.throws(() => assertPoemStaticAdmission([page], [route], [{ ...entry, state: 'noindex' }]), /does not match/);
+  assert.throws(() => assertPoemStaticAdmission([page, page], [route], [entry, entry]), /does not match/);
+  assert.doesNotThrow(() => assertPoemStaticAdmission([page], [route], [entry]));
 });
