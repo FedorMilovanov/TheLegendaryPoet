@@ -58,6 +58,32 @@ test('missing document is a failure', () => fixture(directory => {
   fs.unlinkSync(path.join(directory, 'suno/CASES.md'));
   assert.throws(() => validateKit(directory), /missing suno\/CASES/);
 }));
+for (const file of ['WORKBENCH.md', 'EXPERIENCE.md', 'NEW_YEAR_SERIES.md']) {
+  test(`missing seasonal/workbench document fails: ${file}`, () => fixture(directory => {
+    const relative = `suno/${file}`;
+    fs.unlinkSync(path.join(directory, relative));
+    assert.throws(() => validateKit(directory), error =>
+      error.message.split('\n').includes(`missing ${relative}`));
+  }));
+}
+
+for (const relative of ['suno/NEW_UNREGISTERED.md', 'suno/clips/projects/NEW_UNREGISTERED.md']) {
+  test(`unregistered document fails: ${relative}`, () => fixture(directory => {
+    fs.writeFileSync(path.join(directory, relative), '# New document\n');
+    assert.throws(() => validateKit(directory), error =>
+      error.message.split('\n').includes(`unregistered Suno document: ${relative}`));
+  }));
+}
+
+for (const relative of ['suno/PRONUNCIATION_AND_REPAIR.md', 'suno/WORKBENCH.md', 'suno/NEW_YEAR_SERIES.md']) {
+  test(`missing new agent routing fails: ${relative}`, () => fixture(directory => {
+    const file = path.join(directory, 'AGENTS.md');
+    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replaceAll(relative, ''));
+    assert.throws(() => validateKit(directory), error =>
+      error.message.split('\n').includes(`missing agent routing: ${relative}`));
+  }));
+}
+
 test('missing clip document is a failure', () => fixture(directory => {
   fs.unlinkSync(path.join(directory, 'suno/clips/AGENT.md'));
   assert.throws(() => validateKit(directory), /missing suno\/clips\/AGENT\.md/);
