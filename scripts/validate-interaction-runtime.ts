@@ -314,6 +314,10 @@ expect(dialogSource.includes('if (!deferReleaseUntilUnmount) handle.release()'),
 expect(immersiveSource.includes('useNativeDialogExitLifetime(immersiveOpen && Boolean(currentTrack), dialogRef)'), 'immersive playback must attach its native exit to the painted dialog');
 expect(immersiveSource.includes('open: lifetime.lockOpen') && immersiveSource.includes('deferReleaseUntilUnmount: true'), 'immersive overlay lock must follow painted presence, not logical open');
 const nativeExitSource = read('src/utils/nativeDialogExit.ts');
+expect(dialogSource.includes('startNativeDialogEntrance(surface)') &&
+  immersiveSource.includes('<div\n            ref={dialogRef}') &&
+  !immersiveSource.includes('<motion.div\n            ref={dialogRef}'),
+  'the immersive root must have one native opacity owner and stay mounted across track changes');
 expect(dialogSource.includes('startNativeDialogExit(surface') && dialogSource.includes("typeof surface.animate !== 'function'") && nativeExitSource.includes('exit.finished.then') && nativeExitSource.includes("exit.addEventListener('finish', complete)"), 'immersive overlay must observe both native completion channels through one visual owner');
 expect(immersiveSource.includes('{lifetime.lockOpen && currentTrack'), 'immersive dialog DOM must remain mounted throughout native exit');
 expect(immersiveSource.includes('isTopmost()'), 'background media shortcuts must pause beneath another dialog');

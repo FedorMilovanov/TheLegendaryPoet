@@ -106,12 +106,8 @@ export default function ImmersivePlayer() {
         const VolumeIcon = muted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
         return (
-          <motion.div
+          <div
             ref={dialogRef}
-            key={currentTrack.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.45 }}
             className="theme-dark-island fixed inset-0 z-[110] isolate overflow-y-auto overscroll-contain bg-[#030405] text-white outline-none"
             role="dialog"
             aria-modal="true"
@@ -122,6 +118,7 @@ export default function ImmersivePlayer() {
           >
             {currentTrack.wideCoverUrl && (
               <motion.div
+                key={currentTrack.id + '-backdrop'}
                 initial={{ scale: 1.06, opacity: 0 }}
                 animate={{ scale: playing ? 1.025 : 1.04, opacity: 0.72 }}
                 exit={{ opacity: 0, transition: { duration: 0.4, ease: 'easeInOut' } }}
@@ -147,7 +144,7 @@ export default function ImmersivePlayer() {
             <button ref={closeButtonRef} type="button" onClick={closeImmersive} className="fixed right-4 top-[calc(1rem_+_env(safe-area-inset-top))] z-30 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/14 bg-black/48 px-4 text-xs font-bold text-white/68 shadow-xl backdrop-blur-xl transition hover:border-white/30 hover:bg-black/62 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:right-7 sm:top-7"><Minimize2 size={16} /> Выйти</button>
 
             <div className="mx-auto grid min-h-[100svh] max-w-7xl items-center gap-8 px-5 pb-[calc(4rem_+_env(safe-area-inset-bottom))] pt-[calc(6.5rem_+_env(safe-area-inset-top))] sm:px-8 lg:grid-cols-[minmax(280px,420px)_1fr] lg:gap-16 lg:px-12">
-              <motion.div initial={{ opacity: 0, x: -26 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12, duration: 0.65, ease: [0.16, 1, 0.3, 1] }} className="relative mx-auto w-full max-w-[min(72vw,420px)] lg:max-w-[420px]">
+              <motion.div key={currentTrack.id + '-artwork'} initial={{ opacity: 0, x: -26 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12, duration: 0.65, ease: [0.16, 1, 0.3, 1] }} className="relative mx-auto w-full max-w-[min(72vw,420px)] lg:max-w-[420px]">
                 <div className="absolute -inset-10 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, color-mix(in srgb, var(--track-secondary) 20%, transparent), transparent 68%)' }} />
                 <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-white/16 bg-black shadow-[0_45px_130px_rgba(0,0,0,.72)]">
                   {currentTrack.coverUrl && (
@@ -167,7 +164,7 @@ export default function ImmersivePlayer() {
                 </div>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="min-w-0">
+              <motion.div key={currentTrack.id + '-details'} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="min-w-0">
                 {/* The eyebrow is the accent at its own hue, on the player's
                     tinted dark surface: at its authored depth it measured 3.91
                     against (42,56,63). A fifth of white keeps the hue and
@@ -230,7 +227,7 @@ export default function ImmersivePlayer() {
                 )}
               </motion.div>
             </div>
-          </motion.div>
+          </div>
         );
       })()}
     </>

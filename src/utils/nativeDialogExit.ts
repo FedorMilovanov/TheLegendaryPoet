@@ -1,10 +1,36 @@
+const ROOT_FADE_MS = 450;
+
+function safeOpacity(value: number) {
+  return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 1;
+}
+
+/** The root has one animation owner. Cancel entrance before starting exit,
+ * retaining its actual painted opacity for a continuous reversal. */
+export function startNativeDialogEntrance(surface: HTMLElement, from = 0) {
+  let entrance: Animation | undefined;
+  try {
+    entrance = surface.animate(
+      [{ opacity: safeOpacity(from) }, { opacity: 1 }],
+      { duration: ROOT_FADE_MS, easing: 'ease-in-out' },
+    );
+    // Cancellation on close or unmount is expected.
+    void entrance.finished.catch(() => {});
+  } catch { /* A visible root remains usable without animation. */ }
+  return () => {
+    const opacity = safeOpacity(Number.parseFloat(getComputedStyle(surface).opacity));
+    entrance?.cancel();
+    return opacity;
+  };
+}
+
 /** Native exit visual owner. Never releases the overlay lease itself. */
 export function startNativeDialogExit(
   surface: HTMLElement,
   isCurrent: () => boolean,
   onComplete: () => void,
+  from = 1,
 ) {
-  const duration = 450;
+  const duration = ROOT_FADE_MS;
   let active = true;
   let settled = false;
   let deadline: number | undefined;
@@ -42,7 +68,7 @@ export function startNativeDialogExit(
 
   try {
     exit = surface.animate(
-      [{ opacity: 1 }, { opacity: 0 }],
+      [{ opacity: safeOpacity(from) }, { opacity: 0 }],
       { duration, easing: 'ease-in-out', fill: 'forwards' },
     );
   } catch {

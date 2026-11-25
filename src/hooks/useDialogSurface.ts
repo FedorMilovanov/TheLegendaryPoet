@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import {
   acquireOverlayLock,
   canRestoreOverlayFocus,
   type OverlayLockHandle,
 } from '../utils/overlayRuntime';
-import { startNativeDialogExit } from '../utils/nativeDialogExit';
+import { startNativeDialogEntrance, startNativeDialogExit } from '../utils/nativeDialogExit';
 import { scheduleProgrammaticFocus } from '../utils/focusRuntime';
 
 const FOCUSABLE_SELECTOR = [
@@ -182,14 +182,17 @@ export function useNativeDialogExitLifetime(
   const [retained, setRetained] = useState(logicalOpen);
   const latestOpen = useRef(logicalOpen);
   latestOpen.current = logicalOpen;
+  const exitFrom = useRef(1);
 
-  useEffect(() => {
+  // Layout cleanup cancels the entrance before the exit starts. The dialog
+  // root is stable across track changes and has no separate Motion opacity.
+  useLayoutEffect(() => {
     if (logicalOpen) {
-      setRetained(true);
-      return;
+      const surface = dialogRef.current;
+      if (!surface?.isConnected || typeof surface.animate !== 'function') return;
+      const stopEntrance = startNativeDialogEntrance(surface);
+      return () => { exitFrom.current = stopEntrance(); };
     }
-    if (!retained) return;
-
     const surface = dialogRef.current;
     // An already-detached or backgrounded dialog has no painted exit to
     // preserve. Opacity-only fading also remains accessible in reduced motion.
@@ -199,8 +202,12 @@ export function useNativeDialogExitLifetime(
       return;
     }
 
-    return startNativeDialogExit(surface, () => !latestOpen.current, () => setRetained(false));
-  }, [logicalOpen, retained, dialogRef]);
+    return startNativeDialogExit(surface, () => !latestOpen.current, () => setRetained(false), exitFrom.current);
+  }, [logicalOpen, dialogRef]);
+
+  useLayoutEffect(() => {
+    if (logicalOpen) setRetained(true);
+  }, [logicalOpen]);
 
   return { lockOpen: logicalOpen || retained };
 }

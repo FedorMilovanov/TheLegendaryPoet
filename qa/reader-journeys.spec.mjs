@@ -674,7 +674,7 @@ for (const interruption of ['cancel', 'hidden']) {
       node.animate = (...args) => {
         const animation = animate(...args);
         const frames = args[0];
-        if (Array.isArray(frames) && frames[0]?.opacity === 1 && frames[1]?.opacity === 0) {
+        if (Array.isArray(frames) && typeof frames[0]?.opacity === 'number' && frames[1]?.opacity === 0) {
           animation.pause();
           window.__qaInterruptedExit = animation;
         }
@@ -731,7 +731,7 @@ for (const interruption of ['cancel', 'hidden']) {
       node.animate = (...args) => {
         const animation = animate(...args);
         const frames = args[0];
-        if (Array.isArray(frames) && frames[0]?.opacity === 1 && frames[1]?.opacity === 0) {
+        if (Array.isArray(frames) && typeof frames[0]?.opacity === 'number' && frames[1]?.opacity === 0) {
           animation.pause();
           window.__qaInterruptedExit = animation;
         }
@@ -879,5 +879,49 @@ test('immersive exit survives lost native completion without early overlay relea
   expect(proof).toMatchObject({ connected: true, opacity: '0', depth: 1, inert: true });
   await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
   await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(false);
+  await expect(opener).toBeFocused();
+});
+
+test('immersive root reverses one native entrance without competing opacity writers', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = Element.prototype.animate;
+    window.__qaRootFade = { entrance: null, exit: null };
+    Element.prototype.animate = function (...args) {
+      const animation = original.apply(this, args);
+      if (this.getAttribute('aria-labelledby') !== 'immersive-track-title' || !Array.isArray(args[0])) return animation;
+      const frames = args[0];
+      if (frames[0]?.opacity === 0 && frames[1]?.opacity === 1) {
+        animation.pause();
+        animation.currentTime = 180;
+        window.__qaRootFade.entrance = animation;
+      } else if (frames[1]?.opacity === 0) {
+        window.__qaRootFade.exit = {
+          from: frames[0]?.opacity,
+          oldState: window.__qaRootFade.entrance?.playState,
+          active: this.getAnimations().filter(item => item.playState !== 'idle').length,
+          duration: animation.effect?.getComputedTiming().duration,
+        };
+      }
+      return animation;
+    };
+  });
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await waitForRoute(page);
+  const opener = page.getByRole('button', { name: 'Погружение' }).first();
+  await opener.press('Enter');
+  const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__qaRootFade.entrance))).toBe(true);
+  await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+  const opacity = await dialog.evaluate(node => Number(getComputedStyle(node).opacity));
+  expect(opacity).toBeGreaterThan(0);
+  expect(opacity).toBeLessThan(1);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0, { timeout: 5000 });
+  const proof = await page.evaluate(() => window.__qaRootFade.exit);
+  expect(proof).toBeTruthy();
+  expect(proof.from).toBeCloseTo(opacity, 3);
+  expect(proof).toMatchObject({ oldState: 'idle', active: 1, duration: 450 });
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
   await expect(opener).toBeFocused();
 });
