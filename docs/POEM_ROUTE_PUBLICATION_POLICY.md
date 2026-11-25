@@ -9,3 +9,7 @@ This is the standalone-page admission contract, not a second literary corpus. Au
 - The winter Yesenin poem remains in #628 until independently accepted; do not preallocate a public URL for an unmerged work. Later assign its stable slug in this same lane.
 
 The build-time generator validates the policy against the full canonical catalog. Unit fixtures cover identity, collision, orphan/unsafe slug, explicit excerpt semantics, stale text/epigraph approval and new-work HOLD. Exact-head hosted checks still required.
+
+## Reading body foundation
+
+`src/lib/poemPageModel.ts` projects an eligible catalog row into the same typed model for eventual static and hydrated rendering. `src/components/poet-detail/PoemReadingBody.tsx` renders one semantic H1 and one visible canonical verse block, actual source, editorial analysis, optional edition and Christian perspective, published explicit music links, and adjacent works with legacy-anchor fallback. No duplicate hand-written HTML renderer, global corpus import, synthetic dates, ratings or generic SEO prose. Held rows produce no standalone model. Fixture-only React static-render tests run in the existing discovery gate. This is not an active route or an integrated interactive Reader; do not advertise URLs until source/rights review, route registration, actual static output, hydration parity and visual/browser certification are complete.

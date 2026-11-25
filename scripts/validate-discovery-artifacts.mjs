@@ -64,6 +64,13 @@ try {
     throw new Error('Poem discovery contract fixtures failed:\n' + [poemFixtures.stdout, poemFixtures.stderr].filter(Boolean).join('\n'));
   }
   console.log(poemFixtures.stdout.trim());
+  const readingFixtures = spawnSync(process.execPath, ['--import', 'tsx', '--test', 'scripts/tests/poem-reading-page.test.tsx'], {
+    cwd: root, encoding: 'utf8',
+  });
+  if (readingFixtures.status !== 0) {
+    throw new Error('Poem reading body fixtures failed:\n' + [readingFixtures.stdout, readingFixtures.stderr].filter(Boolean).join('\n'));
+  }
+  console.log(readingFixtures.stdout.trim());
   for (const generator of [...new Set(artifacts.map((artifact) => artifact.generator))]) runGenerator(generator);
 
   for (const artifact of artifacts) {
