@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-18",
+  "generatedAt": "2026-11-25",
   "tracks": [
     {
       "id": "yesenin-ya-ustalym-takim-eshche-ne-byl",
@@ -120,6 +120,17 @@
       "durationSeconds": 187.734792,
       "codec": "MP3, 48 kHz stereo",
       "cover": "/images/music/lermontov-niva-cover.webp",
+      "rightsHolder": "The Legendary Poet",
+      "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
+    },
+    {
+      "id": "yesenin-steel-blizzard",
+      "path": "/audio/yesenin-steel-blizzard.tlp-2026.mp3",
+      "sha256": "83f261207de6573809f79f90d48065b99f24fba533ecb21c82a8843f9d7de366",
+      "bytes": 5739020,
+      "durationSeconds": 253.991646,
+      "codec": "MP3, 48 kHz stereo",
+      "cover": "/images/music/yesenin-steel-blizzard-cover.webp",
       "rightsHolder": "The Legendary Poet",
       "copyright": "© 2026 The Legendary Poet. Музыкальная версия и мастер. Все права защищены."
     }

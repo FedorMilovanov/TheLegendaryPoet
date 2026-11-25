@@ -1,6 +1,6 @@
 import type { MusicTrack } from '../../types/poet';
 import { getPublishedMusicTracks } from '../musicCatalog';
-import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform, blokNightVersion1Waveform, blokNightLoopWaveform, blokKulikovoPart1Waveform, blokKulikovoPart2Waveform, blokScythiansV1Waveform, blokScythiansV2Waveform, blokIWantToLiveWaveform, lermontovNivaWaveform } from '../musicWaveforms';
+import { blokRossiyaWaveform, pushkinTuchaWaveform, yeseninYaUstalymWaveform, blokNightVersion1Waveform, blokNightLoopWaveform, blokKulikovoPart1Waveform, blokKulikovoPart2Waveform, blokScythiansV1Waveform, blokScythiansV2Waveform, blokIWantToLiveWaveform, lermontovNivaWaveform, yeseninSteelBlizzardWaveform } from '../musicWaveforms';
 
 const standardRights = '© 2026 The Legendary Poet. Права на музыкальную версию и мастер защищены. Текст стихотворения находится в общественном достоянии. Повторная загрузка и коммерческое распространение мастер-файла без разрешения запрещены.';
 
@@ -279,6 +279,38 @@ export const allMusicTracks: readonly MusicTrack[] = [
       { start: 93.92, label: 'Студёный ключ' },
       { start: 122.20, label: 'Смиряется души моей тревога' },
     ],
+  },
+  {
+    id: 'yesenin-steel-blizzard',
+    title: 'Поёт зима — аукает — СТАЛЬНАЯ ВЬЮГА',
+    poet: 'Сергей Есенин',
+    poetId: 'sergei-yesenin',
+    availability: 'published',
+    releaseOrder: 110,
+    publishedAt: '2026-11-25',
+    releaseYear: 2026,
+    duration: '4:14',
+    durationSeconds: 253.991646,
+    audioUrl: '/audio/yesenin-steel-blizzard.tlp-2026.mp3',
+    coverUrl: '/images/music/yesenin-steel-blizzard-cover.webp',
+    wideCoverUrl: '/images/music/yesenin-steel-blizzard-wide.webp',
+    videoUrl: 'https://www.youtube.com/watch?v=j26u8q441Lk',
+    description: 'Тяжёлая рок-интерпретация раннего стихотворения Есенина: от безжалостной зимней стихии и хрупкости озябших воробьёв к мечте о весне. Музыкальная версия «Стальная вьюга».',
+    credits: [
+      'Слова — Сергей Александрович Есенин, «Поёт зима — аукает…» (1910)',
+      'Музыкальная интерпретация и мастер — The Legendary Poet',
+      'Создано с использованием генеративных музыкальных технологий',
+      'Обложка — художественная ИИ-интерпретация образа поэта',
+    ],
+    rightsNotice: standardRights,
+    audioSha256: '83f261207de6573809f79f90d48065b99f24fba533ecb21c82a8843f9d7de366',
+    waveform: yeseninSteelBlizzardWaveform,
+    theme: {
+      accent: '#8ed3ed',
+      secondary: '#d58e91',
+      surface: '#0b1824',
+      heroPosition: '50% center',
+    },
   },
 ];
 
