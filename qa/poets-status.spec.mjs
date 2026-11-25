@@ -108,6 +108,40 @@ test.describe('poets result status accessibility', () => {
     }
   }
 
+  test('same-author SPA search and native fragment history keep both poem indexes current', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-core', 'Native selection is covered across browsers by the existing picker tests');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE_URL + '/poets/alexander-blok#poem-blok-1', { waitUntil: 'domcontentloaded' });
+    const index = page.locator('.poet-reading-index');
+    const picker = page.locator('[data-poem-picker]');
+    const current = async (hash) => {
+      for (const nav of [index, picker]) {
+        await expect(nav.locator('a[aria-current="location"]')).toHaveCount(1);
+        await expect(nav.locator('a[aria-current="location"]')).toHaveAttribute('href', hash);
+      }
+    };
+    await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
+    await current('#poem-blok-1');
+    await page.keyboard.press('Control+k');
+    const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
+    await expect(input).toBeVisible();
+    await input.fill('Опять над полем Куликовым');
+    await page.getByRole('option').filter({ hasText: 'На поле Куликовом — V' }).click();
+    await expect(page).toHaveURL(/#poem-blok-11$/);
+    await current('#poem-blok-11');
+    await page.goBack();
+    await expect(page).toHaveURL(/#poem-blok-1$/);
+    await current('#poem-blok-1');
+    await page.goForward();
+    await expect(page).toHaveURL(/#poem-blok-11$/);
+    await current('#poem-blok-11');
+    await picker.locator('summary').click();
+    await picker.locator('a[href="#poem-blok-1"]').click();
+    await expect(page).toHaveURL(/#poem-blok-1$/);
+    await current('#poem-blok-1');
+    await expect(picker).not.toHaveAttribute('open', '');
+  });
+
   test('short mobile poem picker stays clear of bottom dock and header', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'webkit-reader-desktop', 'Poet mobile picker belongs to core and mobile browsers');
     for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 667 }]) {

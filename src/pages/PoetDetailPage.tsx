@@ -109,7 +109,7 @@ export default function PoetDetailPage() {
         <Breadcrumbs items={breadcrumbs} />
       </div>
       <HeroSection poet={poet} />
-      <PoemPicker poems={poet.poems} />
+      <PoemPicker key={poet.id} poems={poet.poems} />
 
       <div className="relative z-20 mx-auto max-w-7xl border-t border-luxury-gold/10 px-4 pb-32 pt-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-12">
@@ -186,7 +186,7 @@ export default function PoetDetailPage() {
                 {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
-              <PoemQuickNav id={contentsId} poems={poet.poems} />
+              <PoemQuickNav key={poet.id} id={contentsId} poems={poet.poems} />
               <Suspense fallback={<p role="status" className="sr-only">Загрузка стихотворений</p>}>
                 <div className="mt-10 space-y-16">
                   {poet.poems.map((poem) => (

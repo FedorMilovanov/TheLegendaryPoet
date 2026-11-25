@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BookOpen, ChevronDown } from 'lucide-react';
+import { useLocation } from 'react-router';
 import type { Poem } from '../../types/poet';
 
 interface PoemPickerProps {
@@ -9,15 +10,9 @@ interface PoemPickerProps {
 /** Persistent shortcut to the existing canonical poem anchors. */
 export default function PoemPicker({ poems }: PoemPickerProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
-  const [currentHash, setCurrentHash] = useState('');
+  // Router location observes both native fragment navigation and SPA search.
+  const { hash: currentHash } = useLocation();
   const [heroVisible, setHeroVisible] = useState(true);
-
-  useEffect(() => {
-    const sync = () => setCurrentHash(window.location.hash);
-    sync();
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
 
   useEffect(() => {
     const hero = document.querySelector('.poet-hero-surface');
