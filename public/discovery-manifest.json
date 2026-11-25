@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "fc6474aba7c8ee32d307238b42063993ad2391238ffaa39c9bfce2aecaf7413d"
+      "fingerprint": "bfa5eb071e0a4d4f3191ee7ee0e6b64c197289294563c91e0236a94d46ac4eb8"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "526dfe3ecf38eb69382a6680513745ecc2e678d8467eb34e1ad979960fb20f21"
+      "fingerprint": "00439d4dee315196f0b43698d7f71bc91d564bc36781f63d5bf7bc21c61da7b6"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6d9961f80b45bf46d032833d36556c513dbeffd208d33fcaae31d401112792df"
+      "fingerprint": "cecec3241c2a3f992d07b4b5dc0224231f9263ef8b57ea9082fd8150bc9a0b5c"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -154,7 +154,7 @@
       "routeId": "music",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "d235a2464ab2d0acd83a55565e6ae99a11d4e19834aa6d79a0983b73162c224b"
+      "fingerprint": "03c00cb05f6e8618cd8be2912fef3b443c3df373d549d11d5916d13a4905a787"
     },
     {
       "url": "https://thelegendarypoet.ru/about/",
@@ -357,6 +357,14 @@
       "fingerprint": "4bb895adae5eab24188186e88f84b01f06417e4436b5dd146741bfca5f556b22"
     },
     {
+      "url": "https://thelegendarypoet.ru/music/yesenin-steel-blizzard/",
+      "path": "/music/yesenin-steel-blizzard/",
+      "routeId": "track-detail",
+      "state": "ready",
+      "lastmod": null,
+      "fingerprint": "6e08fd1aff582c7acc52a807d48a4d4eccc408079a4bf93849974516ccd59816"
+    },
+    {
       "url": "https://thelegendarypoet.ru/poets/fyodor-tyutchev/",
       "path": "/poets/fyodor-tyutchev/",
       "routeId": "poet-detail",
@@ -418,7 +426,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "1c4f160240b3b3ee0d8b5ab2a8222bebc31ed9b6b00d8a53840bda8ec90d69ea"
+      "fingerprint": "12d4a9e790ed452faff5da1e9c535ca9a6af5e43700577439f8cf3b796d6c65f"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/anna-akhmatova/",

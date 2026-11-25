@@ -5,8 +5,19 @@
   <subtitle>Новые статьи, биографические исследования и музыкальные публикации проекта.</subtitle>
   <link href="https://thelegendarypoet.ru/" />
   <link rel="self" type="application/atom+xml" href="https://thelegendarypoet.ru/feed.xml" />
-  <updated>2026-11-18T00:00:00Z</updated>
+  <updated>2026-11-25T00:00:00Z</updated>
   <author><name>THE LEGENDARY POET</name><uri>https://thelegendarypoet.ru/about/</uri></author>
+  <entry>
+    <id>https://thelegendarypoet.ru/music/yesenin-steel-blizzard/</id>
+    <title>Поёт зима — аукает — СТАЛЬНАЯ ВЬЮГА — Сергей Есенин</title>
+    <link href="https://thelegendarypoet.ru/music/yesenin-steel-blizzard/" />
+    <published>2026-11-25T00:00:00Z</published>
+    <updated>2026-11-25T00:00:00Z</updated>
+    <author><name>THE LEGENDARY POET</name></author>
+    <summary type="text">«Стальная вьюга» — тяжёлая рок-интерпретация раннего стихотворения Сергея Есенина. Метель и зимний холод противостоят хрупкой жизни воробьёв у окна; напряжение стихии сменяется образом весны, которую птицы видят во сне. Музыкальный выпуск сохраняет это противопоставление силы и беззащитности.</summary>
+    <category term="музыка" />
+    <category term="Сергей Есенин" />
+  </entry>
   <entry>
     <id>https://thelegendarypoet.ru/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva/</id>
     <title>Когда волнуется желтеющая нива… — Михаил Лермонтов</title>
