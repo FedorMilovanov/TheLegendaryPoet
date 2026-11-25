@@ -41,7 +41,7 @@
 | [Poster House / True Grit](https://collection-open.posterhouse.org/poster/true-grit/) | OPENED | Сильная типографика без лишней картинки. |
 | [ASC / Charade](https://staging.ascmag.com/articles/the-photography-of-charade) | SCREENED | Реальная логика источников света. |
 
-## Визуально проверенные репозиторные материалы (прошлый проход)
+## Визуально проверенные репозиторные материалы (W1–W2)
 - [Fet portrait](../../public/images/fet-480.jpg) — зрелый портрет, теплохолодное освещение, лицо и борода.
 - [Blok Night](../../public/images/music/blok-night-loop-cover.webp) — естественное городское освещение.
 - [Yesenin](../../public/images/music/yesenin-ya-ustalym-cover.webp) — крупный эмоциональный портрет.
@@ -49,4 +49,4 @@
 - [Legendary Poet masters](../clips/references/legendary-poet/) — mantle-full-body.jpg, mantle-aura-raven.jpg, mantle-back-raven.jpg. Три файла просмотрены, канон в CASE_LEGENDARY_POET.
 - [Утверждённый знак](../../docs/BRAND_EMBLEM.md) — правила authority, не новый логотип.
 
-Не просмотрены: все остальные опубликованные обложки, приватные Suno thumbnails, внешний полный визуальный корпус. Следующая волна — открыть визуальные кейсы, сверить исходники и добавить только наблюдаемые выводы, без искусственного заполнения статусов.
+W2: дополнительно просмотрены восемь файлов в public/images/music: blok-kulikovo-part-1/2-cover.webp, blok-rossiya-cover.webp, pushkin-tucha-cover.webp, blok-night-version-1-cover.webp, blok-oh-i-want-to-live-cover.webp, blok-scythians-version-1/2-cover.webp. В совокупности с W1 это 11 музыкальных обложек. Наблюдения: у Куликова поля и Скифов меняется не только цвет, но и драматургия пространства; у «России» и «Тучи» портрет с тёплым ключевым и синим контровым светом; у «Ночи» — мотивированный фонарь, мокрая мостовая; у «О, я хочу безумно жить» — тёплый оконный свет, человеческая поза. Эти наблюдения не означают, что все варианты утверждены владельцем как образцы. Не просмотрены: приватные Suno thumbnails, внешний полный визуальный корпус. Следующая волна — открыть визуальные кейсы, сверить исходники и добавить только наблюдаемые выводы, без искусственного заполнения статусов.

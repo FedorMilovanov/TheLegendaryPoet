@@ -43,7 +43,7 @@ test('current kit passes its structural contract', () => validateKit());
 function fixture(run) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'suno-kit-'));
   try {
-    for (const file of [...documents, ...referenceAssets, 'package.json', 'AGENTS.md', 'docs/MUSIC_RELEASE_WORKFLOW.md']) {
+    for (const file of [...documents, ...referenceAssets, 'package.json', 'AGENTS.md', 'docs/MUSIC_RELEASE_WORKFLOW.md', 'docs/BRAND_EMBLEM.md']) {
       const target = path.join(directory, file);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.copyFileSync(file, target);
@@ -149,3 +149,37 @@ test('literal Lyrics CLI wiring cannot disappear silently', () => fixture(direct
   fs.writeFileSync(file, JSON.stringify(pkg));
   assert.throws(() => validateKit(directory), /missing literal Lyrics CLI wiring/);
 }));
+
+for (const relative of ['suno/covers/AGENT.md', 'suno/covers/RESEARCH.md', 'suno/covers/projects/fet-new-year.md']) {
+  test('missing cover document fails: ' + relative, () => fixture(directory => {
+    fs.unlinkSync(path.join(directory, relative));
+    assert.throws(() => validateKit(directory), error =>
+      error.message.split('\n').includes('missing ' + relative));
+  }));
+}
+test('unregistered cover project fails', () => fixture(directory => {
+  const relative = 'suno/covers/projects/NEW_UNREGISTERED.md';
+  fs.writeFileSync(path.join(directory, relative), '# New cover project\n');
+  assert.throws(() => validateKit(directory), /unregistered Suno document: suno\/covers\/projects\/NEW_UNREGISTERED\.md/);
+}));
+test('missing cover agent routing fails', () => fixture(directory => {
+  const file = path.join(directory, 'AGENTS.md');
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replaceAll('suno/covers/AGENT.md', ''));
+  assert.throws(() => validateKit(directory), /missing agent routing: suno\/covers\/AGENT\.md/);
+}));
+test('missing cover identity reference fails', () => fixture(directory => {
+  fs.unlinkSync(path.join(directory, 'public/images/fet-480.jpg'));
+  assert.throws(() => validateKit(directory), /missing reference: public\/images\/fet-480\.jpg/);
+}));
+test('Fet draft contains ten separate full-image prompts, not a combined prompt', () => {
+  const file = fs.readFileSync('suno/covers/projects/fet-new-year.md', 'utf8');
+  const blocks = readFences(file).blocks.filter(block => block.language === 'text');
+  assert.equal(blocks.length, 10);
+  assert.equal(new Set(blocks.map(block => block.text)).size, 10);
+  for (const block of blocks) {
+    assert.match(block.text, /^Create ONE standalone/);
+    assert.match(block.text, /16:9/);
+    assert.match(block.text, /collage/i);
+  }
+  // Structural only, not a certificate of artistic quality or actual generations.
+});
