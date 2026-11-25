@@ -102,6 +102,7 @@ expect(ci.includes('dist/build-budget-report.json'), 'CI must retain the machine
 expect(ci.includes('node scripts/validate-hall-web-runtime-proof.mjs'), 'required CI verify must execute Hall web runtime proof contract validation');
 
 const canonicalRequiredValidators = [
+  'validate:suno',
   'validate:reader-certification',
   'validate:browser-runtime',
 ];
@@ -222,4 +223,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}; canonical reader/browser validators are merge-blocking; external GitHub Actions are immutable-SHA pinned`);
+console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}; canonical Suno/reader/browser validators are merge-blocking; external GitHub Actions are immutable-SHA pinned`);
