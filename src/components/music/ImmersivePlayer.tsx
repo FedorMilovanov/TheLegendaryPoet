@@ -164,7 +164,7 @@ export default function ImmersivePlayer() {
                 </div>
               </motion.div>
 
-              <motion.div key={currentTrack.id + '-details'} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="min-w-0">
+              <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="min-w-0">
                 {/* The eyebrow is the accent at its own hue, on the player's
                     tinted dark surface: at its authored depth it measured 3.91
                     against (42,56,63). A fifth of white keeps the hue and

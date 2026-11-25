@@ -184,30 +184,32 @@ export function useNativeDialogExitLifetime(
   latestOpen.current = logicalOpen;
   const exitFrom = useRef(1);
 
-  // Layout cleanup cancels the entrance before the exit starts. The dialog
-  // root is stable across track changes and has no separate Motion opacity.
+  // All layout cleanups precede the next layout setups. Cancel the old
+  // entrance before the exit starts, retaining its last painted opacity.
+  // The root is stable across track changes, including focused controls.
+  useLayoutEffect(() => {
+    if (!logicalOpen) return;
+    exitFrom.current = 1;
+    const surface = dialogRef.current;
+    if (!surface?.isConnected || typeof surface.animate !== 'function') return;
+    const stopEntrance = startNativeDialogEntrance(surface);
+    return () => { exitFrom.current = stopEntrance(); };
+  }, [logicalOpen, dialogRef]);
+
   useLayoutEffect(() => {
     if (logicalOpen) {
-      const surface = dialogRef.current;
-      if (!surface?.isConnected || typeof surface.animate !== 'function') return;
-      const stopEntrance = startNativeDialogEntrance(surface);
-      return () => { exitFrom.current = stopEntrance(); };
+      setRetained(true);
+      return;
     }
+    if (!retained) return;
     const surface = dialogRef.current;
-    // An already-detached or backgrounded dialog has no painted exit to
-    // preserve. Opacity-only fading also remains accessible in reduced motion.
     if (!surface?.isConnected || document.visibilityState === 'hidden' ||
         typeof surface.animate !== 'function') {
       setRetained(false);
       return;
     }
-
     return startNativeDialogExit(surface, () => !latestOpen.current, () => setRetained(false), exitFrom.current);
-  }, [logicalOpen, dialogRef]);
-
-  useLayoutEffect(() => {
-    if (logicalOpen) setRetained(true);
-  }, [logicalOpen]);
+  }, [logicalOpen, retained, dialogRef]);
 
   return { lockOpen: logicalOpen || retained };
 }

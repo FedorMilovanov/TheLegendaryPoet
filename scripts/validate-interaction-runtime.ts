@@ -179,7 +179,7 @@ expect(extra.inert && extra.getAttribute('aria-hidden') === 'true' && writes ===
 stable.release();
 expect(!background.inert && !extra.inert && background.getAttribute('aria-hidden') === null && extra.getAttribute('aria-hidden') === null, 'final release must restore all original branch states');
 
-const { startNativeDialogExit } = await import('../src/utils/nativeDialogExit');
+const { startNativeDialogEntrance, startNativeDialogExit } = await import('../src/utils/nativeDialogExit');
 
 async function checkNativeExit(kind: string) {
   let now = 0;
@@ -262,6 +262,27 @@ for (const kind of ['normal', 'eventOnly', 'stalled', 'finishThrows', 'cancel', 
   await checkNativeExit(kind);
 }
 Object.assign(fakeDocument, { visibilityState: 'visible' });
+
+// The root's entrance must surrender the actual painted value before exit.
+{
+  let cancelled = false;
+  const animations: { opacity: number }[][] = [];
+  const previousStyle = globalThis.getComputedStyle;
+  Object.assign(globalThis, { getComputedStyle: () => ({ opacity: '0.37' }) });
+  const entranceSurface = {
+    animate: (frames: { opacity: number }[]) => {
+      animations.push(frames);
+      return { finished: Promise.resolve(), cancel: () => { cancelled = true; } };
+    },
+  } as unknown as HTMLElement;
+  try {
+    const stop = startNativeDialogEntrance(entranceSurface);
+    expect(animations.length === 1 && animations[0][0].opacity === 0 && animations[0][1].opacity === 1, 'native entrance must own the root fade');
+    expect(stop() === 0.37 && cancelled, 'entrance cleanup must capture painted opacity before cancellation');
+  } finally {
+    Object.assign(globalThis, { getComputedStyle: previousStyle });
+  }
+}
 
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
