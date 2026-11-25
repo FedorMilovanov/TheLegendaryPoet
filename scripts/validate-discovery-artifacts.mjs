@@ -57,6 +57,13 @@ function fakeManifest(records) {
 }
 
 try {
+  const poemFixtures = spawnSync(process.execPath, ['--test', 'scripts/tests/poem-discovery.test.mjs'], {
+    cwd: root, encoding: 'utf8',
+  });
+  if (poemFixtures.status !== 0) {
+    throw new Error('Poem discovery contract fixtures failed:\n' + [poemFixtures.stdout, poemFixtures.stderr].filter(Boolean).join('\n'));
+  }
+  console.log(poemFixtures.stdout.trim());
   for (const generator of [...new Set(artifacts.map((artifact) => artifact.generator))]) runGenerator(generator);
 
   for (const artifact of artifacts) {

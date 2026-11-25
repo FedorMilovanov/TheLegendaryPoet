@@ -8,6 +8,7 @@ import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, poets } from '../src/data/poets.ts';
 import { poets as canonicalPoets } from '../src/data/library/index.ts';
 import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
+import { buildPoemRouteCatalog } from './lib/poem-discovery.mjs';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
 const OUTPUT = path.resolve('public/sitemap.xml');
@@ -86,6 +87,12 @@ function policyForRoute(route) {
   if (!policy) throw new Error(`Unknown discoveryState ${route.discoveryState} for ${route.id}`);
   return policy;
 }
+
+const poemRoutePolicy = JSON.parse(fs.readFileSync(path.resolve('src/data/poem-route-policy.json'), 'utf8'));
+const poemRouteCatalog = buildPoemRouteCatalog(canonicalPoets, poemRoutePolicy, canonicalRoutePath);
+console.log('Poem route contract: ' + poemRouteCatalog.length + ' works; '
+  + poemRouteCatalog.filter(row => row.slug !== null).length + ' assigned slugs; '
+  + poemRouteCatalog.filter(row => row.eligible).length + ' standalone approvals (no poem URLs emitted yet).');
 
 const essays = getAllEssays();
 const publishedTracks = allMusicTracks.filter((track) => track.availability === 'published');
