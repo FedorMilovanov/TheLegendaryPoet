@@ -79,3 +79,12 @@ W2: дополнительно просмотрены восемь файлов 
 - [Image generation guide](https://developers.openai.com/api/docs/guides/image-generation) — ограничения текста/согласованности/layout; маски и markup не гарантируют точное сохранение.
 - [Портрет Фета Репина, Третьяковская галерея](https://my.tretyakov.ru/app/masterpiece/22176) — исторический источник 1882; страница проверена, изображение ещё не передано генератору.
 - [Snow in Saint Petersburg](https://commons.wikimedia.org/wiki/Category:Snow_in_Saint_Petersburg), [Winter in Saint Petersburg](https://commons.wikimedia.org/wiki/Category:Winter_in_Saint_Petersburg), [Winter palace square.jpg](https://commons.wikimedia.org/wiki/File:Winter_palace_square.jpg) — поиск натурных основ; последний файл указан с CC BY 2.0, перед применением проверить конкретный кадр/атрибуцию, лицензию и разрешение. Ни один внешний городской кадр не загружен в генератор в этой волне.
+
+## W5 — возрастной диапазон Фета и уроки V2 (2026-11-25)
+
+Проверенные страницы источников:
+- [К. К. Гампельн, Фет около 1850 года](https://commons.wikimedia.org/wiki/File:Fet_as_officer_(ca._1850).jpg) — ранний взрослый возраст, около 30 лет, 400×513, Commons отмечает public domain. Не использовать мундир как обязательный костюм современной сцены.
+- [Фотопортрет Фета 1860-х](https://commons.wikimedia.org/wiki/File:Афанасий_Фет_-_1860-е.jpg) — отдельный кандидат на identity input для 40–49 лет, 365×500; перед производственным применением проверить лицензию/атрибуцию и качество.
+- [Культура.РФ, биография и музейные портреты](https://www.culture.ru/persons/8274/afanasii-fet), [выставка СПб ГБС](https://www.gbs.spb.ru/ru/pages/resursy/novinki/virtualnye_knizhnye_vystavki/virtualnaia_knizhnaia_vystavka_tainy_gospodina_a_a_shenshina_a_a_feta/) — подтверждают раздельные портреты первой половины 1850-х и 1860-х, а также поздние материалы. [Библиотека им. Бунина](https://www.buninlib.ru/mozaika/moz23/) указывает фотопортрет ателье Тулинова 1861–63 гг. Не отождествлять конкретные файлы по похожему описанию без сверки.
+
+В W5 новые изображения не генерировались. Ссылки на источники проверены; файлы не передавались генератору. В V2 попытка получить натурные и репозиторные изображения не удалась (сетевой доступ к raw.githubusercontent.com отсутствовал), запросы были выполнены без явных image inputs. Нельзя считать V2 валидированным фото-композитом или портретным тестом. Дальнейший запуск с реальным источником — отдельная проверка доступности, не ещё один длинный список описаний лица.
