@@ -1,0 +1,40 @@
+/* Memory exhibits live inside the poet's content column, not the viewport.
+ * Keep a single responsive layout for every place and photo count. */
+.memory-exhibit {
+  container: memory-exhibit / inline-size;
+}
+.memory-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.memory-story,
+.memory-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.memory-story > *,
+.memory-detail > *,
+.memory-facts > * {
+  min-width: 0;
+}
+.memory-exhibit figcaption a,
+.memory-exhibit details a {
+  overflow-wrap: anywhere;
+}
+.memory-exhibit .memory-timeline {
+  max-width: 68ch;
+}
+@container memory-exhibit (min-width: 28rem) {
+  .memory-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container memory-exhibit (min-width: 39rem) {
+  .memory-story[data-has-photo="true"] {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+  .memory-detail {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}

@@ -1,3 +1,4 @@
+import { silverAgePlaces } from './silverAgePlaces';
 import { memorialHomePlaces } from './memorialHomes';
 import { estateMemoryPlaces } from './estates';
 import media from './lermontov-pyatigorsk-media.json';
@@ -61,7 +62,7 @@ const lermontov: MemoryPlace = {
   ],
 };
 
-export const memoryPlaces: readonly MemoryPlace[] = [lermontov, ...estateMemoryPlaces, ...memorialHomePlaces];
+export const memoryPlaces: readonly MemoryPlace[] = [lermontov, ...estateMemoryPlaces, ...memorialHomePlaces, ...silverAgePlaces];
 export function getMemoryPlaces(poetId: string): readonly MemoryPlace[] {
   return memoryPlaces.filter((place) => place.poetId === poetId);
 }

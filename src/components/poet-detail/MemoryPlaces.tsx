@@ -1,4 +1,5 @@
 import { ArrowUpRight, Landmark, MapPin } from 'lucide-react';
+import './memory-places.css';
 import { getMemoryPlaces, type MemoryPhoto, type MemoryPlace } from '../../data/memory-places';
 
 const linkClass = 'theme-poet-accent underline decoration-current/40 underline-offset-4 hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
@@ -25,7 +26,7 @@ function Photograph({ photo }: { photo: MemoryPhoto }) {
 function Exhibit({ place }: { place: MemoryPlace }) {
   const [hero, figure, detail, ...more] = place.photos;
   return (
-    <article id={`memory-${place.id}`} aria-labelledby={`memory-${place.id}-title`} className="theme-elevated-surface scroll-mt-28 rounded-[2rem] border p-4 sm:p-8">
+    <article id={`memory-${place.id}`} aria-labelledby={`memory-${place.id}-title`} className="memory-exhibit theme-elevated-surface scroll-mt-28 rounded-[2rem] border p-4 sm:p-8">
       <header className="mb-6 border-b border-luxury-gold/20 pb-6">
         <p className="theme-functional-muted flex flex-wrap items-center gap-2 text-xs font-medium tracking-wide"><MapPin size={15} aria-hidden="true" /> {place.location}</p>
         <h3 id={`memory-${place.id}-title`} className="theme-text mt-3 max-w-[24ch] font-serif text-3xl leading-[1.12] sm:text-4xl">{place.title}</h3>
@@ -33,7 +34,7 @@ function Exhibit({ place }: { place: MemoryPlace }) {
         <p className="theme-text mt-5 max-w-[68ch] text-base leading-[1.85]">{place.intro}</p>
       </header>
       {hero && <Photograph photo={hero} />}
-      <dl className="my-7 grid grid-cols-1 gap-3 min-[400px]:grid-cols-3">
+      <dl className="memory-facts my-7 gap-3">
         {place.facts.map((fact) => (
           <div key={fact.label} className="theme-soft-surface min-w-0 rounded-xl border border-luxury-gold/15 p-3">
             <dt className="theme-functional-muted text-xs leading-relaxed">{fact.label}</dt>
@@ -41,9 +42,9 @@ function Exhibit({ place }: { place: MemoryPlace }) {
           </div>
         ))}
       </dl>
-      <div className="grid items-start gap-6 sm:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="memory-story gap-6" data-has-photo={Boolean(figure)}>
         {figure && <Photograph photo={figure} />}
-        <div className="min-w-0">
+        <div className="memory-timeline min-w-0">
           <h4 className="theme-text mb-5 font-serif text-2xl">История места</h4>
           <ol className="space-y-5 border-l border-luxury-gold/30 pl-5">
             {place.timeline.map((event) => (
@@ -56,7 +57,7 @@ function Exhibit({ place }: { place: MemoryPlace }) {
           </ol>
         </div>
       </div>
-      {detail && <div className="mt-6 grid items-start gap-6 sm:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+      {detail && <div className="memory-detail mt-6 gap-6">
         <div className="self-center">
           <p className="theme-poet-accent mb-2 text-xs font-semibold uppercase tracking-widest">Деталь экспозиции</p>
           <h4 className="theme-text font-serif text-2xl">{place.detailNote?.title ?? detail.alt}</h4>

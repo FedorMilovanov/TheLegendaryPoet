@@ -51,13 +51,13 @@ for (const theme of ['dark', 'light']) {
 }
 
 test('a poet with no registered memory places has no empty section or jump', async ({ page }) => {
-  await page.goto(`${base}/poets/vladimir-mayakovsky`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/poets/valery-bryusov`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('#memory-places')).toHaveCount(0);
   await expect(page.locator('a[href="#memory-places"]')).toHaveCount(0);
 });
 
-for (const [poetId, placeId] of [
+for (const [poetId, placeId, photoCount = 2] of [
   ['alexander-pushkin', 'pushkin-mikhailovskoye'],
   ['sergei-yesenin', 'yesenin-konstantinovo'],
   ['alexander-blok', 'blok-shakhmatovo'],
@@ -65,6 +65,10 @@ for (const [poetId, placeId] of [
   ['fyodor-tyutchev', 'tyutchev-ovstug'],
   ['afanasy-fet', 'fet-vorobyovka'],
   ['boris-pasternak', 'pasternak-peredelkino'],
+  ['vladimir-mayakovsky', 'mayakovsky-baghdati', 2],
+  ['nikolay-gumilev', 'gumilev-gradnitsy', 1],
+  ['marina-tsvetaeva', 'tsvetaeva-borisoglebsky', 2],
+  ['osip-mandelstam', 'mandelstam-voronezh', 1],
 ]) {
   test('registered place renders its own images and evidence: ' + poetId, async ({ page }) => {
     await page.goto(base + '/poets/' + poetId, { waitUntil: 'domcontentloaded' });
@@ -72,7 +76,7 @@ for (const [poetId, placeId] of [
     const exhibit = section.locator('#memory-' + placeId);
     await expect(section).toHaveCount(1);
     await expect(exhibit).toHaveCount(1);
-    await expect(exhibit.locator('figure:has(img)')).toHaveCount(2);
+    await expect(exhibit.locator('figure:has(img)')).toHaveCount(photoCount);
     for (const photo of await exhibit.locator('figure:has(img)').all()) {
       const img = photo.locator('img');
       await img.scrollIntoViewIfNeeded();
