@@ -39,11 +39,20 @@ const suites = [
   })),
 ];
 
-for (const [index, suite] of suites.entries()) {
+// The early diagnostic phase uses the same suite, not a second copy.
+const phase = process.argv[2] ?? '--phase=all';
+if (!['--phase=all', '--phase=animated', '--phase=remaining'].includes(phase) || process.argv.length > 3) {
+  throw new Error('Unknown base Safari phase: ' + phase);
+}
+const selected = phase === '--phase=all' ? suites : suites.filter(suite =>
+  (suite.id === 'animated-modal-exit-lifetime') === (phase === '--phase=animated'));
+
+for (const [index, suite] of selected.entries()) {
   const args = ['playwright', 'test', suite.file, ...common];
   if (suite.grep) args.push('--grep', suite.grep);
+  if (phase === '--phase=animated') args.push('--output=qa-artifacts/early-safari-lifetime');
 
-  console.log(`\n[webkit-base-process ${index + 1}/${suites.length}] ${suite.id}`);
+  console.log(`\n[webkit-base-process ${index + 1}/${selected.length}] ${suite.id}`);
   const result = spawnSync(npx, args, {
     stdio: 'inherit',
     env: {
@@ -63,4 +72,4 @@ for (const [index, suite] of suites.entries()) {
   }
 }
 
-console.log(`\n[webkit-base-process] ${suites.length} fresh-process base Safari contours passed`);
+console.log(`\n[webkit-base-process] ${selected.length} fresh-process base Safari contours passed`);
