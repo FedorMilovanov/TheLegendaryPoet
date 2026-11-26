@@ -563,12 +563,9 @@ html.theme-light .poet-poem-picker-menu a:is(:hover,:focus-visible,[aria-current
   }
 }
 
-/* On narrow screens, yield to the inline index to avoid covering its text.
-   The desktop shortcut stays available, including after history restoration.
-   Never hide an open menu or interrupt keyboard focus. */
-@media (max-width: 767px) {
-  .poet-poem-picker[data-index-visible="true"]:not([open]):not(:focus-within) {
-    visibility: hidden;
-    pointer-events: none;
-  }
+/* Yield to the same inline index on every viewport: no duplicate floating
+   control over its content. Never hide an open menu or interrupt focus. */
+.poet-poem-picker[data-index-visible="true"]:not([open]):not(:focus-within) {
+  visibility: hidden;
+  pointer-events: none;
 }
