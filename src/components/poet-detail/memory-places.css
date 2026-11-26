@@ -18,6 +18,9 @@
 .memory-photo-trigger { background: rgb(127 127 127 / .08); }
 .memory-photo img { height: auto; }
 .memory-caption { padding-top: .65rem; }
+.memory-caption-text { font-size: clamp(.875rem, .85rem + .1cqi, .9375rem); line-height: 1.6; text-wrap: pretty; }
+.memory-photo-credit { margin-top: .3rem; font-size: .75rem; line-height: 1.55; overflow-wrap: anywhere; }
+.memory-photo-changes { display: block; margin-top: .15rem; }
 .memory-caption a, .memory-sources a { overflow-wrap: anywhere; }
 .memory-image-failure { display: none; }
 [data-image-state="failed"] + .memory-image-failure {
@@ -41,15 +44,16 @@
 .memory-fact { padding-block: .8rem; display: grid; gap: .3rem; }
 .memory-fact + .memory-fact { border-top: 1px solid rgb(173 139 72 / .2); }
 .memory-fact-value { font-size: clamp(1.2rem, 1rem + .8cqi, 1.65rem); line-height: 1.15; overflow-wrap: anywhere; }
-.memory-story, .memory-story-media, .memory-extra { display: grid; gap: 1.5rem; grid-template-columns: minmax(0,1fr); align-items: start; }
-.memory-story > *, .memory-extra > * { min-width: 0; }
+.memory-story, .memory-story-media, .memory-detail, .memory-detail-copy, .memory-extra { display: grid; gap: 1.5rem; grid-template-columns: minmax(0,1fr); align-items: start; }
+.memory-story > *, .memory-detail > *, .memory-extra > * { min-width: 0; }
 .memory-timeline { max-width: 68ch; }
 .memory-subtitle { font-size: clamp(1.35rem, 1.2rem + .65cqi, 1.8rem); line-height: 1.25; }
 .memory-events { display: grid; gap: 1.25rem; margin-top: 1rem; border-left: 1px solid rgb(173 139 72 / .4); padding-left: 1rem; }
 .memory-event { position: relative; }
 .memory-event::before { content: ""; position: absolute; width: .42rem; height: .42rem; border-radius: 50%; background: #ad8b48; left: -1.24rem; top: .42rem; }
 .memory-event-date { font-size: .85rem; font-weight: 600; line-height: 1.4; }
-.memory-event-text { margin-top: .35rem; font-size: .925rem; line-height: 1.75; }
+.memory-event-text, .memory-note-text { font-size: clamp(1rem, .98rem + .15cqi, 1.0625rem); line-height: 1.75; text-wrap: pretty; overflow-wrap: break-word; }
+.memory-event-text { margin-top: .35rem; }
 .memory-note, .memory-quotation { border-left: 2px solid rgb(173 139 72 / .5); padding: .5rem 0 .5rem 1rem; display: grid; gap: .6rem; }
 /* Native closed details can expose descendant layout boxes despite not
    painting them. Explicitly remove the closed body from layout and focus. */
@@ -67,7 +71,8 @@
   .memory-fact + .memory-fact { border-top: 0; border-left: 1px solid rgb(173 139 72 / .2); }
 }
 @container memory-exhibit (min-width: 39rem) {
-  .memory-story[data-has-photo="true"] { grid-template-columns: minmax(0,5fr) minmax(0,7fr); gap: 2rem; }
+  .memory-story[data-has-photo="true"] { grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: 2rem; }
+  .memory-detail[data-has-copy="true"] { grid-template-columns: minmax(0,5fr) minmax(0,7fr); gap: 2rem; align-items: center; }
   .memory-extra { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 .memory-gallery {
@@ -79,8 +84,15 @@
 .memory-gallery-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
 .memory-gallery-control { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; color: #fff; border: 1px solid #65666a; border-radius: 50%; }
 .memory-gallery-control:focus-visible { outline: 2px solid #e8d6a7; outline-offset: 3px; }
-.memory-gallery-stage { position: relative; overflow: auto; min-height: 0; min-width: 0; display: grid; place-items: center; }
-.memory-gallery-stage img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; }
-.memory-gallery-stage[data-zoom="true"] { display: block; }
-.memory-gallery-stage[data-zoom="true"] img { max-width: none; max-height: none; width: max(100%, 900px); height: auto; }
+/* The stage has a definite two-dimensional size, independent of the image.
+   Auto margins center fitting images and preserve accessible scroll origins
+   when a zoomed image is larger than the stage. */
+.memory-gallery-stage { position: relative; overflow: auto; min-height: 0; min-width: 0; container-type: size; display: flex; }
+.memory-gallery-stage:focus-visible { outline: 2px solid #e8d6a7; outline-offset: -2px; }
+.memory-gallery-stage img {
+  --memory-fit-width: min(100cqw, calc(100cqh * var(--memory-photo-ratio)), var(--memory-photo-native));
+  display: block; flex: none; margin: auto;
+  width: var(--memory-fit-width); height: auto; max-width: none; max-height: none;
+}
+.memory-gallery-stage[data-zoom="true"] img { width: calc(2 * var(--memory-fit-width)); }
 .memory-gallery-caption { max-height: 28dvh; overflow: auto; width: min(100%, 70rem); margin-inline: auto; overflow-wrap: anywhere; }

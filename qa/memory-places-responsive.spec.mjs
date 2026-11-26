@@ -30,6 +30,20 @@ for (const theme of ['dark', 'light']) {
           return heading.bottom <= photo.top + 1 && photo.bottom <= lead.top + 1;
         });
         expect(heroOrder).toBe(true);
+        // Keep the editorial reading order the same in DOM and narrow viewports:
+        // history, supporting image, then the separate detail with its explanation.
+        const narrative = await exhibit.evaluate(node => {
+          const story = node.querySelector('.memory-story');
+          const timeline = story.querySelector('.memory-timeline');
+          const media = story.querySelector('.memory-story-media');
+          const detail = node.querySelector('.memory-detail');
+          return {
+            historyFirst: !media || Boolean(timeline.compareDocumentPosition(media) & Node.DOCUMENT_POSITION_FOLLOWING),
+            detailSeparate: !detail || Boolean(story.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING),
+            detailHasCaption: !detail || Boolean(detail.querySelector('.memory-detail-copy .memory-note')),
+          };
+        });
+        expect(narrative).toEqual({ historyFirst: true, detailSeparate: true, detailHasCaption: true });
         const images = exhibit.locator('img');
         for (const img of await images.all()) {
           await img.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));

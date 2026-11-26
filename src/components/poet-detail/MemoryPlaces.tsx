@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Landmark, MapPin, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import './memory-places.css';
@@ -18,11 +18,11 @@ function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: numbe
         <span aria-hidden="true" className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-black/80 text-white"><Maximize2 size={18} /></span>
       </button>
       <figcaption className="memory-caption">
-        <p className="theme-text text-sm leading-relaxed">{photo.caption}</p>
-        <p className="theme-functional-muted mt-1 text-xs leading-relaxed">
+        <p className="theme-text memory-caption-text">{photo.caption}</p>
+        <p className="theme-functional-muted memory-photo-credit">
           <a href={photo.source} target="_blank" rel="noopener noreferrer" className={linkClass}>{photo.credit} · {photo.sourceLabel}</a>
           {' · '}<a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>{photo.license}</a>
-          {' · '}{photo.changes}
+          <span className="memory-photo-changes">{photo.changes}</span>
         </p>
       </figcaption>
     </figure>
@@ -41,13 +41,15 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
     onChange((index + direction + photos.length) % photos.length);
   };
   useEffect(() => {
-    stageRef.current?.scrollTo(0, 0);
+    const stage = stageRef.current;
+    if (!stage) return;
+    stage.scrollTo(zoom ? (stage.scrollWidth - stage.clientWidth) / 2 : 0, zoom ? (stage.scrollHeight - stage.clientHeight) / 2 : 0);
   }, [index, zoom]);
   return createPortal(
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Фотографии места памяти" tabIndex={-1}
       className="memory-gallery theme-dark-island theme-dark-island-text"
       onKeyDown={(event) => {
-        if (!isTopmost() || photos.length < 2) return;
+        if (!isTopmost() || photos.length < 2 || (zoom && event.target === stageRef.current)) return;
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault();
           step(event.key === 'ArrowLeft' ? -1 : 1);
@@ -64,16 +66,18 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
           <button ref={closeRef} className="memory-gallery-control" type="button" aria-label="Закрыть фотографии" onClick={onClose}><X size={22} /></button>
         </div>
       </header>
-      <div className="memory-gallery-stage" ref={stageRef} data-zoom={zoom}>
+      <div className="memory-gallery-stage" ref={stageRef} data-zoom={zoom}
+        role="region" aria-label="Область фотографии" tabIndex={zoom ? 0 : -1}
+        style={{ '--memory-photo-ratio': photo.width / photo.height, '--memory-photo-native': photo.width + 'px' } as CSSProperties}>
         <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" />
         <span className="memory-image-failure theme-dark-island-muted">Фотография недоступна</span>
       </div>
       <footer className="memory-gallery-caption">
         <p className="text-sm leading-relaxed">{photo.caption}</p>
-        <p className="theme-dark-island-muted mt-1 text-xs leading-relaxed">
+        <p className="theme-dark-island-muted memory-photo-credit">
           <a className="underline underline-offset-4" href={photo.source} target="_blank" rel="noopener noreferrer">{photo.credit} · {photo.sourceLabel}</a>
           {' · '}<a className="underline underline-offset-4" href={photo.licenseUrl} target="_blank" rel="noopener noreferrer">{photo.license}</a>
-          {' · '}{photo.changes}
+          <span className="memory-photo-changes">{photo.changes}</span>
         </p>
       </footer>
     </div>, document.body
@@ -84,6 +88,22 @@ function Exhibit({ place }: { place: MemoryPlace }) {
   const [activePhoto, setActivePhoto] = useState<number | null>(null);
   const close = useCallback(() => setActivePhoto(null), []);
   const [hero, figure, detail, ...more] = place.photos;
+  const note = place.detailNote && <aside className="memory-note">
+        <p className="theme-poet-accent text-xs font-semibold uppercase tracking-widest">Деталь экспозиции</p>
+        <h4 className="theme-text font-serif memory-subtitle">{place.detailNote.title}</h4>
+        <p className="theme-text memory-note-text">{place.detailNote.text}</p>
+      </aside>;
+  const quotation = place.literaryConnection && (
+        <figure className="memory-quotation">
+          <p className="theme-poet-accent mb-4 text-xs font-semibold uppercase tracking-widest">Место в литературе</p>
+          <blockquote className="theme-text font-serif text-xl leading-[1.6] sm:text-2xl">
+            {place.literaryConnection.lines.map((line) => <span key={line} className="block">{line}</span>)}
+          </blockquote>
+          <figcaption className="theme-functional-muted mt-4 text-xs leading-relaxed">
+            <a href={place.literaryConnection.url} target="_blank" rel="noopener noreferrer" className={linkClass}>{place.literaryConnection.attribution} ↗</a>
+          </figcaption>
+        </figure>
+      );
   return (
     <article id={`memory-${place.id}`} aria-labelledby={`memory-${place.id}-title`} className="memory-exhibit scroll-mt-28">
       <header className="memory-heading">
@@ -102,9 +122,6 @@ function Exhibit({ place }: { place: MemoryPlace }) {
         ))}
       </dl>
       <div className="memory-story" data-has-photo={Boolean(figure)}>
-        {figure && <div className="memory-story-media"><Photograph photo={figure} index={1} onOpen={setActivePhoto} />
-          {detail && <Photograph photo={detail} index={2} onOpen={setActivePhoto} />}
-        </div>}
         <div className="memory-timeline min-w-0">
           <h4 className="theme-text font-serif memory-subtitle">История места</h4>
           <ol className="memory-events">
@@ -116,24 +133,19 @@ function Exhibit({ place }: { place: MemoryPlace }) {
             ))}
           </ol>
         </div>
+        {figure && <div className="memory-story-media">
+          <Photograph photo={figure} index={1} onOpen={setActivePhoto} />
+          {!detail && note}
+        </div>}
       </div>
-      {place.detailNote && <aside className="memory-note">
-        <p className="theme-poet-accent text-xs font-semibold uppercase tracking-widest">Деталь экспозиции</p>
-        <h4 className="theme-text font-serif memory-subtitle">{place.detailNote.title}</h4>
-        <p className="theme-text text-sm leading-[1.8]">{place.detailNote.text}</p>
-      </aside>}
+      {!figure && note}
+      {detail ? (
+        <div className="memory-detail" data-has-copy={Boolean(note || quotation)}>
+          <Photograph photo={detail} index={2} onOpen={setActivePhoto} />
+          {(note || quotation) && <div className="memory-detail-copy">{note}{quotation}</div>}
+        </div>
+      ) : quotation}
       {more.length > 0 && <div className="memory-extra">{more.map((photo, index) => <Photograph key={photo.src} photo={photo} index={index + 3} onOpen={setActivePhoto} />)}</div>}
-      {place.literaryConnection && (
-        <figure className="memory-quotation">
-          <p className="theme-poet-accent mb-4 text-xs font-semibold uppercase tracking-widest">Место в литературе</p>
-          <blockquote className="theme-text font-serif text-xl leading-[1.6] sm:text-2xl">
-            {place.literaryConnection.lines.map((line) => <span key={line} className="block">{line}</span>)}
-          </blockquote>
-          <figcaption className="theme-functional-muted mt-4 text-xs leading-relaxed">
-            <a href={place.literaryConnection.url} target="_blank" rel="noopener noreferrer" className={linkClass}>{place.literaryConnection.attribution} ↗</a>
-          </figcaption>
-        </figure>
-      )}
       <details className="memory-sources">
         <summary className="theme-text cursor-pointer text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">Источники и дальнейшее чтение</summary>
         <ul className="mt-4 space-y-3 text-sm leading-relaxed">

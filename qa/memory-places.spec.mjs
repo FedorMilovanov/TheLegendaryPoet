@@ -108,6 +108,7 @@ for (const [poetId, placeId, photoCount = 2] of [
 }
 
 test('memory gallery shares overlay ownership, navigation, zoom and restores focus', async ({ page }, info) => {
+  if (info.project.name === 'chromium-core') await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(base + '/poets/mikhail-lermontov#memory-places', { waitUntil: 'domcontentloaded' });
   const section = page.locator('#memory-places');
   await expect(section).toBeVisible();
@@ -123,16 +124,44 @@ test('memory gallery shares overlay ownership, navigation, zoom and restores foc
   await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('memory-photo-gallery');
   const img = gallery.locator('img');
   await expect(img).toHaveAttribute('data-image-state', 'loaded');
+  const stage = gallery.locator('.memory-gallery-stage');
+  const measure = () => stage.evaluate(node => {
+    const rect = node.querySelector('img').getBoundingClientRect();
+    return { width: rect.width, height: rect.height, stageWidth: node.clientWidth,
+      stageHeight: node.clientHeight, scrollWidth: node.scrollWidth, scrollHeight: node.scrollHeight };
+  });
+  const fit = async () => {
+    const value = await measure();
+    expect(value.width).toBeGreaterThan(0);
+    expect(value.height).toBeGreaterThan(0);
+    expect(value.width).toBeLessThanOrEqual(value.stageWidth + 1);
+    expect(value.height).toBeLessThanOrEqual(value.stageHeight + 1);
+    expect(value.scrollWidth).toBeLessThanOrEqual(value.stageWidth + 1);
+    expect(value.scrollHeight).toBeLessThanOrEqual(value.stageHeight + 1);
+    return value;
+  };
+  await fit();
   const initial = await img.getAttribute('src');
   await gallery.getByRole('button', { name: 'Следующая фотография' }).click();
   await expect(img).not.toHaveAttribute('src', initial);
   await expect(img).toHaveAttribute('data-image-state', 'loaded');
+  // A portrait must fit even on a short landscape phone.
+  if (info.project.name === 'iphone-safari') await page.setViewportSize({ width: 844, height: 390 });
+  const fitted = await fit();
   await gallery.getByRole('button', { name: 'Увеличить фотографию' }).click();
-  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-zoom', 'true');
+  await expect(stage).toHaveAttribute('data-zoom', 'true');
+  const zoomed = await measure();
+  expect(zoomed.width / fitted.width).toBeGreaterThanOrEqual(1.9);
+  expect(zoomed.width / fitted.width).toBeLessThanOrEqual(2.1);
+  expect(zoomed.height / fitted.height).toBeGreaterThanOrEqual(1.9);
+  expect(zoomed.height / fitted.height).toBeLessThanOrEqual(2.1);
   await gallery.getByRole('button', { name: 'Уменьшить фотографию' }).click();
-  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-zoom', 'false');
+  await expect(stage).toHaveAttribute('data-zoom', 'false');
+  await fit();
   await page.keyboard.press('ArrowLeft');
   await expect(img).toHaveAttribute('src', initial);
+  await expect(img).toHaveAttribute('data-image-state', 'loaded');
+  await fit();
   await expect(gallery.locator('a[href^="https://creativecommons.org/"]')).toHaveCount(1);
   if (process.env.QA_CAPTURE_MEMORY === '1') await page.screenshot({ path: info.outputPath('gallery.png'), animations: 'disabled' });
   await page.keyboard.press('Escape');
