@@ -13,6 +13,7 @@ export default function PoemPicker({ poems }: PoemPickerProps) {
   // Router location observes both native fragment navigation and SPA search.
   const { hash: currentHash } = useLocation();
   const [heroVisible, setHeroVisible] = useState(true);
+  const [indexVisible, setIndexVisible] = useState(false);
 
   useEffect(() => {
     const hero = document.querySelector('.poet-hero-surface');
@@ -21,6 +22,18 @@ export default function PoemPicker({ poems }: PoemPickerProps) {
       setHeroVisible(Boolean(entry?.isIntersecting));
     });
     observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
+  // The inline index already provides the same navigation. Suppress the
+  // redundant closed shortcut while the index is in the reading viewport.
+  useEffect(() => {
+    const index = document.querySelector('.poet-reading-index');
+    if (!index || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setIndexVisible(Boolean(entry?.isIntersecting));
+    }, { rootMargin: '-100px 0px -100px 0px' });
+    observer.observe(index);
     return () => observer.disconnect();
   }, []);
 
@@ -52,7 +65,7 @@ export default function PoemPicker({ poems }: PoemPickerProps) {
   };
 
   return (
-    <details ref={detailsRef} className="poet-poem-picker" data-poem-picker data-hero-visible={heroVisible ? 'true' : 'false'}>
+    <details ref={detailsRef} className="poet-poem-picker" data-poem-picker data-hero-visible={heroVisible ? 'true' : 'false'} data-index-visible={indexVisible ? 'true' : 'false'}>
       <summary>
         <BookOpen size={17} aria-hidden="true" />
         <span>Выбрать стих</span>

@@ -562,3 +562,10 @@ html.theme-light .poet-poem-picker-menu a:is(:hover,:focus-visible,[aria-current
     max-height: min(60dvh, calc(100dvh - 5.625rem - env(safe-area-inset-top) - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, 1rem) - .5rem));
   }
 }
+
+/* Yield to the inline table of contents without interrupting a user who
+   has opened the menu or is navigating it with the keyboard. */
+.poet-poem-picker[data-index-visible="true"]:not([open]):not(:focus-within) {
+  visibility: hidden;
+  pointer-events: none;
+}

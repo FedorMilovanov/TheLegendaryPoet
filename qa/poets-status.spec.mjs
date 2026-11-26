@@ -108,6 +108,24 @@ test.describe('poets result status accessibility', () => {
     }
   }
 
+  test('closed floating picker yields to visible inline index and returns at poem text', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'webkit-reader-desktop', 'Core and mobile index visibility coverage');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+    const index = page.locator('.poet-reading-index');
+    const picker = page.locator('[data-poem-picker]');
+    await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
+    await index.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await expect(picker).toHaveAttribute('data-index-visible', 'true');
+    await expect(picker.locator('summary')).toBeHidden();
+    await index.locator('a[href="#poem-blok-11"]').click();
+    await expect(page).toHaveURL(/#poem-blok-11$/);
+    await expect(picker).toHaveAttribute('data-index-visible', 'false');
+    await expect(picker.locator('summary')).toBeVisible();
+    await picker.locator('summary').click();
+    await expect(picker).toHaveAttribute('open', '');
+  });
+
   test('same-author SPA search and native fragment history keep both poem indexes current', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium-core', 'Native selection is covered across browsers by the existing picker tests');
     await page.setViewportSize({ width: 1440, height: 900 });
