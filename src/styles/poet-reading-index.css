@@ -315,3 +315,260 @@ html.theme-light .poet-reading-index > ol > li > a {
   font-size: clamp(1.55rem, 3.2vw, 2.5rem);
   line-height: 1.18;
 }
+
+
+/* Reader shortcut: accessible from the hero and throughout long poem cards.
+   The canonical editorial index remains unchanged and all fragment URLs survive. */
+.poet-poem-picker {
+  position: fixed;
+  z-index: 45;
+  /* The existing scroll-top control occupies the desktop bottom-right corner.
+     Reserve its 44px footprint plus a visible gap, in the same horizontal row. */
+  right: calc(max(1.25rem, env(safe-area-inset-right)) + 4.25rem);
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  max-width: calc(100vw - 1.5rem);
+  font-family: var(--font-sans);
+}
+.poet-poem-picker > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-height: 48px;
+  min-width: 180px;
+  list-style: none;
+  padding: .65rem .9rem;
+  border: 1px solid rgba(212,175,55,.55);
+  border-radius: 999px;
+  background: rgba(10,20,29,.97);
+  color: #f0d590;
+  box-shadow: 0 12px 34px rgba(0,0,0,.35);
+  backdrop-filter: blur(16px);
+  font-size: .85rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.poet-poem-picker > summary::-webkit-details-marker { display: none; }
+.poet-poem-picker > summary:focus-visible {
+  outline: 3px solid #e9c771;
+  outline-offset: 3px;
+}
+.poet-poem-picker-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 .25rem;
+  border-radius: 50%;
+  background: rgba(212,175,55,.18);
+  color: #f5e1ad;
+  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+}
+.poet-poem-picker-chevron { transition: transform .2s ease; }
+.poet-poem-picker[open] .poet-poem-picker-chevron { transform: rotate(180deg); }
+.poet-poem-picker-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + .7rem);
+  width: min(27rem, calc(100vw - 1.5rem));
+  /* On landscape/short-height desktops leave room for the 81px site header,
+     picker control, fixed bottom inset and popup gap. */
+  max-height: min(64dvh, 39rem, calc(100dvh - 11rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: .8rem;
+  border: 1px solid rgba(212,175,55,.45);
+  border-radius: 1.2rem;
+  background: #0c1821;
+  color: #f0e5ce;
+  box-shadow: 0 20px 65px rgba(0,0,0,.6);
+}
+.poet-poem-picker-title {
+  padding: .4rem .55rem .7rem;
+  color: #e0bc72;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.poet-poem-picker-menu ol { list-style: none; margin: 0; padding: 0; }
+.poet-poem-picker-menu li + li { border-top: 1px solid rgba(212,175,55,.13); }
+.poet-poem-picker-menu a {
+  display: grid;
+  grid-template-columns: 1.9rem minmax(0,1fr);
+  align-items: baseline;
+  gap: .1rem .55rem;
+  min-height: 48px;
+  padding: .55rem .65rem;
+  border-radius: .6rem;
+  color: #f2e8d2;
+  text-decoration: none;
+}
+.poet-poem-picker-menu a:hover,
+.poet-poem-picker-menu a:focus-visible,
+.poet-poem-picker-menu a[aria-current="location"] {
+  background: rgba(212,175,55,.14);
+  color: #fff4d4;
+}
+.poet-poem-picker-menu a:focus-visible {
+  outline: 2px solid #dfb65f;
+  outline-offset: -2px;
+}
+.poet-poem-picker-number {
+  grid-row: 1 / 3;
+  color: #d2ac61;
+  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+}
+.poet-poem-picker-name {
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-size: .98rem;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+.poet-poem-picker-menu small {
+  grid-column: 2;
+  color: #bea677;
+  font-size: .72rem;
+  line-height: 1.3;
+}
+html.theme-light .poet-poem-picker > summary {
+  background: rgba(255,251,239,.98);
+  color: #694912;
+  border-color: rgba(119,86,23,.55);
+  box-shadow: 0 10px 30px rgba(77,59,38,.24);
+}
+html.theme-light .poet-poem-picker-count {
+  background: rgba(119,86,23,.12);
+  color: #694912;
+}
+html.theme-light .poet-poem-picker-menu {
+  background: #fffaf0;
+  color: #3f2f1e;
+  border-color: rgba(119,86,23,.42);
+  box-shadow: 0 18px 50px rgba(77,59,38,.25);
+}
+html.theme-light .poet-poem-picker-title,
+html.theme-light .poet-poem-picker-number,
+html.theme-light .poet-poem-picker-menu small { color: #775617; }
+html.theme-light .poet-poem-picker-menu li + li { border-color: rgba(119,86,23,.18); }
+html.theme-light .poet-poem-picker-menu a { color: #3e2e1c; }
+html.theme-light .poet-poem-picker-menu a:is(:hover,:focus-visible,[aria-current="location"]) {
+  background: rgba(119,86,23,.1);
+  color: #422d0b;
+}
+@media (max-width: 767px) {
+  .poet-poem-picker {
+    right: max(.75rem, env(safe-area-inset-right));
+    bottom: calc(var(--tlp-mobile-dock-clearance, 4.75rem) + var(--tlp-mobile-dock-bottom, 1rem) + .65rem);
+  }
+  .poet-poem-picker-menu {
+    max-height: min(60dvh, calc(100dvh - 13rem));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poet-poem-picker-chevron { transition: none; }
+}
+
+/* Keep the floating picker clear of the hero title on mobile.
+   Restore the dock-safe lower position as soon as the hero leaves view. */
+@media (max-width: 767px) {
+  .poet-poem-picker[data-hero-visible="true"] {
+    top: 9.2rem;
+    bottom: auto;
+  }
+  .poet-poem-picker[data-hero-visible="true"] .poet-poem-picker-menu {
+    top: calc(100% + .7rem);
+    bottom: auto;
+    /* Reserve the dock and safe-area on short phone viewports. */
+    max-height: min(60dvh, calc(100dvh - 19rem - env(safe-area-inset-bottom)));
+  }
+}
+
+/* Native closed details can still lay out absolutely-positioned descendants.
+   Remove the hidden picker sheet from layout, hit-testing and contrast scans. */
+.poet-poem-picker:not([open]) > .poet-poem-picker-menu {
+  display: none;
+}
+
+/* On very short phones and landscape devices, place the whole floating
+   control in the available strip between the fixed header and mobile dock.
+   This applies both near the hero and after scrolling: the normal hero-only
+   position otherwise leaves an unusably shallow 28px sheet at 320px height. */
+@media (max-width: 767px) and (max-height: 400px) {
+  .poet-poem-picker,
+  .poet-poem-picker[data-hero-visible="true"] {
+    top: calc(5.5rem + env(safe-area-inset-top));
+    bottom: auto;
+  }
+  .poet-poem-picker-menu,
+  .poet-poem-picker[data-hero-visible="true"] .poet-poem-picker-menu {
+    top: calc(100% + .7rem);
+    bottom: auto;
+    max-height: min(60dvh, calc(100dvh - 14.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  }
+}
+
+/* Text resize keeps the entire picker between the scaled fixed header and the
+   live measured mobile dock. The dock clearance variable is written by MobileDock;
+   a raw rem-only max-height can otherwise overlap it at 150%–200% text scale. */
+@media (max-width: 767px) and (min-height: 401px) {
+  .poet-poem-picker[data-hero-visible="true"] {
+    --poet-resized-hero-top: clamp(5.0625rem, 9.2rem, calc(100dvh - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, .8rem) - 9rem));
+    top: var(--poet-resized-hero-top);
+  }
+  .poet-poem-picker-menu { box-sizing: border-box; }
+  .poet-poem-picker[data-hero-visible="true"] .poet-poem-picker-menu {
+    max-height: min(60dvh, calc(100dvh - var(--poet-resized-hero-top) - 4rem - .7rem - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, .8rem) - .5rem));
+  }
+  .poet-poem-picker[data-hero-visible="false"] .poet-poem-picker-menu {
+    max-height: min(60dvh, calc(100dvh - 5.5rem - 4rem - .7rem - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, .8rem) - .5rem));
+  }
+}
+/* At large text sizes narrow controls must wrap without stealing height from
+   the only available scroll sheet; the 48px target minimum remains unchanged. */
+@media (max-width: 420px) {
+  .poet-poem-picker > summary {
+    gap: min(.55rem, 8px);
+    padding: .3rem .5rem;
+  }
+}
+
+/* On low, wide mobile viewports use the horizontal space beside the picker
+   instead of stacking the control and scrollable list vertically. The live
+   dock measurement keeps the entire list inside the remaining reading area. */
+@media (min-width: 480px) and (max-width: 767px) and (max-height: 400px) {
+  .poet-poem-picker,
+  .poet-poem-picker[data-hero-visible="true"] {
+    top: calc(5.625rem + env(safe-area-inset-top));
+  }
+  .poet-poem-picker > summary {
+    min-height: 48px;
+    padding: .35rem .5rem;
+    gap: .35rem;
+    font-size: max(12px, .75rem);
+  }
+  .poet-poem-picker-count {
+    height: 1.25rem;
+    min-width: 1.25rem;
+  }
+  .poet-poem-picker[open] > .poet-poem-picker-menu {
+    top: 0;
+    bottom: auto;
+    right: calc(100% + .7rem);
+    width: min(27rem, calc(100vw - 100% - 2.5rem));
+    max-height: min(60dvh, calc(100dvh - 5.625rem - env(safe-area-inset-top) - var(--tlp-mobile-dock-clearance, 4.75rem) - var(--tlp-mobile-dock-bottom, 1rem) - .5rem));
+  }
+}
+
+/* On narrow screens, yield to the inline index to avoid covering its text.
+   The desktop shortcut stays available, including after history restoration.
+   Never hide an open menu or interrupt keyboard focus. */
+@media (max-width: 767px) {
+  .poet-poem-picker[data-index-visible="true"]:not([open]):not(:focus-within) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}

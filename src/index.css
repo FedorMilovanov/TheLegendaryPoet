@@ -1107,10 +1107,10 @@ html.theme-light .luxury-card [class*="text-cyan-200"]:not([class*="theme-"]):no
 /* #5a6a7a cleared the card itself (5.44) but not the card under the consent
    banner's shadow, which paints 232,224,206 over it and left the poet's prose
    at 4.23. A remap is measured in the state the reader can stop in, not only
-   in the state the card ships in: #546372 measures 4.70 under the shadow and
-   5.44 on the card. */
+   in the state the card ships in: #546372 later measured 4.41 on a mobile
+   Pushkin panel (painted rgb(227,217,200)); #475666 measures 5.38 there. */
 html.theme-light .luxury-card .text-luxury-gray-light:not([class*="theme-"]):not(:where(.theme-dark-island, .theme-dark-island *, [data-hall-production-mode], [data-hall-production-mode] *)) {
-  color: #546372 !important;
+  color: #475666 !important;
 }
 
 /* Gold ink belongs to the same remap table as the cyan ink. The brand gold
