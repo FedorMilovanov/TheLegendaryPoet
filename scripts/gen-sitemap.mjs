@@ -204,6 +204,7 @@ const dynamicContentByPath = new Map([
   ...poemPages.map(page => [page.path, {
     page,
     readingBody: fileHash('src/components/poet-detail/PoemReadingBody.tsx'),
+    archiveAction: fileHash('src/components/poet-detail/PoemArchiveAction.tsx'),
     model: fileHash('src/lib/poemPageModel.ts'),
     staticDocument: fileHash('scripts/lib/poem-static-document.tsx'),
     browserPayload: fileHash('src/data/runtime/poemPagePayload.ts'),

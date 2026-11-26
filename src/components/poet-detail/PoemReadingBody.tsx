@@ -1,4 +1,5 @@
 /** @jsxRuntime automatic */
+import type { ReactNode, Ref } from 'react';
 import type { PoemPageModel, ReadingLink } from '../../lib/poemPageModel';
 
 const linkClass = 'theme-text inline-flex min-h-11 items-center underline decoration-current underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
@@ -7,12 +8,18 @@ const linkClass = 'theme-text inline-flex min-h-11 items-center underline decora
  * no hidden SEO copy, no independently implemented static HTML template.
  * Interactive Reader controls can be attached around this single content owner.
  */
-export default function PoemReadingBody({ page }: { page: PoemPageModel }) {
+interface PoemReadingBodyProps {
+  page: PoemPageModel;
+  articleRef?: Ref<HTMLElement>;
+  verseRef?: Ref<HTMLDivElement>;
+  actions?: ReactNode;
+}
+export default function PoemReadingBody({ page, articleRef, verseRef, actions }: PoemReadingBodyProps) {
   const neighbours: Array<{ label: string; link: ReadingLink }> = [];
   if (page.previous) neighbours.push({ label: 'Предыдущее стихотворение', link: page.previous });
   if (page.next) neighbours.push({ label: 'Следующее стихотворение', link: page.next });
   return (
-    <article data-poem-reading-page={page.poemId} className="theme-page-surface mx-auto w-full max-w-4xl px-4 py-10 sm:px-8 md:py-16">
+    <article ref={articleRef} data-poem-reading-page={page.poemId} className="theme-page-surface mx-auto w-full max-w-4xl px-4 py-10 sm:px-8 md:py-16">
       <nav aria-label="Хлебные крошки" className="theme-functional-muted mb-8 text-sm">
         <ol className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           {page.breadcrumbs.map((item, index) => (
@@ -36,6 +43,7 @@ export default function PoemReadingBody({ page }: { page: PoemPageModel }) {
             Здесь представлен фрагмент произведения, а не полный текст.
           </p>
         )}
+        {actions}
       </header>
       <section aria-labelledby="poem-text-heading" className="theme-elevated-surface mb-10 rounded-2xl border p-5 sm:p-9 md:p-12">
         <h2 id="poem-text-heading" className="theme-functional-muted mb-5 text-sm font-semibold">{page.scope === 'excerpt' ? 'Фрагмент' : 'Текст стихотворения'}</h2>
@@ -44,7 +52,7 @@ export default function PoemReadingBody({ page }: { page: PoemPageModel }) {
             {page.epigraph.text}<footer className="mt-2 text-sm">— {page.epigraph.attribution}</footer>
           </blockquote>
         )}
-        <div data-poem-canonical className="theme-text whitespace-pre-wrap break-words font-serif text-xl leading-[1.85] sm:text-2xl">{page.text}</div>
+        <div ref={verseRef} data-poem-canonical className="theme-text whitespace-pre-wrap break-words font-serif text-xl leading-[1.85] sm:text-2xl">{page.text}</div>
         <a href={page.source} rel="noopener noreferrer" className={linkClass + ' mt-6 text-sm'}>Источник текста</a>
       </section>
       <section aria-labelledby="poem-analysis-heading" className="mb-9">

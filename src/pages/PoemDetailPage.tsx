@@ -1,4 +1,4 @@
-import { use } from 'react';
+import { lazy, Suspense, use, useRef } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { getBrowserPoem, getPreparedPoem, prepareDirectPoem } from '../data/runtime/browserPoemData';
 export { prepareDirectPoem as prepareDirectEntry };
@@ -6,11 +6,32 @@ import type { PoemPageModel } from '../lib/poemPageModel';
 import PoemReadingBody from '../components/poet-detail/PoemReadingBody';
 import { useSeo } from '../hooks/useSeo';
 import NotFoundPage from './NotFoundPage';
+import PoemArchiveAction from '../components/poet-detail/PoemArchiveAction';
+import ReadingProgress from '../components/articles/ReadingProgress';
+import ShareLine from '../components/ui/ShareLine';
+import { poemRatingDimensions } from '../data/ratingDimensions';
+
+const CommunityPanel = lazy(() => import('../components/community/CommunityPanel'));
 
 function PublishedPoem({ page }: { page: PoemPageModel }) {
   useSeo({ title: page.title, description: page.description, path: page.path,
     image: page.image, imageAlt: 'Портрет: ' + page.authorName, breadcrumbs: page.breadcrumbs, jsonLd: page.schema });
-  return <div className="pt-24 sm:pt-28"><PoemReadingBody page={page} /></div>;
+  const articleRef = useRef<HTMLElement>(null);
+  const verseRef = useRef<HTMLDivElement>(null);
+  return (
+    <div className="pt-24 sm:pt-28">
+      <ReadingProgress articleRef={articleRef} />
+      <ShareLine scopeRef={verseRef} />
+      <PoemReadingBody page={page} articleRef={articleRef} verseRef={verseRef}
+        actions={<PoemArchiveAction key={page.poemId} poemId={page.poemId} title={page.heading} />} />
+      <div className="mx-auto max-w-4xl px-4 pb-12 sm:px-8">
+        <Suspense fallback={<p role="status" className="theme-functional-muted py-4 text-sm">Загрузка оценок и комментариев…</p>}>
+          <CommunityPanel key={page.poemId} compact deferRemote targetType="poem" targetId={page.poemId}
+            title={'Оценка стихотворения: ' + page.heading} dimensions={poemRatingDimensions} />
+        </Suspense>
+      </div>
+    </div>
+  );
 }
 export default function PoemDetailPage() {
   const { id = '', slug = '' } = useParams<{ id: string; slug: string }>();

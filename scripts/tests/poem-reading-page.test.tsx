@@ -129,3 +129,14 @@ test('initial static snapshot must agree with approved payload before client han
     assert.throws(() => assertDirectPoemParity({ ...snapshot, [key]: snapshot[key] + ' changed' }, page), /content differ/);
   }
 });
+
+test('shared reading body exposes interaction slots without duplicating canonical content', () => {
+  const { page, html } = render(row);
+  const enhanced = renderToStaticMarkup(createElement(PoemReadingBody, { page,
+    actions: createElement('button', { type: 'button' }, 'В архив') }));
+  assert.ok(!html.includes('В архив'));
+  assert.ok(enhanced.includes('В архив'));
+  assert.equal((enhanced.match(/data-poem-canonical=/g) || []).length, 1);
+  assert.equal((enhanced.match(/<h1\b/g) || []).length, 1);
+  assert.ok(enhanced.includes(page.text));
+});
