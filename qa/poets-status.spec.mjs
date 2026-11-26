@@ -110,20 +110,24 @@ test.describe('poets result status accessibility', () => {
 
   test('closed floating picker yields to visible inline index and returns at poem text', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'webkit-reader-desktop', 'Core and mobile index visibility coverage');
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
-    const index = page.locator('.poet-reading-index');
-    const picker = page.locator('[data-poem-picker]');
-    await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
-    await index.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
-    await expect(picker).toHaveAttribute('data-index-visible', 'true');
-    await expect(picker.locator('summary')).toBeHidden();
-    await index.locator('a[href="#poem-blok-11"]').click();
-    await expect(page).toHaveURL(/#poem-blok-11$/);
-    await expect(picker).toHaveAttribute('data-index-visible', 'false');
-    await expect(picker.locator('summary')).toBeVisible();
-    await picker.locator('summary').click();
-    await expect(picker).toHaveAttribute('open', '');
+    const viewports = [{ width: 390, height: 844 }];
+    if (testInfo.project.name === 'chromium-core') viewports.push({ width: 1440, height: 900 });
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+      const index = page.locator('.poet-reading-index');
+      const picker = page.locator('[data-poem-picker]');
+      await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
+      await index.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await expect(picker).toHaveAttribute('data-index-visible', 'true');
+      await expect(picker.locator('summary')).toBeHidden();
+      await index.locator('a[href="#poem-blok-11"]').click();
+      await expect(page).toHaveURL(/#poem-blok-11$/);
+      await expect(picker).toHaveAttribute('data-index-visible', 'false');
+      await expect(picker.locator('summary')).toBeVisible();
+      await picker.locator('summary').click();
+      await expect(picker).toHaveAttribute('open', '');
+    }
   });
 
   test('same-author SPA search and native fragment history keep both poem indexes current', async ({ page }, testInfo) => {
@@ -208,7 +212,13 @@ test.describe('poets result status accessibility', () => {
       const trigger = picker.locator('summary');
       const scrollTop = page.locator('.scroll-top-btn');
       await expect(trigger).toBeVisible();
-      await page.evaluate(() => window.scrollTo(0, 3200));
+      // Measure the two controls where both are meant to be available:
+      // inside a hydrated poem, not at an arbitrary offset in the inline index.
+      const lastPoem = page.locator('.luxury-card[id^="poem-"]').last();
+      await expect(page.locator('.luxury-card[id^="poem-"]')).toHaveCount(10);
+      await lastPoem.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await expect(picker).toHaveAttribute('data-index-visible', 'false');
+      await expect(trigger).toBeVisible();
       await expect(scrollTop).toBeVisible();
 
       const gap = await page.evaluate(() => {

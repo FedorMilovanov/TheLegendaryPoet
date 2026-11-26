@@ -31,6 +31,26 @@ function buildFragmentUrl(text: string): string {
   return `${base}#:~:text=${encodeFragmentPart(start)},${encodeFragmentPart(end)}`;
 }
 
+
+const privateRegion = 'input,textarea,select,[contenteditable],[data-community-target]';
+
+function readPublicSelection(scope: HTMLElement | null) {
+  const selection = document.getSelection();
+  if (!scope || selection?.rangeCount !== 1 || selection.isCollapsed) return null;
+  const range = selection.getRangeAt(0);
+  const common = range.commonAncestorContainer;
+  const host = common instanceof Element ? common : common.parentElement;
+  if (!scope.contains(common) || host?.closest(privateRegion)) return null;
+  // A range can start and end in public text but cross a local comment.
+  if (common instanceof Element && Array.from(common.querySelectorAll(privateRegion)).some(node => range.intersectsNode(node))) return null;
+  return selection.toString().trim() ? range : null;
+}
+
+function sameSelection(a: Range, b: Range | null) {
+  return b !== null && a.startContainer === b.startContainer && a.startOffset === b.startOffset &&
+    a.endContainer === b.endContainer && a.endOffset === b.endOffset;
+}
+
 interface ShareLineProps {
   /** The element whose text is shareable (e.g. the essay <article>). */
   scopeRef: RefObject<HTMLElement | null>;
@@ -40,30 +60,28 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const chipRef = useRef<HTMLButtonElement>(null);
+  const visibleRange = useRef<Range | null>(null);
+  const copiedRange = useRef<Range | null>(null);
   const copiedTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     let raf = 0;
 
-    const readSelection = () => {
-      const sel = document.getSelection();
-      const scope = scopeRef.current;
-      if (!sel || sel.isCollapsed || sel.rangeCount === 0 || !scope) return null;
-      const range = sel.getRangeAt(0);
-      const within =
-        scope.contains(range.startContainer) && scope.contains(range.endContainer);
-      if (!within || !sel.toString().trim()) return null;
-      return range;
-    };
-
     const place = () => {
-      const range = readSelection();
+      const range = readPublicSelection(scopeRef.current);
+      visibleRange.current = range?.cloneRange() ?? null;
+      if (copiedRange.current && !sameSelection(copiedRange.current, range)) {
+        copiedRange.current = null;
+        window.clearTimeout(copiedTimer.current);
+        setCopied(false);
+      }
       if (!range) {
         setPos(null);
         return;
       }
       const rect = range.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) {
+        visibleRange.current = null;
         setPos(null);
         return;
       }
@@ -88,26 +106,33 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
       document.removeEventListener('selectionchange', schedule);
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);
+      visibleRange.current = null;
+      copiedRange.current = null;
+      window.clearTimeout(copiedTimer.current);
     };
   }, [scopeRef]);
 
-  useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
-
   const copy = async () => {
-    const sel = document.getSelection();
-    const text = sel?.toString() ?? '';
-    if (!text.trim()) return;
+    const range = readPublicSelection(scopeRef.current);
+    const shown = visibleRange.current;
+    if (!range || !shown || !sameSelection(shown, range)) return;
+    const text = document.getSelection()?.toString() ?? '';
+    const snapshot = range.cloneRange();
+    copiedRange.current = snapshot;
+    window.clearTimeout(copiedTimer.current);
+    setCopied(false);
     try {
       await navigator.clipboard.writeText(buildFragmentUrl(text));
+      if (copiedRange.current !== snapshot || !sameSelection(snapshot, readPublicSelection(scopeRef.current))) return;
       setCopied(true);
-      window.clearTimeout(copiedTimer.current);
       copiedTimer.current = window.setTimeout(() => {
+        if (copiedRange.current !== snapshot) return;
+        copiedRange.current = null;
         setCopied(false);
-        setPos(null);
-        document.getSelection()?.removeAllRanges();
       }, 1400);
     } catch {
       // Clipboard unavailable (permissions/insecure context) — fail quietly.
+      if (copiedRange.current === snapshot) copiedRange.current = null;
     }
   };
 
