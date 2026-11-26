@@ -212,7 +212,7 @@ test.describe('poets result status accessibility', () => {
   const expandedPoets = [
       ['alexander-pushkin', 10],
       ['mikhail-lermontov', 11],
-      ['sergei-yesenin', 10],
+      ['sergei-yesenin', 11],
       ['fyodor-tyutchev', 11],
     ];
   // Keep every author, viewport, and editorial assertion, but give each
@@ -233,6 +233,11 @@ test.describe('poets result status accessibility', () => {
         // full route-specific JSON to hydrate before testing navigation.
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
+        if (poetId === 'sergei-yesenin') {
+          const expectedIds = ["yesenin-poet-zima-aukaet","yesenin-1","yesenin-2","yesenin-3","yesenin-4","yesenin-5","yesenin-6","yesenin-7","yesenin-8","yesenin-9","yesenin-10"];
+          await expect.poll(() => cards.evaluateAll(nodes => nodes.map(node => node.id.slice('poem-'.length)))).toEqual(expectedIds);
+          await expect.poll(() => entries.evaluateAll(nodes => nodes.map(node => node.getAttribute('href').slice('#poem-'.length)))).toEqual(expectedIds);
+        }
         if (poetId === 'mikhail-lermontov') {
           const musicLink = page.locator('#poem-lermontov-10 a[href="/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva/"]');
           await expect(musicLink).toHaveCount(1);

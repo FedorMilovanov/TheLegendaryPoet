@@ -14,9 +14,18 @@ export const clipDocuments = [
   'suno/clips/references/yesenin-epic/README.md',
   'suno/clips/projects/yesenin-chto-eto-takoe.md',
 ];
+export const coverDocuments = [
+  'suno/covers/AGENT.md', 'suno/covers/RESEARCH.md', 'suno/covers/projects/fet-new-year.md',
+];
+export const coverReferenceAssets = [
+  'public/images/fet-480.jpg', 'public/images/music/blok-night-loop-cover.webp',
+  'public/images/music/yesenin-ya-ustalym-cover.webp', 'public/images/music/lermontov-niva-cover.webp',
+];
 export const documents = ['suno/README.md', 'suno/AGENT.md', 'suno/CASES.md',
-  'suno/PRONUNCIATION_AND_REPAIR.md', 'suno/RESEARCH_2026-10-25.md', ...clipDocuments];
+  'suno/PRONUNCIATION_AND_REPAIR.md', 'suno/RESEARCH_2026-10-25.md',
+  'suno/WORKBENCH.md', 'suno/EXPERIENCE.md', 'suno/NEW_YEAR_SERIES.md', ...clipDocuments, ...coverDocuments];
 export const referenceAssets = [
+  ...coverReferenceAssets,
   ...[
     'action-two-guns.jpg', 'creature-root-giant.jpg', 'expression-calm-alert-daylight.jpg',
     'expression-full-shout-night.jpg', 'expression-startled-night.jpg',
@@ -48,9 +57,26 @@ export function readFences(text) {
   return { blocks, unclosed: Boolean(open) };
 }
 
+// Keep the required inventory explicit (deletions must fail), but also reject
+// unregistered Markdown anywhere in the kit so new docs cannot evade checks
+// or disappear from the isolated test fixture.
+function findMarkdown(directory, relative = 'suno') {
+  const absolute = path.join(directory, relative);
+  if (!fs.existsSync(absolute)) return [];
+  return fs.readdirSync(absolute, { withFileTypes: true }).flatMap(entry => {
+    const file = path.posix.join(relative, entry.name);
+    if (entry.isDirectory()) return findMarkdown(directory, file);
+    return /\.md$/i.test(entry.name) ? [file] : [];
+  });
+}
+
 // Structural checks only. This cannot certify a model response or a song.
 export function validateKit(directory = root) {
   const errors = [];
+  const registered = new Set(documents);
+  for (const file of findMarkdown(directory)) {
+    if (!registered.has(file)) errors.push(`unregistered Suno document: ${file}`);
+  }
   for (const file of documents) {
     const absolute = path.join(directory, file);
     if (!fs.existsSync(absolute)) { errors.push(`missing ${file}`); continue; }
@@ -83,7 +109,8 @@ export function validateKit(directory = root) {
     errors.push('literal Lyrics regressions missing from Suno gate');
   }
   const agents = fs.readFileSync(path.join(directory, 'AGENTS.md'), 'utf8');
-  for (const file of ['suno/AGENT.md', 'suno/CASES.md', 'suno/clips/AGENT.md', 'suno/clips/README.md']) {
+  for (const file of ['suno/AGENT.md', 'suno/CASES.md', 'suno/PRONUNCIATION_AND_REPAIR.md',
+    'suno/WORKBENCH.md', 'suno/NEW_YEAR_SERIES.md', 'suno/clips/AGENT.md', 'suno/clips/README.md', 'suno/covers/AGENT.md']) {
     if (!agents.includes(file)) errors.push(`missing agent routing: ${file}`);
   }
   if (errors.length) throw new Error(errors.join('\n'));

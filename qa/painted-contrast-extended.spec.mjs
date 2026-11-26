@@ -63,7 +63,11 @@ test('Gumilev verse ink remains inside its own painted reading surface', async (
 
 test.describe('canonical owner extension: real painted pixels', () => {
   test.setTimeout(240_000);
-  for (const route of EXTENDED_PAINTED_ROUTES) {
+  // Admission census for the owner-selected new release. It is deliberately
+  // not in the covered inventory above until exact four-mode measurements
+  // establish its permanent 90% floor. The inventory gate remains red.
+  const censusOnly = { path: '/music/yesenin-steel-blizzard', heading: 'СТАЛЬНАЯ ВЬЮГА', censusOnly: true };
+  for (const route of [...EXTENDED_PAINTED_ROUTES, censusOnly]) {
     for (const theme of ['dark', 'light']) {
       for (const viewport of [
         { label: 'desktop', width: 1440, height: 1000 },
@@ -78,9 +82,15 @@ test.describe('canonical owner extension: real painted pixels', () => {
           await expect(page.locator('h1').first()).toContainText(route.heading);
           await page.waitForTimeout(600);
           const { measured, offenders, gradientOffenders, occluded } = await paintedSweep(page);
-          expect(measured.length,
-            `${route.path}: ${occluded.length} nodes under fixed chrome; route did not render enough ink`)
-            .toBeGreaterThan(route.minimumNodes);
+          if (route.censusOnly) {
+            console.log('[release-painted-census] ' + JSON.stringify({ path: route.path, theme, viewport: viewport.label,
+              measured: measured.length, occluded: occluded.length, offenders: offenders.length, gradientOffenders: gradientOffenders.length }));
+            expect(measured.length, 'admission census must measure real rendered ink').toBeGreaterThan(0);
+          } else {
+            expect(measured.length,
+              `${route.path}: ${occluded.length} nodes under fixed chrome; route did not render enough ink`)
+              .toBeGreaterThan(route.minimumNodes);
+          }
           // On a genuine painted-pixel failure retain the live CSS surface
           // and a reader-visible screenshot, without changing any thresholds.
           if (offenders.length || gradientOffenders.length) {
