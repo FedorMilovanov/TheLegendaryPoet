@@ -124,7 +124,7 @@ export default function PoemCard({ poem, contentsId }: PoemCardProps) {
             <h4 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white opacity-70">
               Литературный анализ
             </h4>
-            <p className="text-base font-light leading-[1.8] text-luxury-gray-light">
+            <p className="whitespace-pre-line text-base font-light leading-[1.8] text-luxury-gray-light">
               {poem.analysis}
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function PoemCard({ poem, contentsId }: PoemCardProps) {
             <h4 className="gold-glow-text mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-luxury-gold">
               <Award size={14} /> Духовный подтекст
             </h4>
-            <p className="text-base font-light italic leading-[1.8] text-luxury-gray-light">
+            <p className="whitespace-pre-line text-base font-light italic leading-[1.8] text-luxury-gray-light">
               {poem.biblicalPerspective}
             </p>
           </div>
@@ -149,7 +149,7 @@ export default function PoemCard({ poem, contentsId }: PoemCardProps) {
               <span>Читать текстологическую справку</span>
               <ChevronDown size={16} aria-hidden="true" className="shrink-0 transition-transform duration-200 group-open:rotate-180" />
             </summary>
-            <p className="mt-3 max-w-full whitespace-normal text-sm leading-7 text-luxury-gray-light [overflow-wrap:anywhere]">{poem.textualNote}</p>
+            <p className="mt-3 max-w-full whitespace-pre-line text-sm leading-7 text-luxury-gray-light [overflow-wrap:anywhere]">{poem.textualNote}</p>
           </details>
           {poem.textualSourceUrl && (
             <a href={poem.textualSourceUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 max-w-full items-center rounded-lg text-sm font-medium text-luxury-gold-light underline decoration-luxury-gold/40 underline-offset-4 transition hover:decoration-luxury-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-luxury-gold">

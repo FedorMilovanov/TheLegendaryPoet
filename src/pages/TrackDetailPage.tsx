@@ -126,7 +126,7 @@ export default function TrackDetailPage() {
             </div>
             <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[0.91] drop-shadow-[0_6px_38px_rgba(0,0,0,0.88)] sm:text-7xl lg:text-[5.7rem]">{track.title}</h1>
             <p className="mt-5 text-lg text-white/68 sm:text-xl">{track.poet} <span className="text-white/52">·</span> музыкальная версия The Legendary Poet</p>
-            {track.description && <p className="mt-6 max-w-2xl text-sm leading-relaxed text-white/48 sm:text-base">{track.description}</p>}
+            {track.description && <p className="mt-6 max-w-2xl text-sm leading-relaxed text-white/72 sm:text-base">{track.description}</p>}
             {scheduledDate && track.availability === 'coming-soon' && (
               <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/32 px-4 py-2 text-xs text-white/64 backdrop-blur-xl">
                 <CalendarDays size={14} style={{ color: 'var(--tlp-track-secondary-ink)' }} /> Ориентировочная дата: {scheduledDate}

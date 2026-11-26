@@ -199,6 +199,13 @@ export const supplementaryPoemSearchIndex: readonly SupplementaryPoemSearchEntry
   {
     "poetId": "sergei-yesenin",
     "poetName": "Сергей Есенин",
+    "id": "yesenin-3",
+    "title": "Гой ты, Русь, моя родная",
+    "year": 1914
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
     "id": "yesenin-4",
     "title": "«Отговорила роща золотая…»",
     "year": 1924

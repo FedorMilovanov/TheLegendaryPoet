@@ -141,8 +141,8 @@ for (const profile of [
       const poemTarget = page.locator('#poem-yesenin-3');
       await expect(poemTarget).toBeVisible();
       // Assert the full JSON is committed: the fallback has only three poems.
-      // The scroll coordinator must re-anchor after this 3→10 hydration.
-      await expect(page.locator('div[id^="poem-yesenin-"]')).toHaveCount(10);
+      // The scroll coordinator must re-anchor after this 3→11 hydration.
+      await expect(page.locator('div[id^="poem-yesenin-"]')).toHaveCount(11);
       const anchorDiagnostics = () => page.evaluate(() => {
         const target = document.getElementById('poem-yesenin-3');
         const rect = target?.getBoundingClientRect();

@@ -617,7 +617,7 @@ test.describe('poets result status accessibility', () => {
   const expandedPoets = [
       ['alexander-pushkin', 10],
       ['mikhail-lermontov', 11],
-      ['sergei-yesenin', 10],
+      ['sergei-yesenin', 11],
       ['fyodor-tyutchev', 11],
     ];
   // Keep every author, viewport, and editorial assertion, but give each
@@ -638,6 +638,11 @@ test.describe('poets result status accessibility', () => {
         // full route-specific JSON to hydrate before testing navigation.
         await expect(cards).toHaveCount(expectedCount);
         await expect(entries).toHaveCount(expectedCount);
+        if (poetId === 'sergei-yesenin') {
+          const expectedIds = ["yesenin-poet-zima-aukaet","yesenin-1","yesenin-2","yesenin-3","yesenin-4","yesenin-5","yesenin-6","yesenin-7","yesenin-8","yesenin-9","yesenin-10"];
+          await expect.poll(() => cards.evaluateAll(nodes => nodes.map(node => node.id.slice('poem-'.length)))).toEqual(expectedIds);
+          await expect.poll(() => entries.evaluateAll(nodes => nodes.map(node => node.getAttribute('href').slice('#poem-'.length)))).toEqual(expectedIds);
+        }
         if (poetId === 'mikhail-lermontov') {
           const musicLink = page.locator('#poem-lermontov-10 a[href="/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva/"]');
           await expect(musicLink).toHaveCount(1);
@@ -804,7 +809,10 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
           await expect(page.getByRole('heading', { name: 'Источники и редакции текстов' })).toBeVisible();
           await expect(page.getByRole('link', { name: /Летопись жизни и творчества\. Том 5, книга 1/ })).toBeVisible();
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(10);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(expectedCount);
+          const winterNote = page.locator('#poem-yesenin-poet-zima-aukaet [data-poem-textual-note]');
+          await expect(winterNote).toBeVisible();
+          await expect(winterNote.locator('a')).toHaveAttribute('href', 'https://rvb.ru/20vek/esenin/pss7/vol1/notes/003.html');
           await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('Песня о собаке');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('вернусь!');
@@ -829,7 +837,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('без запятой');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('С. Кошечкин');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://sytin-and-esenin.ru/images/blocks/2.23.24.jpg');
-          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(10);
+          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(expectedCount);
         }
         if (poetId === 'fyodor-tyutchev') {
           await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
