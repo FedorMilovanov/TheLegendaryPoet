@@ -70,3 +70,75 @@ test.describe('native fragment navigation and stable geometry', () => {
     expect(decodeURIComponent(new URL(page.url()).hash)).toBe(citation);
   });
 });
+
+test('share selection rejects private or stale ranges and preserves later reader selection', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__shareWrites = [];
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+      writeText: value => {
+        window.__shareWrites.push(value);
+        return new Promise(resolve => { window.__finishShareWrite = resolve; });
+      },
+    } });
+  });
+  await page.goto(BASE_URL + '/poets/alexander-blok', { waitUntil: 'domcontentloaded' });
+  const intro = page.locator('.poet-bio-intro');
+  const scope = intro.locator('..');
+  const community = scope.locator('[data-community-target]').first();
+  const verse = scope.locator('[data-poem-canonical]').first();
+  const chip = scope.locator('.share-line-chip');
+  await expect(intro).toBeVisible();
+  await expect(community).toBeAttached();
+  await expect(verse).toBeAttached();
+  const select = locator => locator.evaluate(node => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event('selectionchange'));
+  });
+
+  await select(intro);
+  await expect(chip).toBeVisible();
+  // Change to community content and click the old chip in the same task.
+  await chip.evaluate(node => {
+    const region = node.parentElement.querySelector('[data-community-target]');
+    const range = document.createRange();
+    range.selectNodeContents(region);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    node.click();
+    document.dispatchEvent(new Event('selectionchange'));
+  });
+  await expect(chip).toHaveCount(0);
+  expect(await page.evaluate(() => window.__shareWrites)).toEqual([]);
+
+  await select(intro);
+  await expect(chip).toBeVisible();
+  await scope.evaluate(node => {
+    const range = document.createRange();
+    range.setStartBefore(node.querySelector('.poet-bio-intro'));
+    range.setEndAfter(node.querySelector('[data-poem-canonical]'));
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event('selectionchange'));
+  });
+  await expect(chip).toHaveCount(0);
+
+  await select(intro);
+  await expect(chip).toBeVisible();
+  await chip.evaluate(node => node.click());
+  expect(await page.evaluate(() => window.__shareWrites.length)).toBe(1);
+  const bio = scope.locator('.poetry-text > p').first();
+  await select(bio);
+  const selected = await page.evaluate(() => document.getSelection().toString());
+  expect(selected.trim()).not.toBe('');
+  await page.evaluate(() => window.__finishShareWrite());
+  // Exercise the existing 1400ms feedback lifetime, not a navigation delay.
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => document.getSelection().toString())).toBe(selected);
+  await expect(chip).toHaveText('Ссылка на строку');
+});
