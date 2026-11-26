@@ -37,6 +37,7 @@ const pageImporters = {
   HallPage: () => import('../pages/HallPage'),
   PoetsPage: () => import('../pages/PoetsPage'),
   PoetDetailPage: () => import('../pages/PoetDetailPage'),
+  PoemDetailPage: () => import('../pages/PoemDetailPage'),
   RatingsPage: () => import('../pages/RatingsPage'),
   ArticlesPage: () => import('../pages/ArticlesPage'),
   EssayPage: () => import('../pages/EssayPage'),

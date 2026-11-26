@@ -9,6 +9,7 @@ import { allMusicTracks, poets } from '../src/data/poets.ts';
 import { poets as canonicalPoets } from '../src/data/library/index.ts';
 import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
 import { buildPoemRouteCatalog } from './lib/poem-discovery.mjs';
+import { buildPoemPageModel } from '../src/lib/poemPageModel.ts';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
 const OUTPUT = path.resolve('public/sitemap.xml');
@@ -92,10 +93,15 @@ const poemRoutePolicy = JSON.parse(fs.readFileSync(path.resolve('src/data/poem-r
 const poemRouteCatalog = buildPoemRouteCatalog(canonicalPoets, poemRoutePolicy, canonicalRoutePath);
 console.log('Poem route contract: ' + poemRouteCatalog.length + ' works; '
   + poemRouteCatalog.filter(row => row.slug !== null).length + ' assigned slugs; '
-  + poemRouteCatalog.filter(row => row.eligible).length + ' standalone approvals (no poem URLs emitted yet).');
+  + poemRouteCatalog.filter(row => row.eligible).length + ' standalone approvals.');
 
 const essays = getAllEssays();
 const publishedTracks = allMusicTracks.filter((track) => track.availability === 'published');
+const poemPages = poemRouteCatalog.filter(row => row.eligible).map(row => {
+  const page = buildPoemPageModel(row, poemRouteCatalog, allMusicTracks);
+  if (!page) throw new Error('Eligible poem lacks a page model: ' + row.poemId);
+  return page;
+});
 
 const staticRoutes = routeContract.routes
   .filter((route) => route.sitemap)
@@ -145,6 +151,10 @@ const urls = [
       caption: poet.shortBio,
     },
   })),
+  ...poemPages.map(page => ({
+    routeId: 'poem-detail', loc: page.path,
+    image: { loc: page.image, title: page.authorName, caption: page.heading },
+  })),
 ].map((item) => ({ ...item, loc: canonicalRoutePath(item.loc) }));
 
 const seen = new Set();
@@ -191,6 +201,13 @@ const dynamicContentByPath = new Map([
   // Author detail serves the complete canonical corpus after hydration. The
   // deliberately abbreviated shell index cannot fingerprint these pages.
   ...canonicalPoets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), poet]),
+  ...poemPages.map(page => [page.path, {
+    page,
+    readingBody: fileHash('src/components/poet-detail/PoemReadingBody.tsx'),
+    model: fileHash('src/lib/poemPageModel.ts'),
+    staticDocument: fileHash('scripts/lib/poem-static-document.tsx'),
+    browserPayload: fileHash('src/data/runtime/poemPagePayload.ts'),
+  }]),
 ]);
 
 const manifestRoutes = urls.map((item) => {

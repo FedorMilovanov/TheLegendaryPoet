@@ -28,6 +28,12 @@
       "sitemap": false
     },
     {
+      "id": "poem-detail",
+      "path": "/poets/:id/:slug",
+      "state": "ready",
+      "sitemap": false
+    },
+    {
       "id": "ratings",
       "path": "/ratings",
       "state": "ready",

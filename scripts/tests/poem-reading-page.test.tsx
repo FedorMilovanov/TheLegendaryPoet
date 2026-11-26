@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildPoemPageModel, type PoemRouteRow } from '../../src/lib/poemPageModel';
 import PoemReadingBody from '../../src/components/poet-detail/PoemReadingBody';
 import type { MusicTrack } from '../../src/types/poet';
+import { approvedPoemPath, poemPayloadFile, validatePoemPayload } from '../../src/data/runtime/poemPagePayload';
 import { assertPoemStaticAdmission, renderPoemStaticBody } from '../lib/poem-static-document';
 
 const poet = { id: 'test-author', name: 'Автор', fullName: 'Имя Автора', photo: '/images/test.webp' };
@@ -105,4 +106,17 @@ test('static admission is fail-closed until runtime route and discovery inventor
   assert.throws(() => assertPoemStaticAdmission([page], [route], [{ ...entry, state: 'noindex' }]), /does not match/);
   assert.throws(() => assertPoemStaticAdmission([page, page], [route], [entry, entry]), /does not match/);
   assert.doesNotThrow(() => assertPoemStaticAdmission([page], [route], [entry]));
+});
+
+test('browser admission uses exact approved path and validates route payload identity', () => {
+  const { page } = render(row);
+  const index = { schemaVersion: 1 as const, pages: { [page.path]: page.poemId } };
+  assert.equal(approvedPoemPath(index, 'test-author', 'work'), page.path);
+  assert.equal(approvedPoemPath(index, 'test-author', 'held'), null);
+  assert.equal(approvedPoemPath(index, 'test-author', '../work'), null);
+  assert.equal(poemPayloadFile(page.path), 'test-author/work.json');
+  assert.throws(() => poemPayloadFile('/poets/../work/'), /Invalid standalone/);
+  assert.deepEqual(validatePoemPayload(JSON.parse(JSON.stringify(page)), page.path, page.poemId).text, page.text);
+  assert.throws(() => validatePoemPayload({ ...page, poemId: 'other' }, page.path, page.poemId), /identity or content/);
+  assert.throws(() => validatePoemPayload({ ...page, legacyPath: '/wrong/' }, page.path, page.poemId), /legacy identity/);
 });

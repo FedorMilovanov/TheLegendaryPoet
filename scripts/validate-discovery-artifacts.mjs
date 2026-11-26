@@ -72,6 +72,7 @@ try {
   }
   console.log(readingFixtures.stdout.trim());
   for (const generator of [...new Set(artifacts.map((artifact) => artifact.generator))]) runGenerator(generator);
+  runGenerator('validate:poem-browser-data');
 
   for (const artifact of artifacts) {
     const absolutePath = path.join(root, artifact.path);
