@@ -14,6 +14,7 @@ import AuthorCommentary from '../components/poet-detail/AuthorCommentary';
 import PoetCommunitySummary from '../components/poet-detail/PoetCommunitySummary';
 import AkhmatovaReadingGuide from '../components/poet-detail/AkhmatovaReadingGuide';
 import PoemQuickNav from '../components/poet-detail/PoemQuickNav';
+import PoemPicker from '../components/poet-detail/PoemPicker';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
@@ -108,6 +109,7 @@ export default function PoetDetailPage() {
         <Breadcrumbs items={breadcrumbs} />
       </div>
       <HeroSection poet={poet} />
+      <PoemPicker key={poet.id} poems={poet.poems} />
 
       <div className="relative z-20 mx-auto max-w-7xl border-t border-luxury-gold/10 px-4 pb-32 pt-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-12">
@@ -184,7 +186,7 @@ export default function PoetDetailPage() {
                 {'Избранная'} <span className="gold-gradient gold-glow-text italic">{'Лирика'}</span>
               </h2>
 
-              <PoemQuickNav id={contentsId} poems={poet.poems} />
+              <PoemQuickNav key={poet.id} id={contentsId} poems={poet.poems} />
               <Suspense fallback={<p role="status" className="sr-only">Загрузка стихотворений</p>}>
                 <div className="mt-10 space-y-16">
                   {poet.poems.map((poem) => (

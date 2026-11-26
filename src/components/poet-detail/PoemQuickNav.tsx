@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MessageSquare, Star } from 'lucide-react';
+import { useLocation } from 'react-router';
 import { Poem } from '../../types/poet';
 import { useCommunityFeedback } from '../../hooks/useCommunityFeedback';
 
@@ -35,29 +36,25 @@ interface PoemQuickNavProps {
 }
 
 export default function PoemQuickNav({ poems, id }: PoemQuickNavProps) {
+  const { hash: routeHash } = useLocation();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [atIndex, setAtIndex] = useState(false);
 
   useEffect(() => {
-    const syncHash = () => {
-      const hash = window.location.hash.slice(1);
-      const selected = poems.find((poem) => `poem-${poem.id}` === hash);
-      if (selected) {
-        setActiveId(selected.id);
-        setAtIndex(false);
-      } else if (hash === id) {
-        // Remember which entry was visited, but do not claim that the URL
-        // still points to the poem: aria-current must match the fragment.
-        setAtIndex(true);
-      } else {
-        setActiveId(null);
-        setAtIndex(false);
-      }
-    };
-    syncHash();
-    window.addEventListener('hashchange', syncHash);
-    return () => window.removeEventListener('hashchange', syncHash);
-  }, [id, poems]);
+    const hash = routeHash.slice(1);
+    const selected = poems.find((poem) => `poem-${poem.id}` === hash);
+    if (selected) {
+      setActiveId(selected.id);
+      setAtIndex(false);
+    } else if (hash === id) {
+      // Remember which entry was visited, but do not claim that the URL
+      // still points to the poem: aria-current must match the fragment.
+      setAtIndex(true);
+    } else {
+      setActiveId(null);
+      setAtIndex(false);
+    }
+  }, [id, poems, routeHash]);
 
   if (poems.length === 0) return null;
   return (
