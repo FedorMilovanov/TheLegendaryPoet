@@ -4,8 +4,7 @@ import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { poets } from '../data/poets';
-import { getMemoryPlaces } from '../data/memory-places';
-import MemoryPlaces from '../components/poet-detail/MemoryPlaces';
+import { memoryPlaceRevisions } from '../data/runtime/memoryPlaces.generated';
 import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
 import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
@@ -29,6 +28,7 @@ const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait
 const PoemCard = lazy(() => import('../components/poet-detail/PoemCard'));
 const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
+const MemoryPlaces = lazy(() => import('../components/poet-detail/MemoryPlaces'));
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -122,9 +122,7 @@ export default function PoetDetailPage() {
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
-            {getMemoryPlaces(poet.id).length > 0 && (
-              <a className="poet-contents-jump" href="#memory-places">К местам памяти <span aria-hidden="true">↓</span></a>
-            )}
+            {Object.prototype.hasOwnProperty.call(memoryPlaceRevisions, poet.id) && <a className="poet-contents-jump" href="#memory-places">К местам памяти <span aria-hidden="true">↓</span></a>}
             {biographyError && supplementaryPoetIds.includes(poet.id) && (
               <p role="status" className="text-sm text-luxury-gold">
                 Не удалось загрузить полный корпус стихов и биографию. Показана резервная подборка.
@@ -175,7 +173,7 @@ export default function PoetDetailPage() {
               </div>
             )}
 
-            <MemoryPlaces poetId={poet.id} />
+            {Object.prototype.hasOwnProperty.call(memoryPlaceRevisions, poet.id) && <Suspense fallback={null}><MemoryPlaces key={poet.id} poetId={poet.id} revision={memoryPlaceRevisions[poet.id]} /></Suspense>}
 
             <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
 

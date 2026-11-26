@@ -23,6 +23,13 @@ for (const theme of ['dark', 'light']) {
         await page.locator('a[href="#memory-places"]').click();
         await expect.poll(() => new URL(page.url()).hash).toBe('#memory-places');
         await expect(root.locator('h2')).toHaveText('Места памяти');
+        const heroOrder = await exhibit.evaluate(node => {
+          const heading = node.querySelector('.memory-heading').getBoundingClientRect();
+          const photo = node.querySelector('.memory-photo').getBoundingClientRect();
+          const lead = node.querySelector('.memory-lead').getBoundingClientRect();
+          return heading.bottom <= photo.top + 1 && photo.bottom <= lead.top + 1;
+        });
+        expect(heroOrder).toBe(true);
         const images = exhibit.locator('img');
         for (const img of await images.all()) {
           await img.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
@@ -59,10 +66,10 @@ for (const theme of ['dark', 'light']) {
         for (const {text,ratio} of readings) expect(ratio, text).toBeGreaterThanOrEqual(4.5);
         await exhibit.locator('h3').evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-        await page.screenshot({ path: info.outputPath(width + '-hero.png'), animations: 'disabled' });
+        if (process.env.QA_CAPTURE_MEMORY === '1') await page.screenshot({ path: info.outputPath(width + '-hero.png'), animations: 'disabled' });
         await exhibit.locator('.memory-story').evaluate(node => node.scrollIntoView({ block: 'start', behavior: 'instant' }));
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-        await page.screenshot({ path: info.outputPath(width + '-story.png'), animations: 'disabled' });
+        if (process.env.QA_CAPTURE_MEMORY === '1') await page.screenshot({ path: info.outputPath(width + '-story.png'), animations: 'disabled' });
       }
     });
   }

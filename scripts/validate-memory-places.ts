@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { materializeMemoryPlaces } from './memory-place-artifacts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -53,3 +54,5 @@ for (const place of memoryPlaces) {
 }
 assert.equal(getMemoryPlaces('unknown-poet').length, 0);
 console.log('Memory places:', ids.size, 'exhibits;', assets.size, 'verified assets.');
+
+materializeMemoryPlaces(true);

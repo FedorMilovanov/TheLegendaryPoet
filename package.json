@@ -23,6 +23,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "memory:generate": "tsx scripts/gen-memory-places.ts",
     "validate:library": "tsx scripts/validate-library.ts && tsx scripts/validate-memory-places.ts",
     "validate:essays": "tsx scripts/validate-essays.ts",
     "validate:essay-browser-data": "tsx scripts/validate-essay-browser-data.ts",

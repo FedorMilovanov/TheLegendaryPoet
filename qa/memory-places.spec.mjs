@@ -43,7 +43,7 @@ for (const theme of ['dark', 'light']) {
       });
     });
     expect(overflow).toBe(false);
-    if (info.project.name === 'chromium-core') {
+    if (info.project.name === 'chromium-core' && process.env.QA_CAPTURE_MEMORY === '1') {
       await section.locator('h2').scrollIntoViewIfNeeded();
       await section.screenshot({ path: info.outputPath(`exhibit-${theme}.png`), animations: 'disabled', style: '.site-header,.mobile-dock,.scroll-top-btn,[data-custom-cursor-dot],[data-custom-cursor-ring],.cursor-trail { visibility: hidden !important; }' });
     }
@@ -53,6 +53,7 @@ for (const theme of ['dark', 'light']) {
 test('a poet with no registered memory places has no empty section or jump', async ({ page }) => {
   await page.goto(`${base}/poets/valery-bryusov`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('h1')).toBeVisible();
+  await page.waitForFunction(() => document.readyState === 'complete');
   await expect(page.locator('#memory-places')).toHaveCount(0);
   await expect(page.locator('a[href="#memory-places"]')).toHaveCount(0);
 });
@@ -90,3 +91,78 @@ for (const [poetId, placeId, photoCount = 2] of [
     expect(await exhibit.evaluate((node) => node.scrollWidth <= node.clientWidth + 2)).toBe(true);
   });
 }
+
+test('memory gallery shares overlay ownership, navigation, zoom and restores focus', async ({ page }, info) => {
+  await page.goto(base + '/poets/mikhail-lermontov#memory-places', { waitUntil: 'domcontentloaded' });
+  const section = page.locator('#memory-places');
+  await expect(section).toBeVisible();
+  await expect.poll(() => section.evaluate(node => Math.abs(node.getBoundingClientRect().top - 112))).toBeLessThan(48);
+  const opener = section.locator('.memory-photo-trigger').first();
+  await opener.scrollIntoViewIfNeeded();
+  await opener.focus();
+  await opener.click();
+  const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
+  const close = gallery.getByRole('button', { name: 'Закрыть фотографии' });
+  await expect(gallery).toBeVisible();
+  await expect(close).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('memory-photo-gallery');
+  const img = gallery.locator('img');
+  await expect(img).toHaveAttribute('data-image-state', 'loaded');
+  const initial = await img.getAttribute('src');
+  await gallery.getByRole('button', { name: 'Следующая фотография' }).click();
+  await expect(img).not.toHaveAttribute('src', initial);
+  await expect(img).toHaveAttribute('data-image-state', 'loaded');
+  await gallery.getByRole('button', { name: 'Увеличить фотографию' }).click();
+  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-zoom', 'true');
+  await gallery.getByRole('button', { name: 'Уменьшить фотографию' }).click();
+  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-zoom', 'false');
+  await page.keyboard.press('ArrowLeft');
+  await expect(img).toHaveAttribute('src', initial);
+  await expect(gallery.locator('a[href^="https://creativecommons.org/"]')).toHaveCount(1);
+  if (process.env.QA_CAPTURE_MEMORY === '1') await page.screenshot({ path: info.outputPath('gallery.png'), animations: 'disabled' });
+  await page.keyboard.press('Escape');
+  await expect(gallery).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+  if (info.project.name !== 'chromium-core') {
+    expect(await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)).toBe(false);
+    await expect(page.locator('[data-custom-cursor-dot]')).toHaveCount(0);
+  }
+});
+
+test('one-photo gallery does not render meaningless navigation', async ({ page }) => {
+  await page.goto(base + '/poets/nikolay-gumilev', { waitUntil: 'domcontentloaded' });
+  await page.locator('#memory-places .memory-photo-trigger').click();
+  const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
+  await expect(gallery).toBeVisible();
+  await expect(gallery.getByRole('button', { name: 'Следующая фотография' })).toHaveCount(0);
+  await expect(gallery.getByRole('button', { name: 'Предыдущая фотография' })).toHaveCount(0);
+  await gallery.getByRole('button', { name: 'Закрыть фотографии' }).click();
+  await expect(gallery).toHaveCount(0);
+});
+
+test('memory data is scoped to the current poet and retries without affecting the biography', async ({ page }) => {
+  const requests = [];
+  const endpoint = /\/data\/memory-places\/[^/?]+\.json/;
+  let fail = true;
+  await page.route(endpoint, async route => {
+    const url = new URL(route.request().url());
+    requests.push(url.pathname);
+    if (fail) await route.fulfill({ status: 503, body: 'unavailable' });
+    else await route.continue();
+  });
+  await page.goto(base + '/poets/mikhail-lermontov', { waitUntil: 'domcontentloaded' });
+  const section = page.locator('#memory-places');
+  await expect(section.getByRole('button', { name: 'Повторить' })).toBeVisible();
+  await expect(page.locator('h1')).toBeVisible();
+  fail = false;
+  await section.getByRole('button', { name: 'Повторить' }).click();
+  await expect(section.locator('article')).toHaveCount(1);
+  await expect(section.locator('figure:has(img)')).toHaveCount(3);
+  expect(requests.length).toBeGreaterThanOrEqual(2);
+  expect(requests.every(path => path.endsWith('/mikhail-lermontov.json'))).toBe(true);
+  requests.length = 0;
+  await page.goto(base + '/poets/valery-bryusov', { waitUntil: 'networkidle' });
+  await expect(page.locator('#memory-places')).toHaveCount(0);
+  expect(requests).toEqual([]);
+});
