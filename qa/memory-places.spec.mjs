@@ -29,9 +29,13 @@ for (const theme of ['dark', 'light']) {
       await expect(photo.locator('figcaption a[href^="https://commons.wikimedia.org/"]')).toHaveCount(1);
       await expect(photo.locator('figcaption a[href="https://creativecommons.org/licenses/by-sa/4.0"]')).toHaveCount(1);
     }
+    const sourceLinks = section.locator('details a');
+    await expect(sourceLinks.first()).toBeHidden();
+    expect(await sourceLinks.evaluateAll(nodes => nodes.every(node => node.getClientRects().length === 0))).toBe(true);
     await section.locator('summary').click();
     await expect(section.locator('details')).toHaveAttribute('open', '');
     await expect(section.locator('details li')).toHaveCount(4);
+    await expect(sourceLinks.first()).toBeVisible();
     const readings = await contrastMeasurements(section.locator('p, h2, h3, h4, dt, dd, blockquote span, figcaption a, summary, details a'), true);
     expect(readings.length).toBeGreaterThan(20);
     for (const { text, ratio } of readings) expect(ratio, text).toBeGreaterThanOrEqual(4.5);
