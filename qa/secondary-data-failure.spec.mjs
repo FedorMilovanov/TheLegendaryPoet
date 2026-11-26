@@ -62,3 +62,51 @@ test('optional essay catalog failure cannot block primary poet or essay routes',
     await essayPage.close();
   }
 });
+
+test.describe('optional poet chunk independence', () => {
+  for (const chunk of ['MoralPortrait', 'PoetSources', 'PoetVideos']) {
+    test(`failure of ${chunk} preserves the complete poet corpus`, async ({ context, page }) => {
+      const id = chunk === 'PoetVideos' ? 'aleksey-konstantinovich-tolstoy' : 'alexander-blok';
+      let blocked = 0;
+      await context.route(new RegExp('/assets/' + chunk + '-[^/]+[.]js$'), route => {
+        blocked++;
+        return route.abort();
+      });
+      const response = page.waitForResponse(r => new URL(r.url()).pathname === '/data/poets/' + id + '.json' && r.ok());
+      await page.goto(BASE_URL + '/poets/' + id, { waitUntil: 'domcontentloaded' });
+      const data = await (await response).json();
+      await expect.poll(() => blocked).toBeGreaterThan(0);
+      const bio = page.getByRole('heading', { level: 2, name: /Полная Биография/i }).locator('..').locator('.poetry-text > p');
+      const recovery = page.getByRole('heading', { level: 1, name: /Попробуем восстановить страницу/i });
+      await expect.poll(async () => (await recovery.count()) ? 'recovery' : (await bio.count()) === data.fullBio.split('\n\n').length ? 'full corpus' : 'pending').toBe('full corpus');
+      await expect(bio.last()).toHaveText(data.fullBio.split('\n\n').at(-1));
+      await expect(page.locator('div[id^="poem-"]')).toHaveCount(data.poems.length);
+      await expect(page.locator('[data-poem-canonical]').first()).toBeVisible();
+      await expect(page.getByText('Дополнительный раздел недоступен. Обновите страницу.', { exact: true })).toBeVisible();
+      await expectNoRouteRecovery(page);
+    });
+  }
+  test('held portrait does not postpone the biography or poems', async ({ context, page }) => {
+    let release;
+    let attempts = 0;
+    const gate = new Promise(resolve => { release = resolve; });
+    await context.route(/\/assets\/MoralPortrait-[^/]+[.]js$/, async route => {
+      attempts++;
+      await gate;
+      return route.continue();
+    });
+    try {
+      const response = page.waitForResponse(r => new URL(r.url()).pathname === '/data/poets/alexander-blok.json' && r.ok());
+      await page.goto(BASE_URL + '/poets/alexander-blok', { waitUntil: 'domcontentloaded' });
+      const data = await (await response).json();
+      await expect.poll(() => attempts).toBeGreaterThan(0);
+      const bio = page.getByRole('heading', { level: 2, name: /Полная Биография/i }).locator('..').locator('.poetry-text > p');
+      await expect(bio).toHaveCount(data.fullBio.split('\n\n').length);
+      await expect(page.locator('div[id^="poem-"]')).toHaveCount(data.poems.length);
+      await expect(page.getByRole('region', { name: 'Характер и поступки' })).toHaveCount(0);
+      release();
+      await expect(page.getByRole('region', { name: 'Характер и поступки' })).toBeVisible();
+      await expectNoRouteRecovery(page);
+    } finally { release(); }
+  });
+});
