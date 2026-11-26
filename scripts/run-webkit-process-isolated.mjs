@@ -24,6 +24,7 @@ const suites = [
   { id: 'rating-urlstate', file: 'qa/rating-urlstate.spec.mjs' },
   { id: 'audio-completion', file: 'qa/audio-completion.spec.mjs' },
   { id: 'community-request-topology', file: 'qa/community-request-topology.spec.mjs' },
+  { id: 'secondary-data-failure', file: 'qa/secondary-data-failure.spec.mjs' },
   { id: 'reader-journeys', file: 'qa/reader-journeys.spec.mjs' },
   { id: 'fragment-navigation', file: 'qa/fragment-navigation.spec.mjs' },
   { id: 'premium-reader-certification', file: 'qa/premium-reader-certification.spec.mjs' },
