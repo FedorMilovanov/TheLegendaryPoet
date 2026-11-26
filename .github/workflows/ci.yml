@@ -33,6 +33,8 @@ jobs:
         run: npm run validate:browser-install-timeouts
       - name: Validate conditional exact-head merge certification contract
         run: npm run validate:merge-certification
+      - name: Validate Suno kit and regression fixtures
+        run: npm run validate:suno
       - name: Validate content, stores, and literary style
         run: npm run check:content
       - name: Validate source-derived command search contract

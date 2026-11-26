@@ -41,9 +41,10 @@ The exact evidence remains in AuditRepo, but the current source tree enforces th
 
 ## Open architecture lanes
 
-No owner-selected architecture lane is currently open. Future work preserved in an owner-gated roadmap does not become an open architecture lane until a concrete, currently selectable transaction is created with fresh authority and evidence.
+Owner-selected architecture lanes are registered below. Future work preserved in an owner-gated roadmap does not become an open lane without fresh authority and evidence.
 
 <!-- project-contract:open-lanes:start -->
+- `TLP-SEO-001` — [SEO MAX / Product #630](https://github.com/FedorMilovanov/TheLegendaryPoet/issues/630): global canonical poem pages, Russian-first search and AI discovery, shared rendering/metadata/rights authority, premium reading experience; owner-selected 2026-11-25, implementation pending. Coordinate #628, preserve existing anchors and do not create competing lanes.
 <!-- project-contract:open-lanes:end -->
 
 ## Owner-gated Hall roadmap
