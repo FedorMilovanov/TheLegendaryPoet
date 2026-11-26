@@ -112,9 +112,9 @@
     "brand-painted-contrast": {
       "workflowFile": ".github/workflows/brand-deep-audit.yml",
       "canonicalJob": "brand-deep-audit",
-      "canonicalJobTimeoutMinutes": 75,
+      "canonicalJobTimeoutMinutes": 150,
       "event": "pull_request",
-      "pollTimeoutSeconds": 5400,
+      "pollTimeoutSeconds": 10200,
       "pollIntervalSeconds": 20,
       "paths": [
         ".github/workflows/brand-deep-audit.yml",
@@ -135,7 +135,7 @@
         ".github/actions/install-playwright/**"
       ],
       "waiterJob": "brand-painted-contrast",
-      "waiterJobTimeoutMinutes": 100
+      "waiterJobTimeoutMinutes": 180
     },
     "site-browser-release": {
       "workflowFile": ".github/workflows/manual-browser-qa.yml",
