@@ -15,6 +15,11 @@ function PublishedPoem({ page }: { page: PoemPageModel }) {
 export default function PoemDetailPage() {
   const { id = '', slug = '' } = useParams<{ id: string; slug: string }>();
   const location = useLocation();
-  const page = getPreparedPoem(id, slug, location.pathname) ?? use(getBrowserPoem(id, slug, location.pathname, location.key));
+  const prepared = getPreparedPoem(id, slug, location.pathname, location.key);
+  return prepared ? <PublishedPoem page={prepared} /> : <DeferredPoem id={id} slug={slug} pathname={location.pathname} visitKey={location.key} />;
+}
+
+function DeferredPoem({ id, slug, pathname, visitKey }: { id: string; slug: string; pathname: string; visitKey: string }) {
+  const page = use(getBrowserPoem(id, slug, pathname, visitKey));
   return page ? <PublishedPoem page={page} /> : <NotFoundPage />;
 }

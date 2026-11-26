@@ -33,7 +33,7 @@ export async function prepareDirectPoem(snapshot: DirectPoemSnapshot, signal: Ab
   assertDirectPoemParity(snapshot, page);
   prepared = page;
 }
-export function getPreparedPoem(id: string, slug: string, pathname: string): PoemPageModel | undefined {
+export function getPreparedPoem(id: string, slug: string, pathname: string, visitKey: string): PoemPageModel | undefined {
   const path = approvedPoemPath(index, id, slug);
-  return prepared && path === prepared.path && (pathname === path || pathname + '/' === path) ? prepared : undefined;
+  return visitKey === 'default' && prepared && path === prepared.path && (pathname === path || pathname + '/' === path) ? prepared : undefined;
 }
