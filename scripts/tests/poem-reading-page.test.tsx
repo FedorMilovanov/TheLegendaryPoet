@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { buildPoemPageModel, type PoemRouteRow } from '../../src/lib/poemPageModel';
-import PoemReadingBody from '../../src/components/poet-detail/PoemReadingBody';
+import PoemReadingBody, { type PoemInternalLinkProps } from '../../src/components/poet-detail/PoemReadingBody';
 import type { MusicTrack } from '../../src/types/poet';
 import { approvedPoemPath, assertDirectPoemParity, poemPayloadFile, validatePoemPayload } from '../../src/data/runtime/poemPagePayload';
 import { assertPoemStaticAdmission, renderPoemStaticBody } from '../lib/poem-static-document';
@@ -139,4 +139,22 @@ test('shared reading body exposes interaction slots without duplicating canonica
   assert.equal((enhanced.match(/data-poem-canonical=/g) || []).length, 1);
   assert.equal((enhanced.match(/<h1\b/g) || []).length, 1);
   assert.ok(enhanced.includes(page.text));
+});
+
+test('interactive navigation adapter preserves every crawlable internal href and never handles external sources', () => {
+  const previous = makeRow('previous', false);
+  const next = makeRow('next');
+  const item = { ...row, poem: { ...row.poem, textualNote: 'Редакция.', textualSourceUrl: 'https://example.org/notes', relatedMusicTrackIds: ['live'] } };
+  const { page, html } = render(item, [previous, item, next], [track('live', 'published')]);
+  const seen: string[] = [];
+  const Adapter = ({ href, className, children }: PoemInternalLinkProps) => {
+    seen.push(href);
+    return createElement('a', { href, className }, children);
+  };
+  const interactive = renderToStaticMarkup(createElement(PoemReadingBody, { page, internalLink: Adapter }));
+  assert.equal(interactive, html);
+  assert.deepEqual(seen, ['/', '/poets/', page.authorHref, page.authorHref, '/music/live/', page.legacyPath, previous.legacyPath, next.candidatePath]);
+  assert.ok(seen.every(href => href.startsWith('/') && !href.startsWith('//')));
+  assert.ok(html.includes('href="https://example.org/edition"'));
+  assert.ok(html.includes('href="https://example.org/notes"'));
 });

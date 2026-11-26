@@ -1,5 +1,5 @@
 /** @jsxRuntime automatic */
-import type { ReactNode, Ref } from 'react';
+import type { ComponentType, ReactNode, Ref } from 'react';
 import type { PoemPageModel, ReadingLink } from '../../lib/poemPageModel';
 
 const linkClass = 'theme-text inline-flex min-h-11 items-center underline decoration-current underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
@@ -8,13 +8,20 @@ const linkClass = 'theme-text inline-flex min-h-11 items-center underline decora
  * no hidden SEO copy, no independently implemented static HTML template.
  * Interactive Reader controls can be attached around this single content owner.
  */
+export type PoemInternalLinkProps = { href: string; className: string; children: ReactNode };
+
+function StaticPoemLink(props: PoemInternalLinkProps) {
+  return <a {...props} />;
+}
+
 interface PoemReadingBodyProps {
+  internalLink?: ComponentType<PoemInternalLinkProps>;
   page: PoemPageModel;
   articleRef?: Ref<HTMLElement>;
   verseRef?: Ref<HTMLDivElement>;
   actions?: ReactNode;
 }
-export default function PoemReadingBody({ page, articleRef, verseRef, actions }: PoemReadingBodyProps) {
+export default function PoemReadingBody({ page, articleRef, verseRef, actions, internalLink: InternalLink = StaticPoemLink }: PoemReadingBodyProps) {
   const neighbours: Array<{ label: string; link: ReadingLink }> = [];
   if (page.previous) neighbours.push({ label: 'Предыдущее стихотворение', link: page.previous });
   if (page.next) neighbours.push({ label: 'Следующее стихотворение', link: page.next });
@@ -26,13 +33,13 @@ export default function PoemReadingBody({ page, articleRef, verseRef, actions }:
             <li key={item.path} className="min-w-0 break-words">
               {index === page.breadcrumbs.length - 1
                 ? <span aria-current="page">{item.name}</span>
-                : <a className={linkClass} href={item.path}>{item.name}</a>}
+                : <InternalLink className={linkClass} href={item.path}>{item.name}</InternalLink>}
             </li>
           ))}
         </ol>
       </nav>
       <header className="mb-8 border-b border-[var(--tlp-border-subtle)] pb-7">
-        <a href={page.authorHref} className={linkClass}>{page.authorName}</a>
+        <InternalLink href={page.authorHref} className={linkClass}>{page.authorName}</InternalLink>
         <h1 className="theme-text mt-3 break-words font-serif text-4xl leading-tight sm:text-5xl">{page.heading}</h1>
         {(page.yearLabel || page.editionYear !== undefined) && (
           <p className="theme-functional-muted mt-4 text-sm">{[page.yearLabel, page.editionYear !== undefined ? 'редакция ' + page.editionYear + ' г.' : undefined].filter(Boolean).join(' · ')}</p>
@@ -77,16 +84,16 @@ export default function PoemReadingBody({ page, articleRef, verseRef, actions }:
         <section aria-labelledby="poem-music-heading" className="mb-9">
           <h2 id="poem-music-heading" className="theme-text mb-3 font-serif text-2xl">Музыкальные интерпретации</h2>
           <ul className="grid gap-2 sm:grid-cols-2">
-            {page.music.map(track => <li key={track.href}><a className={linkClass} href={track.href}>{track.title}</a></li>)}
+            {page.music.map(track => <li key={track.href}><InternalLink className={linkClass} href={track.href}>{track.title}</InternalLink></li>)}
           </ul>
         </section>
       )}
       <nav aria-label="Другие стихотворения" className="border-t border-[var(--tlp-border-subtle)] pt-6">
-        <a className={linkClass + ' mb-4'} href={page.legacyPath}>Стихотворение в собрании автора</a>
+        <InternalLink className={linkClass + ' mb-4'} href={page.legacyPath}>Стихотворение в собрании автора</InternalLink>
         {neighbours.length > 0 && <ul className="grid gap-4 sm:grid-cols-2">
           {neighbours.map(item => <li key={item.link.href} className="theme-elevated-surface rounded-xl border p-4">
             <p className="theme-functional-muted text-sm">{item.label}</p>
-            <a className={linkClass + ' break-words'} href={item.link.href}>{item.link.title}</a>
+            <InternalLink className={linkClass + ' break-words'} href={item.link.href}>{item.link.title}</InternalLink>
           </li>)}
         </ul>}
       </nav>

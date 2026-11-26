@@ -3,7 +3,8 @@ import { useLocation, useParams } from 'react-router';
 import { getBrowserPoem, getPreparedPoem, prepareDirectPoem } from '../data/runtime/browserPoemData';
 export { prepareDirectPoem as prepareDirectEntry };
 import type { PoemPageModel } from '../lib/poemPageModel';
-import PoemReadingBody from '../components/poet-detail/PoemReadingBody';
+import PoemReadingBody, { type PoemInternalLinkProps } from '../components/poet-detail/PoemReadingBody';
+import { Link } from '../components/ui/Link';
 import { useSeo } from '../hooks/useSeo';
 import NotFoundPage from './NotFoundPage';
 import PoemArchiveAction from '../components/poet-detail/PoemArchiveAction';
@@ -13,6 +14,10 @@ import { poemRatingDimensions } from '../data/ratingDimensions';
 
 const CommunityPanel = lazy(() => import('../components/community/CommunityPanel'));
 
+function AppPoemLink({ href, ...props }: PoemInternalLinkProps) {
+  return <Link to={href} {...props} />;
+}
+
 function PublishedPoem({ page }: { page: PoemPageModel }) {
   useSeo({ title: page.title, description: page.description, path: page.path,
     image: page.image, imageAlt: 'Портрет: ' + page.authorName, breadcrumbs: page.breadcrumbs, jsonLd: page.schema });
@@ -20,9 +25,9 @@ function PublishedPoem({ page }: { page: PoemPageModel }) {
   const verseRef = useRef<HTMLDivElement>(null);
   return (
     <div className="pt-24 sm:pt-28">
-      <ReadingProgress articleRef={articleRef} />
-      <ShareLine scopeRef={verseRef} />
-      <PoemReadingBody page={page} articleRef={articleRef} verseRef={verseRef}
+      <ReadingProgress key={page.poemId} articleRef={articleRef} label="Прогресс чтения стихотворения" />
+      <ShareLine key={page.poemId} scopeRef={verseRef} />
+      <PoemReadingBody page={page} articleRef={articleRef} verseRef={verseRef} internalLink={AppPoemLink}
         actions={<PoemArchiveAction key={page.poemId} poemId={page.poemId} title={page.heading} />} />
       <div className="mx-auto max-w-4xl px-4 pb-12 sm:px-8">
         <Suspense fallback={<p role="status" className="theme-functional-muted py-4 text-sm">Загрузка оценок и комментариев…</p>}>
