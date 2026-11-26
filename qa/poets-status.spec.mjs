@@ -153,6 +153,7 @@ test.describe('poets result status accessibility', () => {
     await page.goForward();
     await expect(page).toHaveURL(/#poem-blok-11$/);
     await current('#poem-blok-11');
+    await expect(picker.locator('summary')).toBeVisible();
     await picker.locator('summary').click();
     await picker.locator('a[href="#poem-blok-1"]').click();
     await expect(page).toHaveURL(/#poem-blok-1$/);
