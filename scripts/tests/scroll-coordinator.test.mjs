@@ -392,3 +392,33 @@ test('reader-owned movement replaces an unfinished POP target on revisit', () =>
   app.render({ key: 'first', pathname: '/essay', hash: '' }, 'POP'); app.frame();
   assert.equal(app.window.scrollY, 75);
 });
+
+test('ordinary PUSH resets to top only after the final overlay release', () => {
+  const app = coordinator();
+  app.render(); app.frame(); app.window.scrollTo({ top: 957 });
+  app.setPaused(true);
+  app.render({ key: 'other', pathname: '/poets', hash: '' }, 'PUSH'); app.frame();
+  assert.deepEqual(app.calls, [957]);
+  app.window.emit('pointerdown'); app.window.emit('tlp-scroll-resumed'); app.frame();
+  assert.deepEqual(app.calls, [957]);
+  // The actual overlay restores its old body scroll before emitting resume.
+  app.window.scrollTo({ top: 957 }); app.setPaused(false);
+  app.window.emit('tlp-scroll-resumed'); app.frame();
+  assert.equal(app.window.scrollY, 0);
+  app.window.scrollTo({ top: 300 }); app.window.emit('tlp-scroll-resumed'); app.frame();
+  assert.equal(app.window.scrollY, 300);
+});
+test('deferred ordinary PUSH cannot overwrite the next route or outlive its deadline', () => {
+  const app = coordinator();
+  app.render(); app.frame(); app.window.scrollTo({ top: 957 });
+  app.setPaused(true);
+  app.render({ key: 'other', pathname: '/poets', hash: '' }, 'PUSH'); app.frame();
+  app.expireTimers(); app.setPaused(false);
+  app.window.emit('tlp-scroll-resumed'); app.frame();
+  assert.equal(app.window.scrollY, 957);
+  app.setPaused(true);
+  app.render({ key: 'third', pathname: '/music', hash: '' }, 'PUSH'); app.frame();
+  app.render({ key: 'hash', pathname: '/essay', hash: '#target' }, 'PUSH'); app.frame();
+  app.setPaused(false); app.window.emit('tlp-scroll-resumed'); app.frame();
+  assert.equal(app.window.scrollY, 204);
+});

@@ -102,6 +102,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     let readerInteractedWithHash = false;
     let historyPending = savedY !== undefined;
     let hashDeferredByPause = false;
+    let topDeferredByPause = false;
     let hashExpired = false;
 
     // Native scroll anchoring and layout shifts may change scrollY without
@@ -113,6 +114,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       historyPending = false;
       unrestoredEntryRef.current = null;
       hashDeferredByPause = false;
+      topDeferredByPause = false;
       cancelHashFocus?.();
       cancelHashFocus = null;
       stopHashObserver();
@@ -123,7 +125,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
         onReaderGesture();
       }
     };
-    if (useHash || savedY !== undefined) {
+    if (useHash || savedY !== undefined || !firstRoute) {
       window.addEventListener('wheel', onReaderGesture, { passive: true });
       window.addEventListener('touchstart', onReaderGesture, { passive: true });
       window.addEventListener('pointerdown', onReaderGesture, { passive: true });
@@ -182,6 +184,10 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
             layoutObserver?.disconnect();
             stopHashObserver();
           }
+        } else if (topDeferredByPause) {
+          if (isSmoothScrollPaused()) return;
+          topDeferredByPause = false;
+          scrollToNumber(0);
         } else if (hashDeferredByPause && lastAnchorScrollY === null) {
           if (findAndScrollToHash()) stopHashObserver();
         } else alignHashAfterLayout();
@@ -200,7 +206,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     // need not change the DOM or viewport height, so observe that actual
     // ownership transition instead of hoping for an unrelated mutation.
     const onScrollResumed = () => {
-      if (!isSmoothScrollPaused() && (historyPending || (hashDeferredByPause && !hashExpired))) scheduleHashLayoutAlignment();
+      if (!isSmoothScrollPaused() && (historyPending || topDeferredByPause || (hashDeferredByPause && !hashExpired))) scheduleHashLayoutAlignment();
     };
     window.addEventListener('tlp-scroll-resumed', onScrollResumed);
 
@@ -276,6 +282,11 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       // Initial POP has no saved in-memory position. A delayed fallback to zero
       // must not erase native reader movement made before this frame executes.
       if (firstRoute) return;
+      if (isSmoothScrollPaused()) {
+        topDeferredByPause = true;
+        layoutTimeoutId = window.setTimeout(() => { topDeferredByPause = false; }, HASH_OBSERVER_TIMEOUT_MS);
+        return;
+      }
       scrollToNumber(0);
     };
 
@@ -290,7 +301,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       layoutObserver?.disconnect();
       if (layoutTimeoutId) window.clearTimeout(layoutTimeoutId);
       if (layoutFrame) cancelAnimationFrame(layoutFrame);
-      if (useHash || savedY !== undefined) {
+      if (useHash || savedY !== undefined || !firstRoute) {
         window.removeEventListener('wheel', onReaderGesture);
         window.removeEventListener('touchstart', onReaderGesture);
         window.removeEventListener('pointerdown', onReaderGesture);
