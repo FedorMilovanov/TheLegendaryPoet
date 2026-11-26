@@ -201,13 +201,30 @@ test('memory gallery shares overlay ownership, navigation, zoom and restores foc
   }
 });
 
-test('one-photo gallery does not render meaningless navigation', async ({ page }) => {
+test('one-photo gallery does not render meaningless navigation and handles missing photos', async ({ page }) => {
+  const endpoint = '**/images/memory-places/gumilev-gradnitsy/**';
+  await page.route(endpoint, route => route.abort());
   await page.goto(base + '/poets/nikolay-gumilev', { waitUntil: 'domcontentloaded' });
-  await page.locator('#memory-places .memory-photo-trigger').click();
+  const opener = page.locator('#memory-places .memory-photo-trigger');
+  await opener.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await expect(opener.locator('img')).toHaveAttribute('data-image-state', 'failed');
+  await expect(opener).toHaveAccessibleName(/фотография недоступна/i);
+  await opener.click();
   const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
   await expect(gallery).toBeVisible();
   await expect(gallery.getByRole('button', { name: 'Следующая фотография' })).toHaveCount(0);
   await expect(gallery.getByRole('button', { name: 'Предыдущая фотография' })).toHaveCount(0);
+  await expect(gallery.locator('img')).toHaveAttribute('data-image-state', 'failed');
+  await expect(gallery.locator('[aria-live="polite"]')).toContainText('Фотография недоступна');
+  await expect(gallery.getByRole('button', { name: 'Увеличить фотографию' })).toBeDisabled();
+  await expect(gallery.locator('footer a[href^="https://creativecommons.org/"]')).toHaveCount(1);
+  await gallery.getByRole('button', { name: 'Закрыть фотографии' }).click();
+  await expect(gallery).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await page.unroute(endpoint);
+  await opener.click();
+  await expect(gallery.locator('img')).toHaveAttribute('data-image-state', 'loaded');
+  await expect(gallery.getByRole('button', { name: 'Увеличить фотографию' })).toBeEnabled();
   await gallery.getByRole('button', { name: 'Закрыть фотографии' }).click();
   await expect(gallery).toHaveCount(0);
 });

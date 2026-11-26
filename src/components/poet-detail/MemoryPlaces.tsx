@@ -4,16 +4,17 @@ import { ChevronLeft, ChevronRight, Landmark, MapPin, Maximize2, X, ZoomIn, Zoom
 import './memory-places.css';
 import type { MemoryPhoto, MemoryPlace } from '../../data/memory-places';
 import { loadMemoryPlaces } from '../../data/runtime/memoryPlaces';
-import ResilientImage from '../media/ResilientImage';
+import ResilientImage, { type ImageLoadState } from '../media/ResilientImage';
 import { useDialogSurface } from '../../hooks/useDialogSurface';
 
 const linkClass = 'theme-poet-accent underline decoration-current/40 underline-offset-4 hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
 
 function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: number; onOpen: (index: number) => void }) {
+  const [imageState, setImageState] = useState<ImageLoadState>('loading');
   return (
     <figure className="memory-photo min-w-0">
-      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" aria-haspopup="dialog" aria-label={`Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index); }}>
-        <ResilientImage src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" className="block h-auto w-full" />
+      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index); }}>
+        <ResilientImage src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
         <span className="memory-image-failure theme-functional-muted" aria-hidden="true">Фотография недоступна</span>
         <span aria-hidden="true" className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-black/80 text-white"><Maximize2 size={18} /></span>
       </button>
@@ -34,10 +35,13 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
   const closeRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(false);
+  const [imageState, setImageState] = useState<ImageLoadState>('loading');
+  const imageReady = imageState === 'loaded' || imageState === 'fallback';
   const { isTopmost } = useDialogSurface({ open: true, dialogRef, initialFocusRef: closeRef, onClose, label: 'memory-photo-gallery' });
   const photo = photos[index];
   const step = (direction: number) => {
     setZoom(false);
+    setImageState('loading');
     onChange((index + direction + photos.length) % photos.length);
   };
   useEffect(() => {
@@ -56,21 +60,21 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
         }
       }}>
       <header className="memory-gallery-toolbar">
-        <p className="theme-dark-island-muted text-sm tabular-nums" aria-live="polite">{index + 1} / {photos.length}</p>
+        <p className="theme-dark-island-muted text-sm tabular-nums" aria-live="polite">{index + 1} / {photos.length}{imageState === 'failed' && <span className="sr-only">. Фотография недоступна</span>}</p>
         <div className="memory-gallery-actions">
           {photos.length > 1 && <>
             <button className="memory-gallery-control" type="button" aria-label="Предыдущая фотография" onClick={() => step(-1)}><ChevronLeft size={20} /></button>
             <button className="memory-gallery-control" type="button" aria-label="Следующая фотография" onClick={() => step(1)}><ChevronRight size={20} /></button>
           </>}
-          <button className="memory-gallery-control" type="button" aria-label={zoom ? 'Уменьшить фотографию' : 'Увеличить фотографию'} aria-pressed={zoom} onClick={() => setZoom((value) => !value)}>{zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}</button>
+          <button className="memory-gallery-control" type="button" aria-label={zoom ? 'Уменьшить фотографию' : 'Увеличить фотографию'} aria-pressed={zoom} disabled={!imageReady} onClick={() => setZoom((value) => !value)}>{zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}</button>
           <button ref={closeRef} className="memory-gallery-control" type="button" aria-label="Закрыть фотографии" onClick={onClose}><X size={22} /></button>
         </div>
       </header>
       <div className="memory-gallery-stage" ref={stageRef} data-zoom={zoom}
         role="region" aria-label="Область фотографии" tabIndex={zoom ? 0 : -1}
         style={{ '--memory-photo-ratio': photo.width / photo.height, '--memory-photo-native': photo.width + 'px' } as CSSProperties}>
-        <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" />
-        <span className="memory-image-failure theme-dark-island-muted">Фотография недоступна</span>
+        <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" onStateChange={setImageState} />
+        <span className="memory-image-failure theme-dark-island-muted" aria-hidden="true">Фотография недоступна</span>
       </div>
       <footer className="memory-gallery-caption">
         <p className="text-sm leading-relaxed">{photo.caption}</p>

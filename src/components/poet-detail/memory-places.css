@@ -88,6 +88,7 @@
 .memory-gallery-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .memory-gallery-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .memory-gallery-control { display: grid; place-items: center; width: 44px; height: 44px; color: #fff; border: 1px solid #65666a; border-radius: 50%; }
+.memory-gallery-control:disabled { opacity: .45; cursor: default; }
 .memory-gallery-control:focus-visible { outline: 2px solid #e8d6a7; outline-offset: 3px; }
 /* The stage has a definite two-dimensional size, independent of the image.
    Auto margins center fitting images and preserve accessible scroll origins
@@ -97,7 +98,7 @@
 .memory-gallery-stage img {
   --memory-fit-width: min(100cqw, calc(100cqh * var(--memory-photo-ratio)), var(--memory-photo-native));
   display: block; flex: none; margin: auto;
-  width: var(--memory-fit-width); height: auto; max-width: none; max-height: none;
+  width: var(--memory-fit-width); height: auto; aspect-ratio: var(--memory-photo-ratio); object-fit: contain; max-width: none; max-height: none;
 }
 .memory-gallery-stage[data-zoom="true"] img { width: calc(2 * var(--memory-fit-width)); }
 .memory-gallery-caption { max-height: 28dvh; overflow: auto; width: min(100%, 70rem); margin-inline: auto; overflow-wrap: anywhere; }
