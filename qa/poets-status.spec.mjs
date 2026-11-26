@@ -212,7 +212,13 @@ test.describe('poets result status accessibility', () => {
       const trigger = picker.locator('summary');
       const scrollTop = page.locator('.scroll-top-btn');
       await expect(trigger).toBeVisible();
-      await page.evaluate(() => window.scrollTo(0, 3200));
+      // Measure the two controls where both are meant to be available:
+      // inside a hydrated poem, not at an arbitrary offset in the inline index.
+      const lastPoem = page.locator('.luxury-card[id^="poem-"]').last();
+      await expect(page.locator('.luxury-card[id^="poem-"]')).toHaveCount(10);
+      await lastPoem.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await expect(picker).toHaveAttribute('data-index-visible', 'false');
+      await expect(trigger).toBeVisible();
       await expect(scrollTop).toBeVisible();
 
       const gap = await page.evaluate(() => {
