@@ -1,3 +1,4 @@
+import { estateMemoryPlaces } from './estates';
 import media from './lermontov-pyatigorsk-media.json';
 
 export type MemoryPhoto = {
@@ -59,7 +60,7 @@ const lermontov: MemoryPlace = {
   ],
 };
 
-export const memoryPlaces: readonly MemoryPlace[] = [lermontov];
+export const memoryPlaces: readonly MemoryPlace[] = [lermontov, ...estateMemoryPlaces];
 export function getMemoryPlaces(poetId: string): readonly MemoryPlace[] {
   return memoryPlaces.filter((place) => place.poetId === poetId);
 }

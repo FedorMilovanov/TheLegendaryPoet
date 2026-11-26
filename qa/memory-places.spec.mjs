@@ -51,8 +51,34 @@ for (const theme of ['dark', 'light']) {
 }
 
 test('a poet with no registered memory places has no empty section or jump', async ({ page }) => {
-  await page.goto(`${base}/poets/alexander-pushkin`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/poets/vladimir-mayakovsky`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('#memory-places')).toHaveCount(0);
   await expect(page.locator('a[href="#memory-places"]')).toHaveCount(0);
 });
+
+for (const [poetId, placeId] of [
+  ['alexander-pushkin', 'pushkin-mikhailovskoye'],
+  ['sergei-yesenin', 'yesenin-konstantinovo'],
+  ['alexander-blok', 'blok-shakhmatovo'],
+]) {
+  test('registered estate renders its own images and evidence: ' + poetId, async ({ page }) => {
+    await page.goto(base + '/poets/' + poetId, { waitUntil: 'domcontentloaded' });
+    const section = page.locator('#memory-places');
+    const exhibit = section.locator('#memory-' + placeId);
+    await expect(section).toHaveCount(1);
+    await expect(exhibit).toHaveCount(1);
+    await expect(exhibit.locator('figure:has(img)')).toHaveCount(2);
+    for (const photo of await exhibit.locator('figure:has(img)').all()) {
+      const img = photo.locator('img');
+      await img.scrollIntoViewIfNeeded();
+      await expect.poll(() => img.evaluate((node) => node.complete && node.naturalWidth > 0)).toBe(true);
+      await expect(img).toHaveAttribute('alt', /.+/);
+      await expect(photo.locator('figcaption a[href^="https://commons.wikimedia.org/"]')).toHaveCount(1);
+      await expect(photo.locator('figcaption a[href^="https://creativecommons.org/"]')).toHaveCount(1);
+    }
+    await exhibit.locator('summary').click();
+    expect(await exhibit.locator('details li').count()).toBeGreaterThanOrEqual(2);
+    expect(await exhibit.evaluate((node) => node.scrollWidth <= node.clientWidth + 2)).toBe(true);
+  });
+}
