@@ -4,6 +4,8 @@ import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { poets } from '../data/poets';
+import { getMemoryPlaces } from '../data/memory-places';
+import MemoryPlaces from '../components/poet-detail/MemoryPlaces';
 import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
 import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
@@ -120,6 +122,9 @@ export default function PoetDetailPage() {
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
+            {getMemoryPlaces(poet.id).length > 0 && (
+              <a className="poet-contents-jump" href="#memory-places">К местам памяти <span aria-hidden="true">↓</span></a>
+            )}
             {biographyError && supplementaryPoetIds.includes(poet.id) && (
               <p role="status" className="text-sm text-luxury-gold">
                 Не удалось загрузить полный корпус стихов и биографию. Показана резервная подборка.
@@ -169,6 +174,8 @@ export default function PoetDetailPage() {
                 </p>
               </div>
             )}
+
+            <MemoryPlaces poetId={poet.id} />
 
             <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
 
