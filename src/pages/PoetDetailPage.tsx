@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
@@ -25,11 +25,30 @@ import { useSeo } from '../hooks/useSeo';
 import { buildPoetPageSchema, type SeoBreadcrumb } from '../lib/seoSchema';
 
 
-const MoralPortrait = lazy(() => import('../components/poet-detail/MoralPortrait'));
+function UnavailableSection() {
+  return <p role="status" className="theme-functional-muted text-sm">Дополнительный раздел недоступен. Обновите страницу.</p>;
+}
+
+// Optional sections may degrade locally, never the canonical poems or biography.
+const lazyOptional = <P,>(load: () => Promise<{ default: ComponentType<P> }>, fallback: ComponentType<P> = UnavailableSection) =>
+  lazy(() => load().catch(() => ({ default: fallback })));
+
+function MemoryPlacesUnavailable({ poetId }: { poetId: string }) {
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('tlp-poet-corpus-hydrated', { detail: { poetId } })));
+    return () => cancelAnimationFrame(frame);
+  }, [poetId]);
+  return <section id="memory-places" aria-labelledby="memory-places-heading" className="scroll-mt-28 space-y-4">
+    <h2 id="memory-places-heading" className="theme-text font-serif text-3xl leading-tight sm:text-4xl">Места памяти</h2>
+    <UnavailableSection />
+  </section>;
+}
+
+const MoralPortrait = lazyOptional(() => import('../components/poet-detail/MoralPortrait'));
 const PoemCard = lazy(() => import('../components/poet-detail/PoemCard'));
-const PoetVideos = lazy(() => import('../components/poet-detail/PoetVideos'));
-const PoetSources = lazy(() => import('../components/poet-detail/PoetSources'));
-const MemoryPlaces = lazy(() => import('../components/poet-detail/MemoryPlaces'));
+const PoetVideos = lazyOptional(() => import('../components/poet-detail/PoetVideos'));
+const PoetSources = lazyOptional(() => import('../components/poet-detail/PoetSources'));
+const MemoryPlaces = lazyOptional(() => import('../components/poet-detail/MemoryPlaces'), MemoryPlacesUnavailable);
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -137,12 +156,8 @@ export default function PoetDetailPage() {
               <a className="poet-contents-jump" href={`#${contentsId}`}>К оглавлению стихов <span aria-hidden="true">↓</span></a>
             )}
 
-            <Suspense fallback={null}>
-              <RelatedEssays poetId={poet.id} />
-
-            <PoetVideos poet={poet} />
-
-            </Suspense>
+            <Suspense fallback={null}><RelatedEssays poetId={poet.id} /></Suspense>
+            {Boolean(poet.videos?.length) && <Suspense fallback={null}><PoetVideos poet={poet} /></Suspense>}
 
             <div className="space-y-8">
               <h2 className="poet-detail-kicker">
@@ -177,7 +192,7 @@ export default function PoetDetailPage() {
 
             {Object.prototype.hasOwnProperty.call(memoryPlaceRevisions, poet.id) && <Suspense fallback={null}><MemoryPlaces key={poet.id} poetId={poet.id} revision={memoryPlaceRevisions[poet.id]} /></Suspense>}
 
-            <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>
+            {Boolean(poet.sources?.length) && <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>}
 
             {poet.moralPortrait && <Suspense fallback={null}><MoralPortrait content={poet.moralPortrait} /></Suspense>}
             {poet.testimonies && poet.testimonies.length > 0 && <Testimonies items={poet.testimonies} />}
