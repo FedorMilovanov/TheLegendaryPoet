@@ -147,9 +147,9 @@ test('interactive navigation adapter preserves every crawlable internal href and
   const item = { ...row, poem: { ...row.poem, textualNote: 'Редакция.', textualSourceUrl: 'https://example.org/notes', relatedMusicTrackIds: ['live'] } };
   const { page, html } = render(item, [previous, item, next], [track('live', 'published')]);
   const seen: string[] = [];
-  const Adapter = ({ href, className, children }: PoemInternalLinkProps) => {
-    seen.push(href);
-    return createElement('a', { href, className }, children);
+  const Adapter = (props: PoemInternalLinkProps) => {
+    seen.push(props.href);
+    return createElement('a', props);
   };
   const interactive = renderToStaticMarkup(createElement(PoemReadingBody, { page, internalLink: Adapter }));
   assert.equal(interactive, html);
