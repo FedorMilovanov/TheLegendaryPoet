@@ -87,3 +87,7 @@ npm run build
 ```
 
 The interaction validator runs an actual nested-lock simulation and then verifies the source-level contracts for shared dialogs, resilient images, smooth-scroll pausing and bounded tilt effects.
+
+### Natural vs interrupted entrance acceptance
+
+The natural exit test requires three consecutive browser-local animation frames at root opacity >= 0.99 with no pending/running root opacity animation, a connected root and a visible document. A five-second entrance timeout reports the real last opacity, animation count, sample count and maximum frame gap. This is a separate readiness gate, not a fixed delay or a relaxation of the existing exit sample/ownership/unmount thresholds. Interrupted entrance and stalled native completion remain independently exercised. The previous insufficient-frame failures are not yet explained or certified; compare the new entrance and exit traces on the same exact head.

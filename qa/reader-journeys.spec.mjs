@@ -520,6 +520,50 @@ test.describe('animated modal exit lifetime', () => {
         await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe(surface);
         await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
 
+        // Natural exit must begin from an already painted, settled entrance.
+        // Visibility/focus alone does not establish opacity: the separate
+        // interrupted-entrance regression below covers closing mid-entry.
+        // Browser-local rAF observation avoids Node/WebKit round-trip sleeps.
+        const entrance = await dialog.evaluate(node => new Promise((resolve, reject) => {
+          const started = performance.now();
+          let frame = 0;
+          let previous = started;
+          let samples = 0;
+          let maxGap = 0;
+          let stable = 0;
+          let last = null;
+          const finish = () => {
+            cancelAnimationFrame(frame);
+            clearTimeout(deadline);
+          };
+          const deadline = setTimeout(() => {
+            finish();
+            reject(new Error('Natural exit entrance never became paint-ready: ' + JSON.stringify({
+              samples, maxGap, elapsed: performance.now() - started, last,
+            })));
+          }, 5000);
+          const observe = () => {
+            const now = performance.now();
+            maxGap = Math.max(maxGap, now - previous);
+            previous = now;
+            samples++;
+            const opacity = Number(getComputedStyle(node).opacity);
+            const runningOpacity = node.getAnimations().filter(animation =>
+              (animation.pending || animation.playState === 'running') &&
+              animation.effect?.getKeyframes().some(keyframe => keyframe.opacity !== undefined));
+            last = { opacity, activeOpacityAnimations: runningOpacity.length,
+              visibility: document.visibilityState, connected: node.isConnected };
+            stable = node.isConnected && document.visibilityState === 'visible' &&
+              opacity >= 0.99 && runningOpacity.length === 0 ? stable + 1 : 0;
+            if (stable >= 3) {
+              finish();
+              resolve({ samples, maxGap, elapsed: now - started, last });
+            } else frame = requestAnimationFrame(observe);
+          };
+          frame = requestAnimationFrame(observe);
+        }));
+        console.log('NATURAL_ENTRANCE_READY', JSON.stringify({ surface, reduced, entrance }));
+
         await page.evaluate(() => {
           window.__tlpExitProof = [];
           window.__tlpExitDone = false;

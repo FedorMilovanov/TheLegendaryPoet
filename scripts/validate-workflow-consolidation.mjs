@@ -84,6 +84,11 @@ expect(webkitRunner.includes("const animatedLifetime = 'animated modal exit life
 expect(readerJourneys.includes("expect(frames.length, 'exit must have connected frames with a live lease').toBeGreaterThan(2)") &&
   readerJourneys.includes("'no frame may expose focus or unlock a still-painted modal'"),
   'natural exit frame count and ownership assertions must not be weakened');
+expect(readerJourneys.includes('NATURAL_ENTRANCE_READY') &&
+  readerJourneys.includes('Natural exit entrance never became paint-ready') &&
+  readerJourneys.includes('opacity >= 0.99 && runningOpacity.length === 0 ? stable + 1 : 0') &&
+  readerJourneys.includes('if (stable >= 3)'),
+  'natural exit must establish bounded painted entrance readiness without replacing interrupted-entrance coverage');
 expect(webkitRunner.includes("file: 'qa/reader-journeys.spec.mjs'"), 'base iPhone Safari suite must execute the shared reader journey file');
 expect(playwrightConfig.includes('reader-journeys'), 'Android and iPhone project matching must include reader journeys');
 
@@ -109,6 +114,7 @@ expect(ci.includes('dist/build-budget-report.json'), 'CI must retain the machine
 expect(ci.includes('node scripts/validate-hall-web-runtime-proof.mjs'), 'required CI verify must execute Hall web runtime proof contract validation');
 
 const canonicalRequiredValidators = [
+  'validate:suno',
   'validate:reader-certification',
   'validate:browser-runtime',
 ];
@@ -229,4 +235,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}; canonical reader/browser validators are merge-blocking; external GitHub Actions are immutable-SHA pinned`);
+console.log(`workflow consolidation contract: OK ${JSON.stringify(inventory)}; canonical Suno/reader/browser validators are merge-blocking; external GitHub Actions are immutable-SHA pinned`);
