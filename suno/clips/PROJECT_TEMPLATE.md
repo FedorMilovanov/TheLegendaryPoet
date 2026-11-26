@@ -74,9 +74,9 @@
 по [STORAGE.md](./STORAGE.md). Не считать неизвестный prompt или файл проверенным.
 
 Статусы: `pending / battling / no_selection / rejected / user_supplied / accepted /
-needs-redo / stopped`. `skipped` означает лишь `no_selection`, не доказанный отказ;
-`aborted` не закрывает кадр. Присланный пользователем кадр можно использовать по запросу,
-но каноном он становится только после явного утверждения.
+needs-redo / aborted / stopped`. `skipped` означает лишь `no_selection`, не доказанный отказ;
+`aborted` не закрывает кадр. Выбор владельца и технические HOLD записываются отдельно.
+Присланный кадр можно использовать по запросу; статус accepted — по [AGENT.md](AGENT.md).
 
 ## 7. Оживление
 
