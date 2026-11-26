@@ -38,3 +38,15 @@ export function assertDirectPoemParity(snapshot: DirectPoemSnapshot, page: PoemP
     throw new Error('Static and interactive poem content differ: ' + snapshot.path);
   }
 }
+
+/** BrowserRouter preserves the history entry key across a full reload. */
+export function poemHistoryVisitKey(state: unknown): string {
+  if (state && typeof state === 'object' && 'key' in state && typeof state.key === 'string' && state.key) return state.key;
+  return 'default';
+}
+
+export type PreparedPoemVisit = { visitKey: string; page: PoemPageModel };
+export function preparedPoemForVisit(prepared: PreparedPoemVisit | undefined, path: string | null, pathname: string, visitKey: string): PoemPageModel | undefined {
+  return prepared && path && prepared.visitKey === visitKey && path === prepared.page.path &&
+    (pathname === path || pathname + '/' === path) ? prepared.page : undefined;
+}

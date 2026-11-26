@@ -1,11 +1,11 @@
 import indexData from './poemPages.generated.json';
-import { approvedPoemPath, assertDirectPoemParity, poemPayloadFile, validatePoemPayload, type DirectPoemSnapshot, type PoemPageIndex } from './poemPagePayload';
+import { approvedPoemPath, assertDirectPoemParity, poemPayloadFile, validatePoemPayload, poemHistoryVisitKey, preparedPoemForVisit, type PreparedPoemVisit, type DirectPoemSnapshot, type PoemPageIndex } from './poemPagePayload';
 import type { PoemPageModel } from '../../lib/poemPageModel';
 
 const index = indexData as PoemPageIndex;
 const requests = new Map<string, Promise<PoemPageModel>>();
 const missing = Promise.resolve(undefined);
-let prepared: PoemPageModel | undefined;
+let prepared: PreparedPoemVisit | undefined;
 export function getBrowserPoem(id: string, slug: string, pathname: string, visitKey: string, signal?: AbortSignal): Promise<PoemPageModel | undefined> {
   const path = approvedPoemPath(index, id, slug);
   if (!path || (pathname !== path && pathname + '/' !== path)) return missing;
@@ -28,12 +28,14 @@ export async function prepareDirectPoem(snapshot: DirectPoemSnapshot, signal: Ab
   const file = poemPayloadFile(snapshot.path);
   const [id, filename] = file.split('/');
   const slug = filename.slice(0, -5);
-  const page = await getBrowserPoem(id, slug, snapshot.path, 'direct-entry', signal);
-  if (!page || signal.aborted) throw new Error('Standalone poem is not available for direct entry');
+  const visitKey = poemHistoryVisitKey(window.history.state);
+  const entryUrl = window.location.href;
+  const page = await getBrowserPoem(id, slug, snapshot.path, visitKey, signal);
+  if (!page || signal.aborted || poemHistoryVisitKey(window.history.state) !== visitKey || window.location.href !== entryUrl) throw new Error('Standalone poem is not available for direct entry');
   assertDirectPoemParity(snapshot, page);
-  prepared = page;
+  prepared = { visitKey, page };
 }
 export function getPreparedPoem(id: string, slug: string, pathname: string, visitKey: string): PoemPageModel | undefined {
   const path = approvedPoemPath(index, id, slug);
-  return visitKey === 'default' && prepared && path === prepared.path && (pathname === path || pathname + '/' === path) ? prepared : undefined;
+  return preparedPoemForVisit(prepared, path, pathname, visitKey);
 }

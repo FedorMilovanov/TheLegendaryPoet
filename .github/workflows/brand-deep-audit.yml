@@ -17,7 +17,9 @@ permissions:
 jobs:
   brand-deep-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    # 122 strict painted-pixel cells run sequentially; keep full coverage and
+    # allow the CI runner enough time without weakening the accessibility gate.
+    timeout-minutes: 150
     env:
       QA_BASE_URL: http://127.0.0.1:4173
       PLAYWRIGHT_HTML_OPEN: never

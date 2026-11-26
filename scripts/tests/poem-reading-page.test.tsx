@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildPoemPageModel, type PoemRouteRow } from '../../src/lib/poemPageModel';
 import PoemReadingBody, { type PoemInternalLinkProps } from '../../src/components/poet-detail/PoemReadingBody';
 import type { MusicTrack } from '../../src/types/poet';
-import { approvedPoemPath, assertDirectPoemParity, poemPayloadFile, validatePoemPayload } from '../../src/data/runtime/poemPagePayload';
+import { approvedPoemPath, assertDirectPoemParity, poemPayloadFile, validatePoemPayload, poemHistoryVisitKey, preparedPoemForVisit } from '../../src/data/runtime/poemPagePayload';
 import { assertPoemStaticAdmission, renderPoemStaticBody } from '../lib/poem-static-document';
 
 const poet = { id: 'test-author', name: 'Автор', fullName: 'Имя Автора', photo: '/images/test.webp' };
@@ -157,4 +157,19 @@ test('interactive navigation adapter preserves every crawlable internal href and
   assert.ok(seen.every(href => href.startsWith('/') && !href.startsWith('//')));
   assert.ok(html.includes('href="https://example.org/edition"'));
   assert.ok(html.includes('href="https://example.org/notes"'));
+});
+
+test('direct handoff reuses the actual history visit on reload, not only the default entry', () => {
+  const { page } = render(row);
+  for (const state of [null, undefined, {}, { key: '' }, { key: 7 }]) assert.equal(poemHistoryVisitKey(state), 'default');
+  const visitKey = poemHistoryVisitKey({ key: 'reload-entry' });
+  assert.equal(visitKey, 'reload-entry');
+  const prepared = { visitKey, page };
+  assert.equal(preparedPoemForVisit(prepared, page.path, page.path, visitKey), page);
+  assert.equal(preparedPoemForVisit(prepared, page.path, page.path.slice(0, -1), visitKey), page);
+  assert.equal(preparedPoemForVisit(prepared, page.path, page.path, 'default'), undefined);
+  assert.equal(preparedPoemForVisit(prepared, page.path, page.path, 'fresh-entry'), undefined);
+  assert.equal(preparedPoemForVisit(prepared, null, page.path, visitKey), undefined);
+  assert.equal(preparedPoemForVisit(prepared, page.path, '/wrong/', visitKey), undefined);
+  assert.equal(preparedPoemForVisit(prepared, '/poets/test-author/other/', '/poets/test-author/other/', visitKey), undefined);
 });
