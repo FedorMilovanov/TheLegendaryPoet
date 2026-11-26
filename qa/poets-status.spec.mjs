@@ -38,6 +38,411 @@ async function assertReachableBeyondDock(entry) {
 }
 
 test.describe('poets result status accessibility', () => {
+  // Permanent selection must be reachable before the 8–16k px biography
+  // and throughout long poem cards, without rewriting canonical fragments.
+  for (const [poetId, total] of [['alexander-pushkin', 10], ['alexander-blok', 11]]) {
+    for (const width of [390, 1440]) {
+      test('persistent poem picker ' + poetId + ' at ' + width + 'px', async ({ page }, testInfo) => {
+        test.skip(width === 1440 && testInfo.project.name !== 'chromium-core', 'Desktop belongs to Chromium QA');
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(BASE_URL + '/poets/' + poetId, { waitUntil: 'domcontentloaded' });
+        const picker = page.locator('[data-poem-picker]');
+        const trigger = picker.locator('summary');
+        await expect(trigger).toBeVisible();
+        await expect(trigger).toContainText('Выбрать стих');
+        // Absolute-positioned descendants of closed <details> must have no
+        // visible geometry, even when a pixel scanner walks the entire DOM.
+        const sheet = picker.locator('nav.poet-poem-picker-menu');
+        await expect(sheet).toBeHidden();
+        expect(await sheet.boundingBox()).toBeNull();
+        // The control is usable without first scrolling to the editorial index.
+        const position = await trigger.boundingBox();
+        expect(position).not.toBeNull();
+        expect(position.y).toBeGreaterThanOrEqual(0);
+        expect(position.y + position.height).toBeLessThanOrEqual(901);
+        if (width === 390) {
+          await expect(picker).toHaveAttribute('data-hero-visible', 'true');
+          const clearHero = await page.evaluate(() => {
+            const title = document.querySelector('.poet-hero-surface h1')?.getBoundingClientRect();
+            const button = document.querySelector('[data-poem-picker] summary')?.getBoundingClientRect();
+            if (!title || !button) return false;
+            return button.right <= title.left || button.left >= title.right
+              || button.bottom <= title.top || button.top >= title.bottom;
+          });
+          expect(clearHero, 'Closed poem picker must not obscure the hero title').toBe(true);
+        }
+        await trigger.click();
+        await expect(picker).toHaveAttribute('open', '');
+        await expect(sheet).toBeVisible();
+        const choices = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' }).locator('a[href^="#poem-"]');
+        await expect(choices).toHaveCount(total);
+        if (testInfo.project.name === 'chromium-core') {
+          mkdirSync('qa-artifacts', { recursive: true });
+          await page.evaluate(() => document.fonts.ready);
+          await page.screenshot({ path: 'qa-artifacts/poem-picker-' + poetId + '-' + width + '-dark.png' });
+          await page.evaluate(() => document.documentElement.classList.add('theme-light'));
+          await page.screenshot({ path: 'qa-artifacts/poem-picker-' + poetId + '-' + width + '-light.png' });
+          await page.evaluate(() => document.documentElement.classList.remove('theme-light'));
+        }
+        const last = choices.last();
+        const hash = await last.getAttribute('href');
+        expect(hash).toMatch(/^#poem-/);
+        await last.click();
+        await expect(page).toHaveURL(new RegExp(hash + '$'));
+        await expect(picker).not.toHaveAttribute('open', '');
+        await expect(page.locator(hash)).toBeVisible();
+        if (width === 390) await expect(picker).toHaveAttribute('data-hero-visible', 'false');
+        await expect.poll(() => page.locator(hash).evaluate((node) => {
+          const { top } = node.getBoundingClientRect();
+          return top >= 0 && top < 300;
+        })).toBe(true);
+        await trigger.click();
+        await expect(picker).toHaveAttribute('open', '');
+        await expect(picker.locator('a[href="' + hash + '"]')).toHaveAttribute('aria-current', 'location');
+        await page.keyboard.press('Escape');
+        await expect(picker).not.toHaveAttribute('open', '');
+        await expect(sheet).toBeHidden();
+        expect(await sheet.boundingBox()).toBeNull();
+        await expect(trigger).toBeFocused();
+      });
+    }
+  }
+
+  test('closed floating picker yields to visible inline index and returns at poem text', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'webkit-reader-desktop', 'Core and mobile index visibility coverage');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+    const index = page.locator('.poet-reading-index');
+    const picker = page.locator('[data-poem-picker]');
+    await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
+    await index.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await expect(picker).toHaveAttribute('data-index-visible', 'true');
+    await expect(picker.locator('summary')).toBeHidden();
+    await index.locator('a[href="#poem-blok-11"]').click();
+    await expect(page).toHaveURL(/#poem-blok-11$/);
+    await expect(picker).toHaveAttribute('data-index-visible', 'false');
+    await expect(picker.locator('summary')).toBeVisible();
+    await picker.locator('summary').click();
+    await expect(picker).toHaveAttribute('open', '');
+  });
+
+  test('same-author SPA search and native fragment history keep both poem indexes current', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-core', 'Native selection is covered across browsers by the existing picker tests');
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE_URL + '/poets/alexander-blok#poem-blok-1', { waitUntil: 'domcontentloaded' });
+    const index = page.locator('.poet-reading-index');
+    const picker = page.locator('[data-poem-picker]');
+    const current = async (hash) => {
+      for (const nav of [index, picker]) {
+        await expect(nav.locator('a[aria-current="location"]')).toHaveCount(1);
+        await expect(nav.locator('a[aria-current="location"]')).toHaveAttribute('href', hash);
+      }
+    };
+    await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
+    await current('#poem-blok-1');
+    await page.keyboard.press('Control+k');
+    const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
+    await expect(input).toBeVisible();
+    await input.fill('Опять над полем Куликовым');
+    await page.getByRole('option').filter({ hasText: 'На поле Куликовом — V' }).click();
+    await expect(page).toHaveURL(/#poem-blok-11$/);
+    await current('#poem-blok-11');
+    await page.goBack();
+    await expect(page).toHaveURL(/#poem-blok-1$/);
+    await current('#poem-blok-1');
+    await page.goForward();
+    await expect(page).toHaveURL(/#poem-blok-11$/);
+    await current('#poem-blok-11');
+    await expect(picker.locator('summary')).toBeVisible();
+    await picker.locator('summary').click();
+    await picker.locator('a[href="#poem-blok-1"]').click();
+    await expect(page).toHaveURL(/#poem-blok-1$/);
+    await current('#poem-blok-1');
+    await expect(picker).not.toHaveAttribute('open', '');
+  });
+
+  test('short mobile poem picker stays clear of bottom dock and header', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'webkit-reader-desktop', 'Poet mobile picker belongs to core and mobile browsers');
+    for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 667 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-pushkin/', { waitUntil: 'domcontentloaded' });
+      const picker = page.locator('[data-poem-picker]');
+      await expect(picker).toHaveAttribute('data-hero-visible', 'true');
+      await picker.locator('summary').click();
+      await expect(picker).toHaveAttribute('open', '');
+      const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+      await expect(nav.locator('a[href^="#poem-"]')).toHaveCount(10);
+      const geometry = await page.evaluate(() => {
+        const menu = document.querySelector('[data-poem-picker] nav')?.getBoundingClientRect();
+        const dock = document.querySelector('.mobile-dock')?.getBoundingClientRect();
+        const header = document.querySelector('.site-header')?.getBoundingClientRect();
+        return {
+          menuTop: menu?.top ?? null,
+          menuBottom: menu?.bottom ?? null,
+          dockTop: dock?.top ?? null,
+          headerBottom: header?.bottom ?? null,
+          overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        };
+      });
+      expect(geometry.menuTop).not.toBeNull();
+      expect(geometry.dockTop).not.toBeNull();
+      expect(geometry.menuBottom, 'Open poem menu must not overlap mobile dock').toBeLessThanOrEqual(geometry.dockTop - 8);
+      expect(geometry.menuTop, 'Open poem menu must remain below site header').toBeGreaterThanOrEqual(geometry.headerBottom);
+      expect(geometry.overflow, 'No horizontal overflow on narrow phones').toBe(false);
+      await nav.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+      const last = nav.locator('a[href^="#poem-"]').last();
+      await expect.poll(() => last.evaluate((node) => {
+        const item = node.getBoundingClientRect();
+        const container = node.closest('nav')?.getBoundingClientRect();
+        return Boolean(container && item.top >= container.top - 1 && item.bottom <= container.bottom + 1);
+      }), { message: 'Last poem remains reachable within the scrolling menu' }).toBe(true);
+    }
+  });
+
+  test('desktop floating poem picker never occludes the existing scroll-to-top control', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-core', 'Desktop shared-controls geometry belongs to Chromium QA');
+    for (const viewport of [{ width: 768, height: 720 }, { width: 1024, height: 768 }, { width: 1440, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-pushkin/', { waitUntil: 'domcontentloaded' });
+      const picker = page.locator('[data-poem-picker]');
+      const trigger = picker.locator('summary');
+      const scrollTop = page.locator('.scroll-top-btn');
+      await expect(trigger).toBeVisible();
+      await page.evaluate(() => window.scrollTo(0, 3200));
+      await expect(scrollTop).toBeVisible();
+
+      const gap = await page.evaluate(() => {
+        const triggerRect = document.querySelector('[data-poem-picker] summary')?.getBoundingClientRect();
+        const scrollTopRect = document.querySelector('.scroll-top-btn')?.getBoundingClientRect();
+        if (!triggerRect || !scrollTopRect) return null;
+        return {
+          horizontal: scrollTopRect.left - triggerRect.right,
+          verticallyAligned: triggerRect.top < scrollTopRect.bottom && triggerRect.bottom > scrollTopRect.top,
+        };
+      });
+      expect(gap).not.toBeNull();
+      expect(gap.verticallyAligned).toBe(true);
+      expect(gap.horizontal, 'Floating poem picker must leave an 8px+ gap before scroll-to-top').toBeGreaterThanOrEqual(8);
+      await trigger.click();
+      await expect(picker).toHaveAttribute('open', '');
+      await page.keyboard.press('Escape');
+      await expect(picker).not.toHaveAttribute('open', '');
+      await scrollTop.click();
+      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(10);
+    }
+  });
+
+  test('landscape poem sheet clears header and reaches the last work', async ({ page }, testInfo) => {
+    test.skip(!['chromium-core', 'iphone-safari'].includes(testInfo.project.name), 'Landscape regression belongs to Chrome and WebKit');
+    for (const viewport of [
+      { width: 667, height: 375 },
+      { width: 768, height: 360 },
+      { width: 844, height: 390 },
+      { width: 932, height: 430 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+      const picker = page.locator('[data-poem-picker]');
+      await expect(picker.locator('summary')).toBeVisible();
+      await picker.locator('summary').click();
+      await expect(picker).toHaveAttribute('open', '');
+      const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+      const last = nav.locator('a[href^="#poem-"]').last();
+      await expect(last).toHaveCount(1);
+      const geometry = await page.evaluate(() => {
+        const header = document.querySelector('.site-header')?.getBoundingClientRect();
+        const menu = document.querySelector('.poet-poem-picker-menu')?.getBoundingClientRect();
+        return {
+          headerBottom: header?.bottom ?? null,
+          menuTop: menu?.top ?? null,
+          menuBottom: menu?.bottom ?? null,
+          menuHeight: menu?.height ?? null,
+          overflow: document.documentElement.scrollWidth > innerWidth + 1,
+        };
+      });
+      expect(geometry.menuTop).not.toBeNull();
+      expect(geometry.headerBottom).not.toBeNull();
+      expect(geometry.menuTop).toBeGreaterThanOrEqual(geometry.headerBottom + 8);
+      expect(geometry.menuBottom).toBeLessThanOrEqual(viewport.height);
+      expect(geometry.menuHeight).toBeGreaterThanOrEqual(48);
+      expect(geometry.overflow).toBe(false);
+      await nav.evaluate((node) => { node.scrollTop = node.scrollHeight; });
+      await expect.poll(() => last.evaluate((node) => {
+        const item = node.getBoundingClientRect();
+        const sheet = node.closest('nav')?.getBoundingClientRect();
+        return Boolean(sheet && item.top >= sheet.top - 1 && item.bottom <= sheet.bottom + 1);
+      }), { message: 'Last work remains reachable in landscape menu' }).toBe(true);
+      const hash = await last.getAttribute('href');
+      await last.click();
+      await expect(page).toHaveURL(new RegExp(hash + '$'));
+      await expect(picker).not.toHaveAttribute('open', '');
+    }
+  });
+
+
+  // Each size and scroll state is its own fresh reader journey. The suite
+  // must not carry a previous fragment scroll into the next viewport or spend
+  // one test's timeout budget across eight independent interactions.
+  for (const viewport of [
+    { width: 320, height: 320 },
+    { width: 568, height: 320 },
+    { width: 667, height: 320 },
+    { width: 390, height: 360 },
+  ]) {
+    for (const phase of ['hero', 'scrolled']) {
+      test('short-height picker stays usable ' + viewport.width + 'x' + viewport.height + ': ' + phase, async ({ page }, testInfo) => {
+        test.skip(!['chromium-core', 'iphone-safari'].includes(testInfo.project.name),
+          'Short-viewport regression is owned by Chromium and iPhone Safari');
+        await page.setViewportSize(viewport);
+        await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+        const picker = page.locator('[data-poem-picker]');
+        const trigger = picker.locator('summary');
+        await expect(trigger).toBeVisible();
+        if (phase === 'scrolled') {
+          await page.locator('.luxury-card[id^="poem-"]').first().scrollIntoViewIfNeeded();
+          await expect.poll(() => page.locator('.poet-hero-surface').evaluate(
+            (hero) => hero.getBoundingClientRect().bottom,
+          )).toBeLessThan(0);
+          await expect(picker).toHaveAttribute('data-hero-visible', 'false');
+        }
+        const closed = await page.evaluate(() => {
+          const button = document.querySelector('[data-poem-picker] summary')?.getBoundingClientRect();
+          const header = document.querySelector('.site-header')?.getBoundingClientRect();
+          const title = document.querySelector('.poet-hero-surface h1')?.getBoundingClientRect();
+          const heroOverlap = Boolean(button && title &&
+            button.left < title.right && button.right > title.left &&
+            button.top < title.bottom && button.bottom > title.top);
+          return { belowHeader: Boolean(button && header && button.top >= header.bottom), heroOverlap };
+        });
+        expect(closed.belowHeader).toBe(true);
+        expect(closed.heroOverlap).toBe(false);
+        await trigger.click();
+        const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+        await expect(nav).toBeVisible();
+        const geometry = await page.evaluate(() => {
+          const menu = document.querySelector('.poet-poem-picker-menu')?.getBoundingClientRect();
+          const header = document.querySelector('.site-header')?.getBoundingClientRect();
+          const dock = document.querySelector('.mobile-dock')?.getBoundingClientRect();
+          return {
+            height: menu?.height ?? 0,
+            belowHeader: Boolean(menu && header && menu.top >= header.bottom),
+            dockGap: menu && dock ? dock.top - menu.bottom : -1,
+            overflow: document.documentElement.scrollWidth > innerWidth + 1,
+          };
+        });
+        expect(geometry.height).toBeGreaterThanOrEqual(48);
+        expect(geometry.belowHeader).toBe(true);
+        expect(geometry.dockGap).toBeGreaterThanOrEqual(8);
+        expect(geometry.overflow).toBe(false);
+        const last = nav.locator('a[href^="#poem-"]').last();
+        const hash = await last.getAttribute('href');
+        await last.click();
+        await expect.poll(() => page.evaluate(() => location.hash)).toBe(hash);
+        await expect(picker).not.toHaveAttribute('open', '');
+      });
+    }
+  }
+
+  for (const phase of ['hero', 'scrolled']) {
+    test('open poem picker survives low landscape rotation at 150% text: ' + phase, async ({ page }, testInfo) => {
+      test.skip(!['chromium-core', 'iphone-safari'].includes(testInfo.project.name),
+        'Landscape text resize belongs to Chromium and Safari');
+      await page.setViewportSize({ width: 320, height: 568 });
+      await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => { document.documentElement.style.fontSize = '24px'; });
+      const picker = page.locator('[data-poem-picker]');
+      if (phase === 'scrolled') {
+        await page.locator('.luxury-card[id^="poem-"]').first().scrollIntoViewIfNeeded();
+        await expect.poll(() => page.locator('.poet-hero-surface').evaluate(
+          (hero) => hero.getBoundingClientRect().bottom,
+        )).toBeLessThan(0);
+        await expect(picker).toHaveAttribute('data-hero-visible', 'false');
+      }
+      await picker.locator('summary').click();
+      await expect(picker).toHaveAttribute('open', '');
+      await page.setViewportSize({ width: 568, height: 320 });
+      const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+      await expect(nav).toBeVisible();
+      await expect.poll(() => page.evaluate(() => {
+        const rect = (selector) => document.querySelector(selector)?.getBoundingClientRect();
+        const menu = rect('.poet-poem-picker-menu');
+        const header = rect('.site-header');
+        const dock = rect('.mobile-dock');
+        const summary = rect('[data-poem-picker] summary');
+        return Boolean(menu && header && dock && summary &&
+          menu.height >= 48 && menu.width >= 160 &&
+          menu.top >= header.bottom + 8 && menu.bottom <= dock.top - 8 &&
+          menu.right <= summary.left - 8 && summary.height >= 48 &&
+          document.documentElement.scrollWidth <= innerWidth + 1 &&
+          parseFloat(getComputedStyle(document.querySelector('[data-poem-picker] summary')).fontSize) >= 18);
+      }), { message: 'Rotated and resized open picker must clear all fixed controls' }).toBe(true);
+      const last = nav.locator('a[href^="#poem-"]').last();
+      const hash = await last.getAttribute('href');
+      await last.click();
+      await expect.poll(() => page.evaluate(() => location.hash)).toBe(hash);
+      await expect(picker).not.toHaveAttribute('open', '');
+    });
+  }
+
+  // Reload between hero and deep-scroll variants: each represents a separate
+  // reader journey, rather than interrupting a previous long hash scroll.
+  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 667 }]) {
+    for (const scale of [1.5, 2]) {
+      test('resized poem picker ' + viewport.width + 'px at ' + scale * 100 + '% text', async ({ page }, testInfo) => {
+        test.skip(!['chromium-core', 'iphone-safari'].includes(testInfo.project.name),
+          'Text-resize geometry belongs to Chromium and Safari');
+        for (const phase of ['hero', 'scrolled']) {
+          await page.setViewportSize(viewport);
+          await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+          await page.evaluate((value) => {
+            document.documentElement.style.fontSize = String(16 * value) + 'px';
+            document.documentElement.classList.toggle('theme-light', value === 2);
+          }, scale);
+          const picker = page.locator('[data-poem-picker]');
+          const trigger = picker.locator('summary');
+          await expect(trigger).toBeVisible();
+          if (phase === 'scrolled') {
+            // The full poem corpus loads asynchronously and changes document height.
+            // Scroll to a real reading card rather than assuming 4000px clears the hero.
+            const firstPoem = page.locator('.luxury-card[id^="poem-"]').first();
+            await expect(firstPoem).toBeAttached();
+            await firstPoem.scrollIntoViewIfNeeded();
+            await expect.poll(() => page.locator('.poet-hero-surface').evaluate(
+              (hero) => hero.getBoundingClientRect().bottom,
+            )).toBeLessThan(0);
+            await expect(picker).toHaveAttribute('data-hero-visible', 'false');
+          }
+          await trigger.click();
+          const nav = picker.getByRole('navigation', { name: 'Быстрый выбор стихотворения' });
+          await expect(nav).toBeVisible();
+          const geometry = await page.evaluate(() => {
+            const rect = (selector) => document.querySelector(selector)?.getBoundingClientRect();
+            const menu = rect('.poet-poem-picker-menu');
+            const header = rect('.site-header');
+            const dock = rect('.mobile-dock');
+            const summary = rect('[data-poem-picker] summary');
+            return {
+              menuHeight: menu?.height ?? 0,
+              belowHeader: Boolean(menu && header && summary &&
+                menu.top >= header.bottom - 1 && summary.top >= header.bottom - 1),
+              dockGap: menu && dock ? dock.top - menu.bottom : -1,
+              overflow: document.documentElement.scrollWidth > innerWidth + 1,
+            };
+          });
+          expect(geometry.menuHeight, 'Resized menu must retain a usable scroll area').toBeGreaterThanOrEqual(48);
+          expect(geometry.belowHeader, 'Resized picker must clear the fixed header').toBe(true);
+          expect(geometry.dockGap, 'Resized menu must clear the measured mobile dock').toBeGreaterThanOrEqual(8);
+          expect(geometry.overflow).toBe(false);
+          const last = nav.locator('a[href^="#poem-"]').last();
+          const hash = await last.getAttribute('href');
+          await last.click();
+          await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(hash);
+          await expect(picker).not.toHaveAttribute('open', '');
+        }
+      });
+    }
+  }
+
   test('result changes use one stable polite status without stealing search focus', async ({ page }) => {
     await page.goto(`${BASE_URL}/poets`, { waitUntil: 'domcontentloaded' });
 
