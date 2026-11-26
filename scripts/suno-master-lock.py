@@ -2,8 +2,10 @@
 """Optional local raster QA/compositing. Requires Pillow; no generation or network."""
 import argparse
 import json
+import io
+import struct
 from pathlib import Path
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, PngImagePlugin
 
 
 def load(path):
@@ -12,6 +14,21 @@ def load(path):
             raise ValueError("use single-frame, orientation-normalized inputs")
         image.load()
         return image.copy()
+
+
+COLOR_KEYS = ("icc_profile", "gamma", "srgb", "chromaticity")
+
+
+def png_color_info(image):
+    """Preserve supported PNG color chunks; Pillow does not copy them by default."""
+    info = PngImagePlugin.PngInfo()
+    if "gamma" in image.info:
+        info.add(b"gAMA", struct.pack(">I", round(image.info["gamma"] * 100000)))
+    if "srgb" in image.info:
+        info.add(b"sRGB", bytes([image.info["srgb"]]))
+    if "chromaticity" in image.info:
+        info.add(b"cHRM", struct.pack(">8I", *(round(v * 100000) for v in image.info["chromaticity"])))
+    return info
 
 
 def validate_inputs(base, candidate, mask):
@@ -23,8 +40,12 @@ def validate_inputs(base, candidate, mask):
         raise ValueError("mask must be single-channel L")
     if not mask.getbbox() or mask.getextrema()[0] != 0:
         raise ValueError("local mask must contain both editable and protected pixels")
-    if base.info.get("icc_profile") != candidate.info.get("icc_profile"):
-        raise ValueError("ICC profile mismatch; reconcile color before compositing")
+    for key in COLOR_KEYS:
+        if base.info.get(key) != candidate.info.get(key):
+            raise ValueError(f"color metadata mismatch: {key}; reconcile color before compositing")
+    for image in (base, candidate):
+        if image.mode == "RGB" and "transparency" in image.info:
+            raise ValueError("convert RGB transparency to explicit RGBA before QA")
 
 
 def verify(base, final, mask):
@@ -60,18 +81,28 @@ def main():
             validate_inputs(base, candidate, mask)
             if not args.output or Path(args.output).suffix.lower() != ".png":
                 raise ValueError("composite requires a new PNG output")
+            if base.mode == "RGB" and candidate.mode == "RGBA" and candidate.getchannel("A").getextrema() != (255, 255):
+                raise ValueError("nonopaque candidate would lose alpha on RGB base")
             final = Image.composite(candidate.convert(base.mode), base, mask)
             final.info = base.info.copy()
             result = verify(base, final, mask)
             if not result["valid"]:
                 raise ValueError("composite failed pixel guard")
+            # Validate encoded bytes before creating the destination.
+            encoded = io.BytesIO()
+            final.save(encoded, format="PNG", icc_profile=base.info.get("icc_profile"),
+                       pnginfo=png_color_info(base))
+            encoded.seek(0)
+            result = verify(base, load(encoded), mask)
+            if not result["valid"]:
+                raise ValueError("encoded composite failed pixel guard")
             # Exclusive create: never overwrite the source or another candidate.
             with open(args.output, "xb") as target:
-                final.save(target, format="PNG", icc_profile=base.info.get("icc_profile"))
+                target.write(encoded.getbuffer())
             result = verify(base, load(args.output), mask)
         print(json.dumps(result))
         return 0 if result["valid"] else 1
-    except (OSError, ValueError) as error:
+    except (OSError, ValueError, OverflowError, struct.error) as error:
         print(json.dumps({"valid": False, "reason": str(error)}))
         return 1
 
