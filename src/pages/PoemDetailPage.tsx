@@ -1,6 +1,7 @@
 import { use } from 'react';
 import { useLocation, useParams } from 'react-router';
-import { getBrowserPoem } from '../data/runtime/browserPoemData';
+import { getBrowserPoem, getPreparedPoem, prepareDirectPoem } from '../data/runtime/browserPoemData';
+export { prepareDirectPoem as prepareDirectEntry };
 import type { PoemPageModel } from '../lib/poemPageModel';
 import PoemReadingBody from '../components/poet-detail/PoemReadingBody';
 import { useSeo } from '../hooks/useSeo';
@@ -14,6 +15,6 @@ function PublishedPoem({ page }: { page: PoemPageModel }) {
 export default function PoemDetailPage() {
   const { id = '', slug = '' } = useParams<{ id: string; slug: string }>();
   const location = useLocation();
-  const page = use(getBrowserPoem(id, slug, location.pathname, location.key));
+  const page = getPreparedPoem(id, slug, location.pathname) ?? use(getBrowserPoem(id, slug, location.pathname, location.key));
   return page ? <PublishedPoem page={page} /> : <NotFoundPage />;
 }

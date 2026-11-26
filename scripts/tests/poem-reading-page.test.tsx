@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { buildPoemPageModel, type PoemRouteRow } from '../../src/lib/poemPageModel';
 import PoemReadingBody from '../../src/components/poet-detail/PoemReadingBody';
 import type { MusicTrack } from '../../src/types/poet';
-import { approvedPoemPath, poemPayloadFile, validatePoemPayload } from '../../src/data/runtime/poemPagePayload';
+import { approvedPoemPath, assertDirectPoemParity, poemPayloadFile, validatePoemPayload } from '../../src/data/runtime/poemPagePayload';
 import { assertPoemStaticAdmission, renderPoemStaticBody } from '../lib/poem-static-document';
 
 const poet = { id: 'test-author', name: 'Автор', fullName: 'Имя Автора', photo: '/images/test.webp' };
@@ -90,7 +90,7 @@ test('static full document owns exactly one visible H1 and verse before JavaScri
   assert.ok(html.includes('Строка $&amp; $1 $$\nВторая строка'));
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
   assert.equal((html.match(/data-poem-canonical=/g) || []).length, 1);
-  assert.ok(html.includes('<div id="root"><main id="main-content">'));
+  assert.ok(html.includes('<div id="root"><main id="main-content" data-poem-static-path="' + page.path + '"'));
   assert.ok(html.includes('src="/assets/app.js"'));
   assert.throws(() => renderPoemStaticBody('<div id="root">old</div>', page), /exactly one empty/);
   assert.throws(() => renderPoemStaticBody(shell + '<div id="root"></div>', page), /exactly one empty/);
@@ -119,4 +119,13 @@ test('browser admission uses exact approved path and validates route payload ide
   assert.deepEqual(validatePoemPayload(JSON.parse(JSON.stringify(page)), page.path, page.poemId).text, page.text);
   assert.throws(() => validatePoemPayload({ ...page, poemId: 'other' }, page.path, page.poemId), /identity or content/);
   assert.throws(() => validatePoemPayload({ ...page, legacyPath: '/wrong/' }, page.path, page.poemId), /legacy identity/);
+});
+
+test('initial static snapshot must agree with approved payload before client handoff', () => {
+  const { page } = render(row);
+  const snapshot = { path: page.path, workId: page.poemId, heading: page.heading, text: page.text, analysis: page.analysis };
+  assert.doesNotThrow(() => assertDirectPoemParity(snapshot, page));
+  for (const key of ['path', 'workId', 'heading', 'text', 'analysis'] as const) {
+    assert.throws(() => assertDirectPoemParity({ ...snapshot, [key]: snapshot[key] + ' changed' }, page), /content differ/);
+  }
 });

@@ -30,3 +30,11 @@ export function validatePoemPayload(value: unknown, path: string, workId: string
   }
   return page as PoemPageModel;
 }
+
+export type DirectPoemSnapshot = { path: string; workId: string; heading: string; text: string; analysis: string };
+export function assertDirectPoemParity(snapshot: DirectPoemSnapshot, page: PoemPageModel): void {
+  if (snapshot.path !== page.path || snapshot.workId !== page.poemId
+    || snapshot.heading !== page.heading || snapshot.text !== page.text || snapshot.analysis !== page.analysis) {
+    throw new Error('Static and interactive poem content differ: ' + snapshot.path);
+  }
+}

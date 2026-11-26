@@ -207,6 +207,9 @@ const dynamicContentByPath = new Map([
     model: fileHash('src/lib/poemPageModel.ts'),
     staticDocument: fileHash('scripts/lib/poem-static-document.tsx'),
     browserPayload: fileHash('src/data/runtime/poemPagePayload.ts'),
+    browserLoader: fileHash('src/data/runtime/browserPoemData.ts'),
+    directEntry: fileHash('src/main.tsx'),
+    routeRuntime: fileHash('src/routes/routeModules.ts'),
   }]),
 ]);
 

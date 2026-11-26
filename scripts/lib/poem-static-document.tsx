@@ -11,7 +11,10 @@ export function renderPoemStaticBody(document: string, page: PoemPageModel): str
   // Callback replacement is deliberate: literal $ sequences in authored verse
   // must survive String.replace unchanged. React handles text/attribute escaping.
   const body = renderToStaticMarkup(createElement(PoemReadingBody, { page }));
-  return document.replace(emptyRoot, () => '<div id="root"><main id="main-content">' + body + '</main></div>');
+  // The path is a validated canonical model value; escape attribute characters
+  // defensively before injecting the single existing application root.
+  const marker = page.path.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return document.replace(emptyRoot, () => '<div id="root"><main id="main-content" data-poem-static-path="' + marker + '" class="relative z-10 min-h-screen pb-32 md:pb-0"><div class="pt-24 sm:pt-28">' + body + '</div></main></div>');
 }
 
 type Route = { id: string; path: string; discoveryState: string; sitemap: boolean };

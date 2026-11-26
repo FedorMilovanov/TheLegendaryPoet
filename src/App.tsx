@@ -47,6 +47,10 @@ const WipeOverlay = () => (
 
 let introPlayed = false;
 
+// A direct poem document has already shown the reader its content. Do not
+// cover that content with the first-session brand wipe during handoff.
+export function skipIntroForPreparedPoem() { introPlayed = true; }
+
 function RouteSettled({ pathname, onSettled, children }: { pathname: string; onSettled: () => void; children: ReactNode }) {
   useEffect(() => {
     const timeout = window.setTimeout(onSettled, 0);
