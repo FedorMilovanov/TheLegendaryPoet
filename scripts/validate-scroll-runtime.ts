@@ -13,6 +13,7 @@ assertContract(projectContract.runtime.scrollMode === 'native', 'the project scr
 
 type CapturedScroll = ScrollToOptions & { top?: number };
 const nativeScrolls: CapturedScroll[] = [];
+const scrollEvents: string[] = [];
 let reduceMotion = false;
 const anchor = {
   getBoundingClientRect: () => ({ top: 250 }),
@@ -22,6 +23,7 @@ const testWindow = {
   scrollY: 400,
   matchMedia: () => ({ matches: reduceMotion }),
   scrollTo: (options: CapturedScroll) => nativeScrolls.push(options),
+  dispatchEvent: (event: Event) => { scrollEvents.push(event.type); return true; },
 };
 const testDocument = {
   getElementById: (id: string) => (id === 'target' ? anchor : null),
@@ -50,10 +52,12 @@ const releaseSecond = smoothScroll.pauseSmoothScroll('second-overlay');
 assertContract(smoothScroll.isSmoothScrollPaused(), 'nested overlays must register a paused state');
 releaseFirst(400);
 assertContract(smoothScroll.isSmoothScrollPaused(), 'closing one overlay must not release another overlay token');
+assertContract(scrollEvents.length === 0, 'partial overlay release must not resume document scroll');
 releaseSecond(400);
 assertContract(!smoothScroll.isSmoothScrollPaused(), 'closing the final overlay must clear the paused state');
 releaseSecond(400);
 assertContract(!smoothScroll.isSmoothScrollPaused(), 'overlay release functions must remain idempotent');
+assertContract(scrollEvents.length === 1 && scrollEvents[0] === 'tlp-scroll-resumed', 'final overlay release must notify the coordinator exactly once');
 
 const coordinatorSource = readFileSync(new URL('../src/components/SmoothScroll.tsx', import.meta.url), 'utf8');
 const smoothScrollSource = readFileSync(new URL('../src/utils/smoothScroll.ts', import.meta.url), 'utf8');
@@ -85,9 +89,9 @@ assertContract(coordinatorAst.hasEventListener('tlp-scroll-top'), 'the native sc
 assertContract(coordinatorSource.includes('new MutationObserver'), 'delayed hash targets must use DOM readiness observation instead of short fixed polling');
 assertContract(coordinatorSource.includes('HASH_OBSERVER_TIMEOUT_MS = 15_000'), 'hash observation must have a bounded 15-second lifetime for slow lazy routes');
 const observerRegistration = "observer.observe(document.body ?? document.documentElement, { childList: true, subtree: true })";
-const observerIndex = coordinatorSource.indexOf(observerRegistration);
+const observerIndex = coordinatorSource.lastIndexOf(observerRegistration);
 const postRegistrationLookupIndex = coordinatorSource.indexOf('if (findAndScrollToHash()) {', observerIndex + observerRegistration.length);
-const observerTimeoutIndex = coordinatorSource.indexOf('window.setTimeout(stopHashObserver, HASH_OBSERVER_TIMEOUT_MS)', observerIndex + observerRegistration.length);
+const observerTimeoutIndex = coordinatorSource.indexOf('window.setTimeout(expireHashObserver, HASH_OBSERVER_TIMEOUT_MS)', observerIndex + observerRegistration.length);
 assertContract(observerIndex >= 0, 'hash observation must watch bounded DOM insertions for the requested anchor');
 assertContract(
   postRegistrationLookupIndex > observerIndex && observerTimeoutIndex > postRegistrationLookupIndex,

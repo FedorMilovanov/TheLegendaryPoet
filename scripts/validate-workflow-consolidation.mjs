@@ -76,6 +76,7 @@ const preservedSuites = [
 for (const suite of preservedSuites) expect(manual.includes(suite), `Manual Browser QA lost acceptance contour: ${suite}`);
 expect(webkitRunner.includes("id: 'community-request-topology'"), 'base iPhone Safari suite must retain community request topology');
 expect(webkitRunner.includes("file: 'qa/community-request-topology.spec.mjs'"), 'base iPhone Safari suite must execute the shared community topology file');
+expect(webkitRunner.includes("id: 'secondary-data-failure', file: 'qa/secondary-data-failure.spec.mjs'"), 'base iPhone Safari must execute optional-data containment outcomes in a fresh process');
 expect(webkitRunner.includes("id: 'reader-journeys'"), 'base iPhone Safari suite must retain reader outcome journeys');
 expect(webkitRunner.includes("file: 'qa/reader-journeys.spec.mjs'"), 'base iPhone Safari suite must execute the shared reader journey file');
 expect(playwrightConfig.includes('reader-journeys'), 'Android and iPhone project matching must include reader journeys');
