@@ -77,5 +77,10 @@ export const EXTENDED_PAINTED_ROUTES = [
   // dark desktop 127, dark mobile 120, light desktop 127, light mobile 120.
   // Zero text/gradient offenders; floor(0.90 * 120) = 108 verified nodes.
   { path: "/music/lermontov-kogda-volnuetsya-zhelteyushchaya-niva", heading: "Когда волнуется желтеющая нива", minimumNodes: 108 },
+  // Exact 6f655acc census (2026-11-26): dark desktop/mobile 127/120,
+  // light desktop/mobile 127/120. Dark mobile description failed (4.3282).
+  // Floor=108 from actual measured nodes; the repaired shared hero must
+  // pass all four strict pixel modes, not merely this admission inventory.
+  { path: "/music/yesenin-steel-blizzard", heading: "СТАЛЬНАЯ ВЬЮГА", minimumNodes: 108 },
 
 ];
