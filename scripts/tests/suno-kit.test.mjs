@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { preflight, comparePayload, verifySourceMap } from '../check-suno-payload.mjs';
 import { measureStyle } from '../check-suno-style.mjs';
 import { documents, referenceAssets, readFences, validateKit } from '../validate-suno-kit.mjs';
 
@@ -173,7 +174,9 @@ test('missing cover identity reference fails', () => fixture(directory => {
 }));
 test('Fet draft contains ten separate full-image prompts, not a combined prompt', () => {
   const file = fs.readFileSync('suno/covers/projects/fet-new-year.md', 'utf8');
-  const blocks = readFences(file).blocks.filter(block => block.language === 'text');
+  const conceptPackage = file.split('## 01 —')[1]?.split('## Приёмка и урок W3')[0];
+  assert.ok(conceptPackage, 'original concept package boundary missing');
+  const blocks = readFences(conceptPackage).blocks.filter(block => block.language === 'text');
   assert.equal(blocks.length, 10);
   assert.equal(new Set(blocks.map(block => block.text)).size, 10);
   for (const block of blocks) {
@@ -183,3 +186,31 @@ test('Fet draft contains ten separate full-image prompts, not a combined prompt'
   }
   // Structural only, not a certificate of artistic quality or actual generations.
 });
+
+test('poetry preflight measures UTF-16 and permits empty Exclude', () => {
+  const payload = { lyrics: 'а'.repeat(5000), style: 'piano', exclude: '' };
+  assert.equal(preflight(payload).valid, true);
+  assert.equal(preflight({ ...payload, lyrics: 'а'.repeat(4999) + '🎵' }).valid, false);
+  assert.equal(preflight({ ...payload, style: ' '.repeat(5) }).valid, false);
+  assert.equal(preflight({ lyrics: 'слово', style: 'piano' }).valid, false);
+});
+test('readback catches truncation, same-length substitution and missing fields', () => {
+  const payload = { lyrics: 'Все звёзды', style: 'a'.repeat(900), exclude: '' };
+  assert.equal(comparePayload(payload, payload, payload).valid, true);
+  assert.equal(comparePayload(payload, payload, { ...payload, style: 'a'.repeat(800) }).valid, false);
+  assert.equal(comparePayload(payload, { ...payload, lyrics: 'Всё звёзды' }, payload).valid, false);
+  assert.equal(comparePayload(payload, payload, { lyrics: payload.lyrics, style: payload.style }).valid, false);
+  assert.equal(comparePayload(payload, null, payload).valid, false);
+});
+test('source map accepts explicit sequence, repetition and accent edit only as recorded', () => {
+  const ledger = { sources: { a: { text: 'Все звезды', locator: 'edition A, line 1' }, b: { text: 'Свет', locator: 'edition A, line 2' } },
+    sequence: [{ tag: '[Verse]' }, { sourceId: 'b' }, { sourceId: 'a', edits: [{ at: 6, before: 'е', after: 'ё', reason: 'approved yo' }] }, { sourceId: 'b' }, { blank: true }] };
+  const lyrics = '[Verse]\nСвет\nВсе звёзды\nСвет\n';
+  assert.equal(verifySourceMap(ledger, lyrics).valid, true);
+  assert.equal(verifySourceMap(ledger, lyrics.replace('Все', 'Всё')).valid, false);
+  assert.equal(verifySourceMap(ledger, lyrics.trimEnd()).valid, false);
+  assert.equal(verifySourceMap({ ...ledger, sequence: [{ sourceId: 'missing' }] }, 'Свет').valid, false);
+  assert.equal(verifySourceMap({ ...ledger, sequence: [{ sourceId: 'a', edits: [{ at: 0, before: 'X', after: 'Y', reason: 'wrong' }] }] }, 'Все звезды').valid, false);
+  assert.equal(verifySourceMap({ ...ledger, sequence: [{ tag: '[sing my words]' }] }, '[sing my words]').valid, false);
+});
+
