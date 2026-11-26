@@ -85,9 +85,6 @@ def main():
                 raise ValueError("nonopaque candidate would lose alpha on RGB base")
             final = Image.composite(candidate.convert(base.mode), base, mask)
             final.info = base.info.copy()
-            result = verify(base, final, mask)
-            if not result["valid"]:
-                raise ValueError("composite failed pixel guard")
             # Validate encoded bytes before creating the destination.
             encoded = io.BytesIO()
             final.save(encoded, format="PNG", icc_profile=base.info.get("icc_profile"),

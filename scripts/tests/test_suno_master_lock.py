@@ -10,9 +10,6 @@ import unittest
 from PIL import Image, PngImagePlugin
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'suno-master-lock.py'
-# Also allow a standalone copy of this test beside the script.
-if not SCRIPT.is_file():
-    SCRIPT = Path(__file__).with_name('suno-master-lock.py')
 spec = importlib.util.spec_from_file_location('master_lock', SCRIPT)
 lock = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lock)
@@ -54,7 +51,14 @@ class MasterLockTest(unittest.TestCase):
     def test_protected_alpha_change_fails(self):
         candidate = self.base.copy()
         candidate.putpixel((0, 0), (10, 20, 30, 254))
-        self.assertEqual(lock.verify(self.base, candidate, self.mask)['outside'], 1)
+        result = lock.verify(self.base, candidate, self.mask)
+        self.assertEqual(result['outside'], 1)
+        self.assertFalse(result['valid'])
+        candidate = self.base.copy()
+        candidate.putpixel((0, 0), (11, 20, 30, 255))
+        result = lock.verify(self.base, candidate, self.mask)
+        self.assertEqual(result['outside'], 1)
+        self.assertFalse(result['valid'])
 
     def test_invalid_masks_and_sizes(self):
         for mask in (Image.new('L', (3, 3)), Image.new('L', (3, 3), 255), Image.new('L', (2, 2))):
