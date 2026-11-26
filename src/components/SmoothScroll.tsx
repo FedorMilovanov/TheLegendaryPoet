@@ -26,6 +26,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigationType = useNavigationType();
   const positionsRef = useRef(new Map<string, number>());
+  const unrestoredEntryRef = useRef<string | null>(null);
   const previousRouteRef = useRef(`${location.pathname}${location.hash}`);
   const firstRouteRef = useRef(true);
 
@@ -62,8 +63,11 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       window.removeEventListener('scroll', remember);
       window.removeEventListener('click', remember, { capture: true });
       window.removeEventListener('keydown', remember, { capture: true });
+      // A short loading outlet must not overwrite an unfinished POP target.
+      const departingY = unrestoredEntryRef.current === location.key
+        ? positionsRef.current.get(location.key) ?? lastY : lastY;
       positionsRef.current.delete(location.key);
-      positionsRef.current.set(location.key, lastY);
+      positionsRef.current.set(location.key, departingY);
       if (positionsRef.current.size > 80) {
         const oldest = positionsRef.current.keys().next().value as string | undefined;
         if (oldest) positionsRef.current.delete(oldest);
@@ -76,6 +80,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
     const firstRoute = firstRouteRef.current;
     firstRouteRef.current = false;
     const savedY = !firstRoute && navigationType === 'POP' ? positionsRef.current.get(location.key) : undefined;
+    unrestoredEntryRef.current = savedY !== undefined ? location.key : null;
     const sameRoute = previousRouteRef.current === routeIdentity;
     if (!firstRoute && sameRoute && savedY === undefined) return;
     previousRouteRef.current = routeIdentity;
@@ -106,6 +111,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
       if (isSmoothScrollPaused()) return;
       readerInteractedWithHash = true;
       historyPending = false;
+      unrestoredEntryRef.current = null;
       hashDeferredByPause = false;
       cancelHashFocus?.();
       cancelHashFocus = null;
@@ -172,6 +178,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
           if (Math.abs(window.scrollY - savedY) >= 1) scrollToNumber(savedY);
           if (Math.abs(window.scrollY - savedY) < 1) {
             historyPending = false;
+            unrestoredEntryRef.current = null;
             layoutObserver?.disconnect();
             stopHashObserver();
           }
@@ -233,6 +240,7 @@ const SmoothScroll = ({ children }: { children: React.ReactNode }) => {
         if (!isSmoothScrollPaused()) scrollToNumber(savedY);
         if (Math.abs(window.scrollY - savedY) < 1 && !isSmoothScrollPaused()) {
           historyPending = false;
+          unrestoredEntryRef.current = null;
           layoutObserver?.disconnect();
         } else {
           // A short loading shell may clamp the requested offset. Retry only

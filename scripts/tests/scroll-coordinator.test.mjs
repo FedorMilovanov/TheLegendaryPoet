@@ -367,3 +367,28 @@ test('deferred layout correction cannot outlive deadline without ResizeObserver'
   app.window.emit('tlp-scroll-resumed'); app.frame();
   assert.equal(app.window.scrollY, 204);
 });
+
+test('uncompleted POP retains the original reading offset on a later revisit', () => {
+  const app = coordinator();
+  app.render(); app.frame(); app.window.scrollTo({ top: 957 });
+  app.render({ key: 'other', pathname: '/poets', hash: '' }, 'PUSH'); app.frame();
+  app.setMaxY(100);
+  app.render({ key: 'first', pathname: '/essay', hash: '' }, 'POP'); app.frame();
+  assert.equal(app.window.scrollY, 100);
+  app.render({ key: 'third', pathname: '/music', hash: '' }, 'PUSH'); app.frame();
+  app.setMaxY(1500);
+  app.render({ key: 'first', pathname: '/essay', hash: '' }, 'POP'); app.frame();
+  assert.equal(app.window.scrollY, 957);
+});
+test('reader-owned movement replaces an unfinished POP target on revisit', () => {
+  const app = coordinator();
+  app.render(); app.frame(); app.window.scrollTo({ top: 957 });
+  app.render({ key: 'other', pathname: '/poets', hash: '' }, 'PUSH'); app.frame();
+  app.setMaxY(100);
+  app.render({ key: 'first', pathname: '/essay', hash: '' }, 'POP'); app.frame();
+  app.window.emit('wheel'); app.window.scrollTo({ top: 75 });
+  app.render({ key: 'third', pathname: '/music', hash: '' }, 'PUSH'); app.frame();
+  app.setMaxY(1500);
+  app.render({ key: 'first', pathname: '/essay', hash: '' }, 'POP'); app.frame();
+  assert.equal(app.window.scrollY, 75);
+});
