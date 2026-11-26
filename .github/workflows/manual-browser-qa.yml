@@ -156,7 +156,7 @@ jobs:
           --project=chromium-core
           --workers=1
           --reporter=line,github
-      - name: Run remaining base iPhone Safari QA in fresh browser processes
+      - name: Run base iPhone Safari QA in fresh browser processes
         if: ${{ !cancelled() && steps.production_preview.outcome == 'success' }}
         run: node scripts/run-webkit-process-isolated.mjs --phase=remaining
       - name: Upload core browser QA evidence
