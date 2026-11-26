@@ -53,6 +53,7 @@ for (const place of memoryPlaces) {
   assert(size <= 750_000, 'Exhibit budget: ' + place.id);
 }
 assert.equal(getMemoryPlaces('unknown-poet').length, 0);
+for (const poetId of poetIds) assert(getMemoryPlaces(poetId).length > 0, 'Missing exhibit: ' + poetId);
 console.log('Memory places:', ids.size, 'exhibits;', assets.size, 'verified assets.');
 
 materializeMemoryPlaces(true);

@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/bryusov-mira/house.webp",
+    "width": 1200,
+    "height": 900,
+    "alt": "Фасад дома Брюсова на проспекте Мира",
+    "caption": "Москва, 24 июля 2011 года.",
+    "credit": "Vladimir OKC",
+    "source": "https://commons.wikimedia.org/wiki/File:Bryusov-House-Pr_Mira-30_%281%29.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "originalSha256": "c96f89bbb6081b8fd93c788e0e59d9432097e88522069bf9f02a4bc99bc35fdf",
+    "sha256": "d7cff53c792b55de9c3f71dc59881a266e759c452410155bd01742d682895964",
+    "bytes": 140652,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Bryusov-House-Pr_Mira-30_%281%29.jpg"
+  },
+  {
+    "src": "/images/memory-places/bryusov-mira/plaque.webp",
+    "width": 953,
+    "height": 1200,
+    "alt": "Мемориальная доска Брюсову",
+    "caption": "10 января 2024 года.",
+    "credit": "Vesan99",
+    "source": "https://commons.wikimedia.org/wiki/File:BryusovPlaque.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "originalSha256": "ec3c982b442549eb216c469a91657aab180a3b0fd87f51ea30ccf404ba4fc509",
+    "sha256": "1c5e072a452e20e73d194030e8b3ac1e614a839fd6b1b2397c1cd3d2f5d145b2",
+    "bytes": 71830,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/83/BryusovPlaque.jpg"
+  }
+]

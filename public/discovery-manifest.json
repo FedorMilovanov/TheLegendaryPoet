@@ -458,7 +458,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "6abf8188272f7ffe0eba33310daf33998b6b6ccfb3e1bd215ce72c0828e8f96e"
+      "fingerprint": "759d45e4a647502e53acc7c2fc53eb0f0fc627c580f756788b91871ecb6986a5"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-nekrasov/",
@@ -466,7 +466,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "61ab1f846e33f97dcfd76563ba2d5a659b4aaab792a065caf37e0f3d2b2cc9cd"
+      "fingerprint": "a76083999a5ba64307b35099b4e91f82a8ab6e0ac473a7307624ca956ea0e1d6"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/konstantin-simonov/",
@@ -474,7 +474,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "b205a7ec64568fd7bd95b05487b2caa26ecb69767b4bbdd77d7514905b8d3330"
+      "fingerprint": "a6aae362ce997e53595b7f167c578533e13c237a54595af17994564ab537dad3"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/aleksey-konstantinovich-tolstoy/",
@@ -482,7 +482,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "33eb3eb125ba8e46e5997d60f73b9d60971493e47f8a4cda2f781281fa6fda71"
+      "fingerprint": "5f83e05df2dec63cfba3febb671ff44a3d5e1b451260c588dff45ab5e74e03a1"
     }
   ]
 }
