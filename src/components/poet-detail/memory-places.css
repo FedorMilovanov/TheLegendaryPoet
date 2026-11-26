@@ -1,10 +1,12 @@
 /* A museum spread follows its actual reading column, not the viewport. */
-.memory-places { display: grid; gap: 1.5rem; }
+.memory-places { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.5rem; }
 .memory-section-heading { display: grid; gap: .5rem; }
 .memory-exhibit {
   container: memory-exhibit / inline-size;
   min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0,1fr);
+  overflow-wrap: anywhere;
   gap: 1.5rem;
   border-top: 1px solid rgb(173 139 72 / .35);
   padding-block: 1.5rem;
@@ -48,11 +50,11 @@
 .memory-story > *, .memory-detail > *, .memory-extra > * { min-width: 0; }
 .memory-timeline { max-width: 68ch; }
 .memory-subtitle { font-size: clamp(1.35rem, 1.2rem + .65cqi, 1.8rem); line-height: 1.25; }
-.memory-events { display: grid; gap: 1.25rem; margin-top: 1rem; border-left: 1px solid rgb(173 139 72 / .4); padding-left: 1rem; }
-.memory-event { position: relative; }
+.memory-events { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.25rem; margin-top: 1rem; border-left: 1px solid rgb(173 139 72 / .4); padding-left: 1rem; }
+.memory-event { position: relative; min-width: 0; }
 .memory-event::before { content: ""; position: absolute; width: .42rem; height: .42rem; border-radius: 50%; background: #ad8b48; left: -1.24rem; top: .42rem; }
-.memory-event-date { font-size: .85rem; font-weight: 600; line-height: 1.4; }
-.memory-event-text, .memory-note-text { font-size: clamp(1rem, .98rem + .15cqi, 1.0625rem); line-height: 1.75; text-wrap: pretty; overflow-wrap: break-word; }
+.memory-event-date { font-size: .85rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.memory-event-text, .memory-note-text { font-size: clamp(1rem, .98rem + .15cqi, 1.0625rem); line-height: 1.75; text-wrap: pretty; overflow-wrap: anywhere; }
 .memory-event-text { margin-top: .35rem; }
 .memory-note, .memory-quotation { border-left: 2px solid rgb(173 139 72 / .5); padding: .5rem 0 .5rem 1rem; display: grid; gap: .6rem; }
 /* Native closed details can expose descendant layout boxes despite not
@@ -78,11 +80,14 @@
 .memory-gallery {
   position: fixed; inset: 0; z-index: 110; display: grid;
   grid-template-rows: auto minmax(0,1fr) auto;
-  gap: .75rem; background: #101216; outline: none;
-  padding: max(.75rem,env(safe-area-inset-top)) max(.75rem,env(safe-area-inset-right)) max(.75rem,env(safe-area-inset-bottom)) max(.75rem,env(safe-area-inset-left));
+  gap: 12px; background: #101216; outline: none;
+  padding: max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
 }
-.memory-gallery-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
-.memory-gallery-control { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; color: #fff; border: 1px solid #65666a; border-radius: 50%; }
+/* Keep the icon controls at a stable accessible size even when the reader
+   enlarges text; reserve the remaining space for the actual photograph. */
+.memory-gallery-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.memory-gallery-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.memory-gallery-control { display: grid; place-items: center; width: 44px; height: 44px; color: #fff; border: 1px solid #65666a; border-radius: 50%; }
 .memory-gallery-control:focus-visible { outline: 2px solid #e8d6a7; outline-offset: 3px; }
 /* The stage has a definite two-dimensional size, independent of the image.
    Auto margins center fitting images and preserve accessible scroll origins

@@ -162,11 +162,38 @@ test('memory gallery shares overlay ownership, navigation, zoom and restores foc
   await expect(img).toHaveAttribute('src', initial);
   await expect(img).toHaveAttribute('data-image-state', 'loaded');
   await fit();
+  if (info.project.name === 'iphone-safari') {
+    // Large reader text on a small screen must not crowd the photo out.
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
+    const largeTextFit = await fit();
+    expect(largeTextFit.stageHeight).toBeGreaterThanOrEqual(200);
+    const controls = await gallery.locator('.memory-gallery-control').evaluateAll(nodes =>
+      nodes.every(node => {
+        const rect = node.getBoundingClientRect();
+        return rect.width >= 44 && rect.height >= 44 && rect.left >= 0 &&
+          rect.right <= innerWidth + 1 && rect.top >= 0 && rect.bottom <= innerHeight + 1;
+      }));
+    expect(controls).toBe(true);
+    await page.setViewportSize({ width: 568, height: 320 });
+    const landscapeFit = await fit();
+    expect(landscapeFit.stageHeight).toBeGreaterThanOrEqual(120);
+    await page.evaluate(() => { document.documentElement.style.removeProperty('font-size'); });
+  }
   await expect(gallery.locator('a[href^="https://creativecommons.org/"]')).toHaveCount(1);
   if (process.env.QA_CAPTURE_MEMORY === '1') await page.screenshot({ path: info.outputPath('gallery.png'), animations: 'disabled' });
   await page.keyboard.press('Escape');
   await expect(gallery).toHaveCount(0);
   await expect(opener).toBeFocused();
+  if (info.project.name === 'iphone-safari') {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
+    expect(await section.locator('article').evaluate(node =>
+      node.scrollWidth <= node.clientWidth + 2 &&
+      [...node.querySelectorAll('.memory-events, .memory-event')].every(el => el.scrollWidth <= el.clientWidth + 2)
+    )).toBe(true);
+    await page.evaluate(() => { document.documentElement.style.removeProperty('font-size'); });
+  }
   await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
   if (info.project.name !== 'chromium-core') {
     expect(await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)).toBe(false);

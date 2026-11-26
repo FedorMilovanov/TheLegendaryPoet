@@ -57,7 +57,7 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
       }}>
       <header className="memory-gallery-toolbar">
         <p className="theme-dark-island-muted text-sm tabular-nums" aria-live="polite">{index + 1} / {photos.length}</p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="memory-gallery-actions">
           {photos.length > 1 && <>
             <button className="memory-gallery-control" type="button" aria-label="Предыдущая фотография" onClick={() => step(-1)}><ChevronLeft size={20} /></button>
             <button className="memory-gallery-control" type="button" aria-label="Следующая фотография" onClick={() => step(1)}><ChevronRight size={20} /></button>
