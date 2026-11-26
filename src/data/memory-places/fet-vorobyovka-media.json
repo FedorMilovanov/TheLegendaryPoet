@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/fet-vorobyovka/house.webp",
+    "width": 1200,
+    "height": 675,
+    "alt": "Главный дом усадьбы Фета с юго-запада",
+    "caption": "Воробьёвка. 12 сентября 2021 года.",
+    "credit": "Alexander Grebenkov",
+    "source": "https://commons.wikimedia.org/wiki/File:Afanasy_Fet_Estate_-_Sep_2021_-_Estate_view%2C_south_and_west_side.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "originalSha256": "9cd577a57a1889eabe9046a938891ebb7b585ee52b1502893295f80a712033f2",
+    "sha256": "68f9ddb5cb7538ce4d1ef280391707bd5ad1e3ca43f724267d9f398b3f1f25dc",
+    "bytes": 209148,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/6/60/Afanasy_Fet_Estate_-_Sep_2021_-_Estate_view%2C_south_and_west_side.jpg"
+  },
+  {
+    "src": "/images/memory-places/fet-vorobyovka/library.webp",
+    "width": 1200,
+    "height": 675,
+    "alt": "Музейная библиотека в усадьбе Фета",
+    "caption": "Воссозданная обстановка библиотеки. 12 сентября 2021 года.",
+    "credit": "Alexander Grebenkov",
+    "source": "https://commons.wikimedia.org/wiki/File:Afanasy_Fet_Estate_-_Sep_2021_-_The_library.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "originalSha256": "4e0a3935d5c3e23a43807effb7922bf56a61e9ff9ea17bfb8f87bb6e66feeffc",
+    "sha256": "24d29a064830021dd1dac50cb748f309599446ac507c3da779bd6bb96be45e3b",
+    "bytes": 111244,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/Afanasy_Fet_Estate_-_Sep_2021_-_The_library.jpg"
+  }
+]

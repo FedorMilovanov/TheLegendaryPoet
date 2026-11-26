@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/tyutchev-ovstug/house.webp",
+    "width": 1200,
+    "height": 800,
+    "alt": "Воссозданный господский дом в Овстуге",
+    "caption": "Господский дом. Июнь 2006 года.",
+    "credit": "София Юрашевич",
+    "source": "https://commons.wikimedia.org/wiki/File:Owstug.JPG",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "originalSha256": "4669d12cf74b289426080386326f1e9e1d352ad1c56d58ed05622f17ae7bdfc0",
+    "sha256": "4f2206b0b62959b61239f3672bc995269addbc36503efcc7ed8a6e0e3b8782e6",
+    "bytes": 211824,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Owstug.JPG"
+  },
+  {
+    "src": "/images/memory-places/tyutchev-ovstug/estate.webp",
+    "width": 1200,
+    "height": 900,
+    "alt": "Главный дом музея-заповедника Тютчева",
+    "caption": "Овстуг. 26 мая 2012 года.",
+    "credit": "Vlad-Mier",
+    "source": "https://commons.wikimedia.org/wiki/File:119.%D0%94%D0%BE%D0%BC-%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%A2%D1%8E%D1%82%D1%87%D0%B5%D0%B2%D0%B0.%D0%9E%D0%B2%D1%81%D1%82%D1%83%D0%B3_2012.JPG",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "originalSha256": "6a1028d3c90e95d670e19d90cd7661748fee90e4db2cd63adfff1bfe28402fd7",
+    "sha256": "3d49e7eaba02b68bb86462939566e8be9f44633bb7fc0e953826b8a3dd404d81",
+    "bytes": 202800,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8a/119.%D0%94%D0%BE%D0%BC-%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D0%B0_%D0%BF%D0%BE%D1%8D%D1%82%D0%B0_%D0%A2%D1%8E%D1%82%D1%87%D0%B5%D0%B2%D0%B0.%D0%9E%D0%B2%D1%81%D1%82%D1%83%D0%B3_2012.JPG"
+  }
+]

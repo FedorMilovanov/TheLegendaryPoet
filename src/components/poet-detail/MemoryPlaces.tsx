@@ -64,6 +64,12 @@ function Exhibit({ place }: { place: MemoryPlace }) {
         </div>
         <Photograph photo={detail} />
       </div>}
+      {!detail && place.detailNote && (
+        <aside className="theme-soft-surface mt-6 rounded-2xl border border-luxury-gold/20 p-5">
+          <h4 className="theme-text font-serif text-2xl">{place.detailNote.title}</h4>
+          <p className="theme-text mt-3 text-sm leading-[1.85]">{place.detailNote.text}</p>
+        </aside>
+      )}
       {more.length > 0 && <div className="mt-6 grid gap-4 sm:grid-cols-2">{more.map((photo) => <Photograph key={photo.src} photo={photo} />)}</div>}
       {place.literaryConnection && (
         <figure className="theme-soft-surface mt-7 rounded-2xl border border-luxury-gold/20 p-5 sm:p-7">

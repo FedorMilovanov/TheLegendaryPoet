@@ -61,8 +61,12 @@ for (const [poetId, placeId] of [
   ['alexander-pushkin', 'pushkin-mikhailovskoye'],
   ['sergei-yesenin', 'yesenin-konstantinovo'],
   ['alexander-blok', 'blok-shakhmatovo'],
+  ['anna-akhmatova', 'akhmatova-fountain-house'],
+  ['fyodor-tyutchev', 'tyutchev-ovstug'],
+  ['afanasy-fet', 'fet-vorobyovka'],
+  ['boris-pasternak', 'pasternak-peredelkino'],
 ]) {
-  test('registered estate renders its own images and evidence: ' + poetId, async ({ page }) => {
+  test('registered place renders its own images and evidence: ' + poetId, async ({ page }) => {
     await page.goto(base + '/poets/' + poetId, { waitUntil: 'domcontentloaded' });
     const section = page.locator('#memory-places');
     const exhibit = section.locator('#memory-' + placeId);
