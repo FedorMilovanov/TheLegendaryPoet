@@ -483,3 +483,102 @@ assets:
     source_use: primary_publication_facsimile
     alteration: "None; source bytes preserved (no crop, recolor, upscale or watermark removal)"
     notes: "Annual volume titled 'Severnye tsvety na 1830 god'; bibliographic imprint is Saint Petersburg, 1829 (FEB Pushkin critical apparatus, vol. 3, pt. 2, p. 1193). Year 1830 names the annual, not the publication year. Wikimedia original is public domain with Google digitization footer; no image bytes changed. Two other Google Books scans remain local rights-review only."
+
+  - path: public/images/music/blok-night-version-1-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/590
+    git_blob_sha: b101108093ba66e37e507be28599e9c3452b01bc
+    bytes: 95202
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records identify this as the owner-approved new Blok cover. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/blok-night-loop-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/589
+    git_blob_sha: 199574c825b8a647738d1595655c09b7b7faac13
+    bytes: 336078
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records identify this as an approved square cover in the six-track Blok release. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/blok-kulikovo-part-1-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/589
+    git_blob_sha: 432042c4bb8001ee2be826a9614a8385a19c462b
+    bytes: 499020
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records identify this as an approved square cover in the six-track Blok release. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/blok-kulikovo-part-2-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/589
+    git_blob_sha: bbb7dc55813cc43723d9fddc47864333c6665e15
+    bytes: 251298
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records identify this as an approved square cover in the six-track Blok release. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/blok-scythians-version-1-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/589
+    git_blob_sha: 61fb909e5344bb5149bc519c524aa8e3957be05a
+    bytes: 404594
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records identify this as an approved square cover in the six-track Blok release. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/blok-scythians-version-2-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/589
+    git_blob_sha: 2e57de67dfe271f6445eb1a8f6b12835235159ba
+    bytes: 332348
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records identify this as an approved square cover in the six-track Blok release. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/blok-oh-i-want-to-live-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/589
+    git_blob_sha: 304a04282893f899df16e4b7cfefc10841bf9bab
+    bytes: 347546
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records identify this as an approved square cover in the six-track Blok release. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/lermontov-niva-cover.webp
+    role: music_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/594
+    git_blob_sha: 65d0a32e4715d6e76c23970063bbbbefd39392a0
+    bytes: 141574
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records describe this as an approved derivative of the same AI-generated Lermontov portrait; not an archival photograph. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
+
+  - path: public/images/music/lermontov-niva-wide.webp
+    role: music_wide_cover
+    origin_class: local_project_artwork
+    evidence: https://github.com/FedorMilovanov/TheLegendaryPoet/pull/594
+    git_blob_sha: b470d5ca84e01885e7d2b008a797d1d376c3130a
+    bytes: 178338
+    review_status: PENDING-GENERATION-RECORD
+    source_use: not_primary_evidence
+    notes: "Release records describe this as an approved derivative of the same AI-generated Lermontov portrait; not an archival photograph. Exact current Git blob matches the merged release; full generation/reference record has not been independently recovered."
+    required_follow_up: recover original generation prompt, reference set, tool record and approval evidence before reuse outside the project
