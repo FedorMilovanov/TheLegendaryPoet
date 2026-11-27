@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { acquireExactOfflineSource } from './download-exact-source.mjs';
+import { acquireExactOfflineSource, prepareOfflineSourceOutput } from './download-exact-source.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const acquisitionPath = path.join(root, 'docs/hall-v3/pushkin-acquisition.json');
@@ -36,9 +36,6 @@ const main = async () => {
   if (owner.offlineAuthoring?.productionShippingAuthorizedByThisDecision !== false) fail('offline source preparation may not imply production shipping');
   if (acquisition.currentOutcome?.offlineBlenderSourceEvidenceAllowed !== true) fail('acquisition authority does not allow offline Blender source evidence');
 
-  fs.rmSync(outputDir, { recursive: true, force: true });
-  fs.mkdirSync(outputDir, { recursive: true });
-
   const byId = new Map((acquisition.assets ?? []).map((asset) => [asset.assetId, asset]));
   const ownerById = new Map((owner.offlineAuthoring?.assets ?? []).map((asset) => [asset.assetId, asset]));
   const portrait = byId.get('pushkin-kiprensky-1827-portrait');
@@ -47,6 +44,8 @@ const main = async () => {
   if (ownerById.get(portrait.assetId)?.sourceFileHash !== portrait.sourceFileHash) fail('portrait owner/source hash authority drifted');
   if (ownerById.get(onegin.assetId)?.sourceFileHash !== onegin.sourceFileHash) fail('Onegin owner/source hash authority drifted');
   if (onegin.selectedOfflineSourcePdfPageIndex !== 0 || ownerById.get(onegin.assetId)?.selectedOfflinePresentation?.sourcePdfPageIndex !== 0) fail('Onegin offline presentation must remain source PDF page index 0');
+
+  prepareOfflineSourceOutput(root, outputDir);
 
   const portraitEvidence = await downloadExact(portrait, 'kiprensky-1827-source.jpg');
   const portraitBytes = fs.readFileSync(path.join(outputDir, portraitEvidence.file));
