@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, poets } from '../src/data/poets.ts';
+import { getMemoryPlaces } from '../src/data/memory-places/index.ts';
 import { poetryCollections, collectionsForPoet, collectionsForEssay } from '../src/data/poetryCollections.ts';
 import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
 
@@ -181,7 +182,19 @@ const dataDependencies = {
 const dynamicContentByPath = new Map([
   ...essays.map((essay) => [canonicalRoutePath(`/essays/${essay.slug}`), collectionsForEssay(essay.slug).length ? { essay, collections: collectionsForEssay(essay.slug) } : essay]),
   ...publishedTracks.map((track) => [canonicalRoutePath(`/music/${track.id}`), track]),
-  ...poets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), collectionsForPoet(poet.id).length ? { poet, collections: collectionsForPoet(poet.id) } : poet]),
+  ...poets.map((poet) => {
+    const places = getMemoryPlaces(poet.id);
+    const collections = collectionsForPoet(poet.id);
+    return [canonicalRoutePath(`/poets/${poet.id}`), {
+      poet,
+      memoryPlaces: places,
+      ...(collections.length ? { collections } : {}),
+      ...(places.length ? {
+        memoryPlacesView: fileHash('src/components/poet-detail/MemoryPlaces.tsx'),
+        memoryPlacesStyle: fileHash('src/components/poet-detail/memory-places.css'),
+      } : {}),
+    }];
+  }),
 ]);
 
 const manifestRoutes = urls.map((item) => {
