@@ -77,7 +77,6 @@ test('unauthorized source and off-Wikimedia redirect are refused', async (t) => 
   }), /unapproved source redirect/);
 });
 
-
 test('offline source cleanup is confined to the two generated source directories', (t) => {
   const root = path.dirname(make(t).outputDir);
   const keep = path.join(root, 'keep.txt');
