@@ -27,15 +27,20 @@ export default function PoemPicker({ poems }: PoemPickerProps) {
 
   // The inline index already provides the same navigation. Suppress the
   // redundant closed shortcut while the index is in the reading viewport.
+  // Supplementary JSON may replace an initially partial or absent index.
+  // Rebind after the corpus changes, not only on the first route mount.
   useEffect(() => {
     const index = document.querySelector('.poet-reading-index');
-    if (!index || typeof IntersectionObserver === 'undefined') return;
+    if (!index || typeof IntersectionObserver === 'undefined') {
+      setIndexVisible(false);
+      return;
+    }
     const observer = new IntersectionObserver(([entry]) => {
       setIndexVisible(Boolean(entry?.isIntersecting));
     }, { rootMargin: '-100px 0px -100px 0px' });
     observer.observe(index);
     return () => observer.disconnect();
-  }, []);
+  }, [poems.length]);
 
   useEffect(() => {
     const dismissOutside = (event: PointerEvent) => {
