@@ -3,13 +3,14 @@ import { silverAgePlaces } from './silverAgePlaces';
 import { memorialHomePlaces } from './memorialHomes';
 import { estateMemoryPlaces } from './estates';
 import media from './lermontov-pyatigorsk-media.json';
+import type { MemoryPreviewFrame } from './previewFrame';
 
 export type MemoryPhoto = {
   src: string; width: number; height: number; alt: string; caption: string;
   credit: string; source: string; sourceLabel: string; license: string; licenseUrl: string;
   originalSha256: string; sha256: string; bytes: number; changes: string;
   /** Optional same-canvas editorial cutout. The gallery always uses src. */
-  preview?: { src: string; sha256: string; bytes: number; changes: string };
+  preview?: { src: string; sha256: string; bytes: number; changes: string; frame?: MemoryPreviewFrame };
 };
 export type MemoryPlace = {
   id: string; poetId: string; kind: 'monument' | 'museum' | 'estate' | 'grave' | 'other';

@@ -105,6 +105,26 @@
 
 /* Cutouts are editorial previews, not extra gallery photographs. */
 .memory-photo-trigger[data-cutout="true"] { background: transparent; border-radius: 0; }
+/* Keep the same bounded inline frame while loading or showing the full fallback.
+   A clipped preview never changes the documentary gallery's source canvas. */
+.memory-photo-trigger[data-frame="true"] {
+  --memory-frame-limit: 480px;
+  width: min(100%, calc(var(--memory-frame-limit) * var(--memory-frame-ratio)));
+  aspect-ratio: var(--memory-frame-ratio);
+  margin-inline: auto;
+  overflow: clip;
+}
+.memory-photo-trigger[data-frame="true"] img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; max-width: none; object-fit: contain;
+}
+.memory-photo-trigger[data-frame="true"][data-cutout="true"] img {
+  inset: auto; left: var(--memory-frame-image-left); top: var(--memory-frame-image-top);
+  width: var(--memory-frame-image-width); height: auto;
+}
+@container memory-exhibit (max-width: 28rem) {
+  .memory-photo-trigger[data-frame="true"] { --memory-frame-limit: 460px; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .memory-gallery-stage[data-reveal="true"]::before {
     content: ""; position: absolute; inset: 0; pointer-events: none;

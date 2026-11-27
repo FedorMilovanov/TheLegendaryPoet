@@ -13,9 +13,16 @@ const linkClass = 'theme-poet-accent underline decoration-current/40 underline-o
 function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: number; onOpen: (index: number, reveal: boolean) => void }) {
   const [imageState, setImageState] = useState<ImageLoadState>('loading');
   const cutout = Boolean(photo.preview && imageState === 'loaded');
+  const frame = photo.preview?.frame;
+  const frameStyle = frame ? {
+    '--memory-frame-ratio': frame.width / frame.height,
+    '--memory-frame-image-width': `${photo.width / frame.width * 100}%`,
+    '--memory-frame-image-left': `${-frame.x / frame.width * 100}%`,
+    '--memory-frame-image-top': `${-frame.y / frame.height * 100}%`,
+  } as CSSProperties : undefined;
   return (
     <figure className="memory-photo min-w-0">
-      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" data-cutout={cutout} aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index, cutout); }}>
+      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" data-cutout={cutout} data-frame={Boolean(frame)} style={frameStyle} aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index, cutout); }}>
         <ResilientImage src={photo.preview?.src ?? photo.src} fallbackSrc={photo.preview ? photo.src : undefined} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
         <span className="memory-image-failure theme-functional-muted" aria-hidden="true">Фотография недоступна</span>
         <span aria-hidden="true" className={`absolute bottom-3 right-3 flex h-11 items-center justify-center gap-2 rounded-full bg-black/80 text-white ${cutout ? 'px-3' : 'w-11'}`}><Maximize2 size={18} />{cutout && <span className="text-xs">Оригинал</span>}</span>

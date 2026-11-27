@@ -1,5 +1,6 @@
 import type { MemoryPlace } from '../memory-places';
 import { asset } from '../../utils/asset';
+import { isMemoryPreviewFrame } from '../memory-places/previewFrame';
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -31,7 +32,8 @@ function renderablePlace(value: unknown, poetId: string): boolean {
     (photo.preview === undefined || (
       textFields(photo.preview, ['src', 'sha256', 'changes']) &&
       typeof photo.preview.src === 'string' && /^\/images\/memory-places\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/.test(photo.preview.src) &&
-      photo.preview.src !== photo.src && positiveDimension(photo.preview.bytes)
+      photo.preview.src !== photo.src && positiveDimension(photo.preview.bytes) &&
+      (photo.preview.frame === undefined || isMemoryPreviewFrame(photo.preview.frame, Number(photo.width), Number(photo.height)))
     ))
   ) &&
     Array.isArray(facts) && facts.every(fact => textFields(fact, ['label', 'value'])) &&

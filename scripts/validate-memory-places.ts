@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { readIntrinsicSize } from './lib/image-metrics.mjs';
 import { poets } from '../src/data/poets';
 import { memoryPlaces, getMemoryPlaces } from '../src/data/memory-places';
+import { isMemoryPreviewFrame } from '../src/data/memory-places/previewFrame';
 
 const ids = new Set<string>();
 const assets = new Set<string>();
@@ -56,6 +57,7 @@ for (const place of memoryPlaces) {
       assert(!assets.has(preview.src), 'Duplicate preview asset: ' + preview.src);
       assets.add(preview.src);
       assert(preview.changes.trim());
+      assert(preview.frame === undefined || isMemoryPreviewFrame(preview.frame, photo.width, photo.height), 'Invalid preview frame: ' + preview.src);
       assert.match(preview.sha256, /^[a-f0-9]{64}$/);
       const derivative = readFileSync(resolve('public', preview.src.slice(1)));
       assert.equal(derivative.length, preview.bytes, preview.src);

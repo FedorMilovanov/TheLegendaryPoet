@@ -40,10 +40,20 @@ for (const theme of ['dark', 'light']) {
     expect(readings.length).toBeGreaterThan(20);
     for (const { text, ratio } of readings) expect(ratio, text).toBeGreaterThanOrEqual(4.5);
     const overflow = await section.evaluate((node) => {
+      if (node.scrollWidth > node.clientWidth + 2) return true;
       const bounds = node.getBoundingClientRect();
-      return [...node.querySelectorAll('article, figure, img, ol, dl, details')].some((item) => {
+      return [...node.querySelectorAll('article, figure, .memory-photo-trigger, img, ol, dl, details')].some((item) => {
         const r = item.getBoundingClientRect();
-        return r.left < bounds.left - 1 || r.right > bounds.right + 1 || item.scrollWidth > item.clientWidth + 2;
+        // A framed image may extend past its button, but its visible area must
+        // stay clipped. The button itself is independently checked above.
+        const clip = item.tagName === 'IMG' ? item.closest('.memory-photo-trigger[data-frame="true"]') : null;
+        if (clip && getComputedStyle(clip).overflowX !== 'clip') return true;
+        const c = clip?.getBoundingClientRect();
+        const left = c ? Math.max(r.left, c.left) : r.left;
+        const right = c ? Math.min(r.right, c.right) : r.right;
+        const frameButton = item.matches('.memory-photo-trigger[data-frame="true"]');
+        if (frameButton && (getComputedStyle(item).overflowX !== 'clip' || item.scrollLeft !== 0 || item.scrollTop !== 0)) return true;
+        return left < bounds.left - 1 || right > bounds.right + 1 || (!frameButton && item.scrollWidth > item.clientWidth + 2);
       });
     });
     expect(overflow).toBe(false);
@@ -288,6 +298,24 @@ test('cutout reveals its documentary original and falls back without a second ga
   await expect(image).toHaveAttribute('data-image-state', 'loaded');
   await expect(image).toHaveAttribute('src', /figure-cutout\.webp$/);
   await expect(opener).toHaveAttribute('data-cutout', 'true');
+  await expect(opener).toHaveAttribute('data-frame', 'true');
+  const measureFrame = () => opener.evaluate(btn => {
+    const b = btn.getBoundingClientRect();
+    const img = btn.querySelector('img');
+    const i = img.getBoundingClientRect();
+    const scale = i.width / img.naturalWidth;
+    return { width: b.width, height: b.height, left: i.left + 191 * scale - b.left,
+      top: i.top + 223 * scale - b.top, right: i.left + 647 * scale - b.left,
+      bottom: i.top + 1100 * scale - b.top, scrollLeft: btn.scrollLeft, scrollTop: btn.scrollTop };
+  });
+  const framed = await measureFrame();
+  expect(framed.left).toBeGreaterThanOrEqual(-1);
+  expect(framed.top).toBeGreaterThanOrEqual(-1);
+  expect(framed.right).toBeLessThanOrEqual(framed.width + 1);
+  expect(framed.bottom).toBeLessThanOrEqual(framed.height + 1);
+  expect(framed.height).toBeLessThanOrEqual(481);
+  expect(framed.scrollLeft).toBe(0);
+  expect(framed.scrollTop).toBe(0);
   const sample = locator => locator.evaluate(node => {
     const canvas = document.createElement('canvas');
     canvas.width = node.naturalWidth; canvas.height = node.naturalHeight;
@@ -317,6 +345,10 @@ test('cutout reveals its documentary original and falls back without a second ga
   await expect(image).toHaveAttribute('data-image-state', 'fallback');
   await expect(opener).toHaveAttribute('data-cutout', 'false');
   await expect(image).toHaveAttribute('src', /figure\.webp$/);
+  const fallbackFrame = await measureFrame();
+  expect(Math.abs(fallbackFrame.width - framed.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(fallbackFrame.height - framed.height)).toBeLessThanOrEqual(1);
+  await expect(image).toHaveCSS('object-fit', 'contain');
   await opener.click();
   await expect(gallery).toBeVisible();
   await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-reveal', 'false');
