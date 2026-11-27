@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/blok-shakhmatovo/house.webp",
+    "width": 1200,
+    "height": 900,
+    "alt": "Воссозданный главный дом усадьбы Шахматово",
+    "caption": "Главный дом, 10 ноября 2007 года.",
+    "credit": "Zac allan",
+    "source": "https://commons.wikimedia.org/wiki/File:Blok%27s_house_in_Shakhmatovo_1.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "originalSha256": "651cd284be61f3a91dc501a2f565974475da2c51e5715b9ec3ee5ed613d2defe",
+    "sha256": "881b37081852ccde04116601ad832c7419ac8f3f214f070974d7276d0c68b9ed",
+    "bytes": 182132,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/34/Blok%27s_house_in_Shakhmatovo_1.jpg"
+  },
+  {
+    "src": "/images/memory-places/blok-shakhmatovo/interior.webp",
+    "width": 1200,
+    "height": 900,
+    "alt": "Интерьер дома-музея Блока в Шахматове",
+    "caption": "Музейный интерьер, 10 ноября 2007 года.",
+    "credit": "Zac allan",
+    "source": "https://commons.wikimedia.org/wiki/File:Blok%27s_house_in_Shakhmatovo._Nowadays_internal_view.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "originalSha256": "4d4dc5b84b715ec30f7508616f70d2ee6a835dd0942b7e48b66c10c2f745a635",
+    "sha256": "09e5016a94e571dc2003199c5a62dde6a686023c793bf270149515225714b2ae",
+    "bytes": 85078,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Blok%27s_house_in_Shakhmatovo._Nowadays_internal_view.jpg"
+  }
+]
