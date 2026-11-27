@@ -57,6 +57,20 @@ export const supplementaryPoemSearchIndex: readonly SupplementaryPoemSearchEntry
     "year": 1918
   },
   {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-12",
+    "title": "Рождество",
+    "year": 1906
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-13",
+    "title": "Сочельник в лесу",
+    "year": 1912
+  },
+  {
     "poetId": "alexander-pushkin",
     "poetName": "Александр Пушкин",
     "id": "pushkin-4",
