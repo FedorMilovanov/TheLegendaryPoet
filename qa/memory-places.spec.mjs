@@ -297,6 +297,7 @@ test('cutout reveals its documentary original and falls back without a second ga
   const full = await sample(original);
   expect(full[0][3]).toBe(255);
   expect(full.slice(1)).toEqual(preview.slice(1));
+  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-reveal', 'false');
   await page.keyboard.press('Escape');
   await expect(gallery).toHaveCount(0);
   await expect(opener).toBeFocused();
@@ -306,4 +307,11 @@ test('cutout reveals its documentary original and falls back without a second ga
   await expect(image).toHaveAttribute('data-image-state', 'fallback');
   await expect(opener).toHaveAttribute('data-cutout', 'false');
   await expect(image).toHaveAttribute('src', /figure\.webp$/);
+  await opener.click();
+  await expect(gallery).toBeVisible();
+  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-reveal', 'false');
+  await expect(original).toHaveAttribute('data-image-state', 'loaded');
+  await page.keyboard.press('Escape');
+  await expect(gallery).toHaveCount(0);
+  await expect(opener).toBeFocused();
 });

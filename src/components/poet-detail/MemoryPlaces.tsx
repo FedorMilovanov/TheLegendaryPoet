@@ -10,12 +10,12 @@ import { asset } from '../../utils/asset';
 
 const linkClass = 'theme-poet-accent underline decoration-current/40 underline-offset-4 hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
 
-function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: number; onOpen: (index: number) => void }) {
+function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: number; onOpen: (index: number, reveal: boolean) => void }) {
   const [imageState, setImageState] = useState<ImageLoadState>('loading');
   const cutout = Boolean(photo.preview && imageState === 'loaded');
   return (
     <figure className="memory-photo min-w-0">
-      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" data-cutout={cutout} aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index); }}>
+      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" data-cutout={cutout} aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index, cutout); }}>
         <ResilientImage src={photo.preview?.src ?? photo.src} fallbackSrc={photo.preview ? photo.src : undefined} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
         <span className="memory-image-failure theme-functional-muted" aria-hidden="true">Фотография недоступна</span>
         <span aria-hidden="true" className={`absolute bottom-3 right-3 flex h-11 items-center justify-center gap-2 rounded-full bg-black/80 text-white ${cutout ? 'px-3' : 'w-11'}`}><Maximize2 size={18} />{cutout && <span className="text-xs">Оригинал</span>}</span>
@@ -33,12 +33,12 @@ function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: numbe
   );
 }
 
-function Gallery({ photos, index, onChange, onClose }: { photos: readonly MemoryPhoto[]; index: number; onChange: (index: number) => void; onClose: () => void }) {
+function Gallery({ photos, index, initialReveal, onChange, onClose }: { photos: readonly MemoryPhoto[]; index: number; initialReveal: boolean; onChange: (index: number) => void; onClose: () => void }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(false);
-  const [reveal, setReveal] = useState(Boolean(photos[index]?.preview));
+  const [reveal, setReveal] = useState(() => initialReveal && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [imageState, setImageState] = useState<ImageLoadState>('loading');
   const imageReady = imageState === 'loaded' || imageState === 'fallback';
   const { isTopmost } = useDialogSurface({ open: true, dialogRef, initialFocusRef: closeRef, onClose, label: 'memory-photo-gallery' });
@@ -78,7 +78,7 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
       <div className="memory-gallery-stage" ref={stageRef} data-zoom={zoom} data-reveal={reveal && Boolean(photo.preview) && imageState !== 'failed'}
         role="region" aria-label="Область фотографии" tabIndex={zoom ? 0 : -1}
         style={{ '--memory-photo-ratio': photo.width / photo.height, '--memory-photo-native': photo.width + 'px', '--memory-reveal-preview': photo.preview ? `url("${asset(photo.preview.src)}")` : undefined } as CSSProperties}>
-        <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" onStateChange={setImageState} />
+        <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" onStateChange={setImageState} onAnimationEnd={(event) => { if (event.animationName === 'memory-photo-reveal') setReveal(false); }} />
         <span className="memory-image-failure theme-dark-island-muted" aria-hidden="true">Фотография недоступна</span>
       </div>
       <footer className="memory-gallery-caption">
@@ -95,6 +95,11 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
 
 function Exhibit({ place }: { place: MemoryPlace }) {
   const [activePhoto, setActivePhoto] = useState<number | null>(null);
+  const [revealOnOpen, setRevealOnOpen] = useState(false);
+  const open = (index: number, reveal: boolean) => {
+    setRevealOnOpen(reveal);
+    setActivePhoto(index);
+  };
   const close = useCallback(() => setActivePhoto(null), []);
   const [hero, figure, detail, ...more] = place.photos;
   const note = place.detailNote && <aside className="memory-note">
@@ -120,7 +125,7 @@ function Exhibit({ place }: { place: MemoryPlace }) {
         <h3 id={`memory-${place.id}-title`} className="theme-text font-serif memory-title">{place.title}</h3>
         <p className="theme-poet-accent text-sm font-semibold">{place.date}</p>
       </header>
-      {hero && <Photograph photo={hero} index={0} onOpen={setActivePhoto} />}
+      {hero && <Photograph photo={hero} index={0} onOpen={open} />}
       <p className="memory-lead theme-text">{place.intro}</p>
       <dl className="memory-facts">
         {place.facts.map((fact) => (
@@ -143,25 +148,25 @@ function Exhibit({ place }: { place: MemoryPlace }) {
           </ol>
         </div>
         {figure && <div className="memory-story-media">
-          <Photograph photo={figure} index={1} onOpen={setActivePhoto} />
+          <Photograph photo={figure} index={1} onOpen={open} />
           {!detail && note}
         </div>}
       </div>
       {!figure && note}
       {detail ? (
         <div className="memory-detail" data-has-copy={Boolean(note || quotation)}>
-          <Photograph photo={detail} index={2} onOpen={setActivePhoto} />
+          <Photograph photo={detail} index={2} onOpen={open} />
           {(note || quotation) && <div className="memory-detail-copy">{note}{quotation}</div>}
         </div>
       ) : quotation}
-      {more.length > 0 && <div className="memory-extra">{more.map((photo, index) => <Photograph key={photo.src} photo={photo} index={index + 3} onOpen={setActivePhoto} />)}</div>}
+      {more.length > 0 && <div className="memory-extra">{more.map((photo, index) => <Photograph key={photo.src} photo={photo} index={index + 3} onOpen={open} />)}</div>}
       <details className="memory-sources">
         <summary className="theme-text cursor-pointer text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">Источники и дальнейшее чтение</summary>
         <ul className="mt-4 space-y-3 text-sm leading-relaxed">
           {place.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer" className={linkClass}>{source.label} ↗</a></li>)}
         </ul>
       </details>
-      {activePhoto !== null && <Gallery photos={place.photos} index={activePhoto} onChange={setActivePhoto} onClose={close} />}
+      {activePhoto !== null && <Gallery photos={place.photos} index={activePhoto} initialReveal={revealOnOpen} onChange={setActivePhoto} onClose={close} />}
     </article>
   );
 }
