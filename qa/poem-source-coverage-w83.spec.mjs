@@ -18,6 +18,7 @@ const editions = {
     ['fet-1', 'https://rvb.ru/19vek/fet/bp/text/221.html', false],
     ['fet-2', 'https://rvb.ru/19vek/fet/bp/text/285.html', false],
     ['fet-3', 'https://rvb.ru/19vek/fet/bp/text/174.html', false],
+    ['fet-4', 'https://ru.wikisource.org/wiki/Певице_(Фет)', false],
   ],
   'nikolay-gumilev': [
     ['gumilev-1', 'https://ru.wikisource.org/wiki/Жираф_(Гумилёв)', false],

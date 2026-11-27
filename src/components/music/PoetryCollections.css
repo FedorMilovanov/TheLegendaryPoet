@@ -46,6 +46,7 @@
 .poetry-collection-source-main:hover{background:#203554}
 .poetry-collection-original{display:flex;align-items:center;justify-content:space-between;gap:.45rem;min-height:44px;padding:.5rem .7rem;border-top:1px solid #3e5371;border-radius:0 0 .7rem .7rem;font-size:.78rem;color:var(--collection-blue);line-height:1.35;text-decoration:none}
 .poetry-collection-original:hover{background:#203554;text-decoration:underline}
+.poetry-collection-library-link{border-radius:0;color:var(--collection-gold)}
 .poetry-collection-original svg{flex:none}
 #poetry-collections{scroll-margin-top:8rem}
 .poetry-collection-jump{display:inline-flex;align-items:center;gap:.55rem;min-height:44px;font-size:.95rem;font-weight:600;text-decoration:underline;text-underline-offset:.25em;color:inherit}

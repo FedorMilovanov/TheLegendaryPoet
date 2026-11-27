@@ -71,6 +71,11 @@ function CollectionCard({ collection }: { collection: PoetryCollection }) {
                         </span>
                         <ArrowRight className="poetry-collection-source-arrow" size={16} aria-hidden="true" />
                       </Link>
+                      {source.poemId && (
+                        <Link className="poetry-collection-original poetry-collection-library-link" to={`/poets/${entry.poetId}#poem-${source.poemId}`} aria-label={`Читать в библиотеке: ${source.title}`}>
+                          Читать в Библиотеке <BookOpen size={15} aria-hidden="true" />
+                        </Link>
+                      )}
                       <a className="poetry-collection-original" href={source.url} target="_blank" rel="noopener noreferrer" aria-label={`Первоисточник: ${source.title}`}>
                         {source.prose ? 'Публикация Письма' : 'Полный Текст в Источнике'} <ExternalLink size={14} aria-hidden="true" />
                       </a>
