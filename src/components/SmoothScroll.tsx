@@ -1,16 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
 import { scheduleProgrammaticFocus } from '../utils/focusRuntime';
-import { isSmoothScrollPaused } from '../utils/smoothScroll';
+import { decodeHash, isSmoothScrollPaused } from '../utils/smoothScroll';
 
 const HASH_OBSERVER_TIMEOUT_MS = 15_000;
 const FIXED_HEADER_OFFSET = 96;
-
-function decodeHash(hash: string) {
-  const raw = hash.replace(/^#/, '');
-  if (!raw) return '';
-  try { return decodeURIComponent(raw); } catch { return raw; }
-}
 
 function prefersReducedMotion() {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;

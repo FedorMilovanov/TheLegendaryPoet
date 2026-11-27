@@ -10,6 +10,7 @@ import {
   Network,
 } from 'lucide-react';
 import type { EssaySource, EssaySourceKind } from '../../types/essay';
+import { decodeHash } from '../../utils/smoothScroll';
 
 const sourceKinds: Record<
   EssaySourceKind,
@@ -67,10 +68,10 @@ export default function SourceLibrary({ sources }: { sources: EssaySource[] }) {
 
   useEffect(() => {
     const revealLinkedSource = () => {
-      const match = window.location.hash.match(/^#source-(.+)$/);
-      if (!match) return;
-      const sourceId = decodeURIComponent(match[1]);
-      if (!sources.some((source) => source.id === sourceId)) return;
+      const id = decodeHash(window.location.hash);
+      if (!id.startsWith('source-')) return;
+      const sourceId = id.slice('source-'.length);
+      if (!sourceId || !sources.some((source) => source.id === sourceId)) return;
 
       setFilter('all');
       setExpanded(true);
