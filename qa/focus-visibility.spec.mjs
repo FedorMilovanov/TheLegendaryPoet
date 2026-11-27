@@ -26,7 +26,7 @@ const CELLS = [
 ];
 
 /** Elements a reader can reach with Tab, in the order Tab reaches them. */
-const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'a[href], button, input, select, textarea, summary:first-of-type, [tabindex]:not([tabindex="-1"])';
 
 // Long enough to leave the longest route behind: the Brik essay carries 127
 // focusable controls, so a 70-step walk would have quietly covered half a page

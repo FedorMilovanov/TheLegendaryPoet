@@ -1,3 +1,4 @@
+import { musicPageTitle, musicPageDescription } from '../src/data/poetryCollections.ts';
 // Prerender route-specific HTML so crawlers and unfurl bots receive complete
 // metadata in the first 200 response without executing JavaScript.
 import fs from 'node:fs';
@@ -268,8 +269,8 @@ async function main() {
     },
     {
       routePath: '/music',
-      title: 'Музыка на стихи русских поэтов — THE LEGENDARY POET',
-      description: 'Официальные музыкальные интерпретации русской поэзии от проекта THE LEGENDARY POET.',
+      title: musicPageTitle,
+      description: musicPageDescription,
       image: featuredTrack?.wideCoverUrl || featuredTrack?.coverUrl,
     },
     {

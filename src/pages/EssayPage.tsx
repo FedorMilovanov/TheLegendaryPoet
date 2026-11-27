@@ -1,6 +1,8 @@
 import { Suspense, use, useRef } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
+import { CollectionReferences } from '../components/music/PoetryCollections';
+import { collectionsForEssay } from '../data/poetryCollections';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { ArrowLeft, ArrowRight, BookOpen, FileText, Layers3 } from 'lucide-react';
@@ -186,6 +188,7 @@ export default function EssayPage() {
 
           <article ref={articleRef} className="min-w-0 max-w-3xl">
             <ShareLine scopeRef={articleRef} />
+            <CollectionReferences collections={collectionsForEssay(essay.slug)} />
             <ArticleRenderer blocks={essay.blocks} sources={essay.sources} />
 
             {essay.series && (
