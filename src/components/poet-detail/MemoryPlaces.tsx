@@ -22,7 +22,7 @@ function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: numbe
   } as CSSProperties : undefined;
   return (
     <figure className="memory-photo min-w-0">
-      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" data-cutout={cutout} data-frame={Boolean(frame)} style={frameStyle} aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index, cutout); }}>
+      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" data-cutout={cutout} data-frame={Boolean(frame)} style={frameStyle} aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : cutout ? `Открыть оригинал фотографии: ${photo.alt}` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index, cutout); }}>
         <ResilientImage src={photo.preview?.src ?? photo.src} fallbackSrc={photo.preview ? photo.src : undefined} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
         <span className="memory-image-failure theme-functional-muted" aria-hidden="true">Фотография недоступна</span>
         <span aria-hidden="true" className={`absolute bottom-3 right-3 flex h-11 items-center justify-center gap-2 rounded-full bg-black/80 text-white ${cutout ? 'px-3' : 'w-11'}`}><Maximize2 size={18} />{cutout && <span className="text-xs">Оригинал</span>}</span>
@@ -56,6 +56,14 @@ function Gallery({ photos, index, initialReveal, onChange, onClose }: { photos: 
     setImageState('loading');
     onChange((index + direction + photos.length) % photos.length);
   };
+  useEffect(() => {
+    if (!reveal) return;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const retire = () => { if (motion.matches) setReveal(false); };
+    motion.addEventListener('change', retire);
+    retire();
+    return () => motion.removeEventListener('change', retire);
+  }, [reveal]);
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;

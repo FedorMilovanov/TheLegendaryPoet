@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
 import { contrastMeasurements } from './contrast-helpers.mjs';
 
 const base = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
@@ -57,15 +58,15 @@ for (const theme of ['dark', 'light']) {
       });
     });
     expect(overflow).toBe(false);
-    // Retain a bounded real-page visual witness in the existing HTML report.
+    // Persist the real-page witness even when CI uses line/github reporters.
     if (info.project.name === 'chromium-core') {
       const cutout = section.locator('.memory-photo-trigger[data-cutout="true"]');
       await expect(cutout).toHaveCount(1);
       await cutout.scrollIntoViewIfNeeded();
-      await info.attach(`museum-reveal-${theme}-story`, {
-        body: await section.locator('.memory-story').screenshot({ animations: 'disabled', style: '.site-header,.mobile-dock,.scroll-top-btn,[data-custom-cursor-dot],[data-custom-cursor-ring],.cursor-trail { visibility: hidden !important; }' }),
-        contentType: 'image/png',
-      });
+      await mkdir('qa-artifacts', { recursive: true });
+      const path = `qa-artifacts/museum-reveal-${theme}-story.png`;
+      await section.locator('.memory-story').screenshot({ path, animations: 'disabled', style: '.site-header,.mobile-dock,.scroll-top-btn,[data-custom-cursor-dot],[data-custom-cursor-ring],.cursor-trail { visibility: hidden !important; }' });
+      await info.attach(`museum-reveal-${theme}-story`, { path, contentType: 'image/png' });
     }
     if (info.project.name === 'chromium-core' && process.env.QA_CAPTURE_MEMORY === '1') {
       await section.locator('h2').scrollIntoViewIfNeeded();
@@ -264,7 +265,13 @@ test('memory data is scoped to the current poet and retries without affecting th
       contentType: 'application/json',
       body: JSON.stringify([{ poetId: 'mikhail-lermontov', id: 'broken-place', title: 'Broken', location: 'Place', date: 'Date', intro: 'Intro', photos: [null], facts: [null], timeline: [null], sources: [null] }]),
     });
-    else await route.continue();
+    else if (failure === 'frame') {
+      const response = await route.fetch();
+      const payload = await response.json();
+      const preview = payload[0].photos.find(photo => photo.preview).preview;
+      preview.frame = { x: -1, y: 192, width: 518, height: 908 };
+      await route.fulfill({ response, json: payload });
+    } else await route.continue();
   });
   await page.goto(base + '/poets/mikhail-lermontov', { waitUntil: 'domcontentloaded' });
   const section = page.locator('#memory-places');
@@ -275,12 +282,16 @@ test('memory data is scoped to the current poet and retries without affecting th
   await expect(section.getByRole('button', { name: 'Повторить' })).toBeVisible();
   await expect(section.locator('article')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 2, name: /Полная Биография/i })).toBeVisible();
+  failure = 'frame';
+  await section.getByRole('button', { name: 'Повторить' }).click();
+  await expect(section.getByRole('button', { name: 'Повторить' })).toBeVisible();
+  await expect(section.locator('article')).toHaveCount(0);
   failure = 'none';
   await section.getByRole('button', { name: 'Повторить' }).click();
   await expect(section.locator('article')).toHaveCount(1);
   await expect(section.locator('figure:has(img)')).toHaveCount(3);
   expect(errors).toEqual([]);
-  expect(requests.length).toBeGreaterThanOrEqual(3);
+  expect(requests.length).toBeGreaterThanOrEqual(4);
   expect(requests.every(path => path.endsWith('/mikhail-lermontov.json'))).toBe(true);
   requests.length = 0;
   await page.goto(base + '/poets', { waitUntil: 'networkidle' });
@@ -298,6 +309,7 @@ test('cutout reveals its documentary original and falls back without a second ga
   await expect(image).toHaveAttribute('data-image-state', 'loaded');
   await expect(image).toHaveAttribute('src', /figure-cutout\.webp$/);
   await expect(opener).toHaveAttribute('data-cutout', 'true');
+  await expect(opener).toHaveAccessibleName(/оригинал/i);
   await expect(opener).toHaveAttribute('data-frame', 'true');
   const measureFrame = () => opener.evaluate(btn => {
     const b = btn.getBoundingClientRect();
@@ -356,4 +368,36 @@ test('cutout reveals its documentary original and falls back without a second ga
   await page.keyboard.press('Escape');
   await expect(gallery).toHaveCount(0);
   await expect(opener).toBeFocused();
+});
+
+test('changing motion preference while original loads retires reveal permanently', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  let releaseOriginal;
+  const gate = new Promise(resolve => { releaseOriginal = resolve; });
+  await page.route('**/figure.webp', async route => {
+    await gate;
+    await route.continue();
+  });
+  const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
+  const stage = gallery.locator('.memory-gallery-stage');
+  try {
+    await page.goto(base + '/poets/mikhail-lermontov#memory-places', { waitUntil: 'domcontentloaded' });
+    const opener = page.locator('#memory-places .memory-photo-trigger').nth(1);
+    await opener.scrollIntoViewIfNeeded();
+    await expect(opener).toHaveAttribute('data-cutout', 'true');
+    await opener.click();
+    await expect(stage).toHaveAttribute('data-reveal', 'true');
+    await expect(gallery.locator('img')).toHaveAttribute('data-image-state', 'loading');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(stage).toHaveAttribute('data-reveal', 'false');
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await expect(stage).toHaveAttribute('data-reveal', 'false');
+  } finally {
+    releaseOriginal();
+  }
+  await expect(gallery.locator('img')).toHaveAttribute('data-image-state', 'loaded');
+  await expect(stage).toHaveAttribute('data-reveal', 'false');
+  await expect(gallery.locator('img')).toHaveCSS('opacity', '1');
+  await page.keyboard.press('Escape');
+  await expect(gallery).toHaveCount(0);
 });

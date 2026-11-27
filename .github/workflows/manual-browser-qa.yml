@@ -135,11 +135,22 @@ jobs:
           qa/essay-lightbox-overlay.spec.mjs
           qa/focus-visibility.spec.mjs
           qa/image-integrity.spec.mjs
+          qa/memory-places.spec.mjs
           --config=playwright.config.mjs
           --project=chromium-core
           --project=android-pixel7
           --workers=1
           --reporter=line,github
+      - name: Verify museum reveal visual evidence
+        run: |
+          set -euo pipefail
+          for theme in dark light; do
+            file="qa-artifacts/museum-reveal-${theme}-story.png"
+            if [ ! -s "$file" ]; then
+              echo "::error file=$file::Missing museum reveal screenshot: $file"
+              exit 1
+            fi
+          done
       - name: Certify WCAG 1.4.12 registered text owners at desktop and mobile widths
         run: >-
           npx playwright test
