@@ -14,7 +14,8 @@
 .poetry-collection-secondary{background:#12243c;color:var(--collection-ink);border:1px solid #496385}
 .poetry-collection-primary:hover{background:#ffe5b6;color:#111927}
 .poetry-collection-secondary:hover{background:#1d385b;border-color:#95b9ec;color:#fff}
-.poetry-collection :is(a,summary):focus-visible,.collection-reference a:focus-visible{outline:2px solid #ffd58a;outline-offset:3px}
+.poetry-collection :is(a,summary):focus-visible{outline:2px solid #ffd58a;outline-offset:3px}
+.collection-reference a:focus-visible{outline:2px solid var(--tlp-focus-ring);outline-offset:3px}
 .poetry-collection-figure{min-width:0;margin:0}
 .poetry-collection-image{position:relative;isolation:isolate;aspect-ratio:16/9;overflow:hidden;border-radius:1.25rem;border:1px solid #63758d;background:radial-gradient(ellipse at 50% 20%,#2d4260,#101a2b)}
 .poetry-collection-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform 1s cubic-bezier(.2,.7,.2,1)}
@@ -41,6 +42,7 @@
 .poetry-collection-chevron{color:var(--collection-blue);font-size:1.5rem;line-height:1;transition:transform .25s}
 .poetry-collection-sources[open] .poetry-collection-chevron{transform:rotate(180deg)}
 .poetry-collection-source-list{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin:.5rem 0 0;padding:0}
+.poetry-collection-sources:not([open]) > .poetry-collection-source-list{display:none}
 .poetry-collection-source-list li{min-width:0;display:flex;flex-direction:column;border:1px solid #3e5371;border-radius:.75rem;background:#142137}
 .poetry-collection-source-main{display:grid;grid-template-columns:minmax(3.2rem,auto) minmax(0,1fr) auto;align-items:start;gap:.6rem;min-height:72px;flex:1;border-radius:.7rem;padding:.7rem;color:var(--collection-ink);text-decoration:none;background:#142137;transition:background-color .2s,border-color .2s}
 .poetry-collection-source-main:hover{background:#203554}

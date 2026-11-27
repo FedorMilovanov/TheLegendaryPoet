@@ -47,7 +47,7 @@ const blocks: EssayBlock[] = [
   { type: 'section', heading: 'Карта Литературных Источников', anchor: 'source-map' },
   { type: 'paragraph', text: 'Ниже — девять источников по порядку первого появления их фрагментов в авторском тексте композиции. Это не партитура и не покадровая расшифровка финального клипа. Цитаты передают опознаваемые начала или характерные строки в орфографии источников; полный текст и редакция доступны по ссылкам в библиографии. Вступительная прозаическая фраза отделена от восьми стихотворений. Повторы и музыкальное расположение строк принадлежат современной обработке.' },
   ...fetNewYearSources.flatMap((source): EssayBlock[] => [
-    { type: 'section', heading: `${source.title} · ${source.date}`, anchor: `source-${source.id}` },
+    { type: 'section', heading: `${source.title} · ${source.date}`, anchor: `literary-fragment-${source.id}` },
     { type: 'paragraph', text: `«${source.fragment}». ${source.note}`, sourceIds: [source.id] },
   ]),
   { type: 'section', heading: 'Бал как Современный Образ', anchor: 'ball' },

@@ -63,7 +63,7 @@ function CollectionCard({ collection }: { collection: PoetryCollection }) {
                 <ol className="poetry-collection-source-list">
                   {entry.sources.map(source => (
                     <li key={source.id}>
-                      <Link className="poetry-collection-source-main" to={`/essays/${entry.essaySlug}#source-${source.id}`}>
+                      <Link className="poetry-collection-source-main" to={`/essays/${entry.essaySlug}#literary-fragment-${source.id}`}>
                         <span className="poetry-collection-source-date">{source.date}</span>
                         <span className="poetry-collection-source-body">
                           <span>{source.title}</span>
