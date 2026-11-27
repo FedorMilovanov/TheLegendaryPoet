@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import { canonicalRoutePath, canonicalRouteUrl } from './src/routes/publicUrl';
 import { materializeSupplementaryPoets } from './scripts/supplementary-poet-artifacts';
+import { materializeMemoryPlaces } from './scripts/memory-place-artifacts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -150,9 +151,11 @@ function poetArtifactIntegrityPlugin(): Plugin {
     name: 'poet-artifact-integrity',
     buildStart() {
       materializeSupplementaryPoets(true);
+      materializeMemoryPlaces(true);
     },
     configureServer() {
       materializeSupplementaryPoets(true);
+      materializeMemoryPlaces(true);
     },
   };
 }

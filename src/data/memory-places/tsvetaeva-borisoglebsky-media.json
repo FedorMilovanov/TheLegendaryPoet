@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/tsvetaeva-borisoglebsky/house.webp",
+    "width": 1200,
+    "height": 845,
+    "alt": "Дом-музей Цветаевой в Борисоглебском переулке",
+    "caption": "Дом-музей Марины Цветаевой в Борисоглебском переулке. 17 апреля 2011 года.",
+    "credit": "Vladimir OKC",
+    "source": "https://commons.wikimedia.org/wiki/File:House-Museum_of_Marina_Tsvetaeva.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC0 1.0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "originalSha256": "6b2f980d0667b935acff02bea0173696b23235d2e06336b76eec6bb1370cbf2f",
+    "sha256": "54227bb7fa0dc29cc1d5abc19471698090ea31d527b75aad4a66263b59e7566b",
+    "bytes": 108344,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1d/House-Museum_of_Marina_Tsvetaeva.jpg"
+  },
+  {
+    "src": "/images/memory-places/tsvetaeva-borisoglebsky/facade.webp",
+    "width": 1200,
+    "height": 675,
+    "alt": "Фасад дома Цветаевой в Москве",
+    "caption": "Фасад московского дома Цветаевой. 24 июля 2008 года.",
+    "credit": "Eden87",
+    "source": "https://commons.wikimedia.org/wiki/File:Tsvetaeva_house.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "originalSha256": "2b6fdd72294ed6f6efce259a3854d9e26259f9538e9a25b93596cb98ffb9de92",
+    "sha256": "2cd65d51689512358354c7d123a5c3e8a091e87ddee13a0e5177aa92d333f220",
+    "bytes": 93530,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/8/86/Tsvetaeva_house.jpg"
+  }
+]

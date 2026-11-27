@@ -1,0 +1,47 @@
+[
+  {
+    "slug": "square",
+    "src": "/images/memory-places/lermontov-pyatigorsk/square.webp",
+    "width": 1200,
+    "height": 675,
+    "credit": "Vyacheslav Bukharov",
+    "source": "https://commons.wikimedia.org/wiki/File:Monument_to_Mikhail_Lermontov_in_Pyatigorsk_(October_2023)_-_1.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "originalSha256": "99c46df400ea3dcf97f5c5bf3dfd5d42d60eb22db26d2db5e9d650ed219173cd",
+    "sha256": "4a614d2d19d2f8185189e5d547493d7eaafe92998175edc8d3c53bb724fc0d8c",
+    "bytes": 246714,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "sourceLabel": "Wikimedia Commons"
+  },
+  {
+    "slug": "figure",
+    "src": "/images/memory-places/lermontov-pyatigorsk/figure.webp",
+    "width": 733,
+    "height": 1100,
+    "credit": "Алексей Трубин",
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%B0%D0%BC%D1%8F%D1%82%D0%BD%D0%B8%D0%BA_%D0%9B%D0%B5%D1%80%D0%BC%D0%BE%D0%BD%D1%82%D0%BE%D0%B2%D1%83_(%D0%B3._%D0%9F%D1%8F%D1%82%D0%B8%D0%B3%D0%BE%D1%80%D1%81%D0%BA).jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "originalSha256": "9dab555a505168d1cfc170e20cec314679dd1d5a00afd6a9bb691c13f84e64b5",
+    "sha256": "e543db787b9f4b0890479945f7c2733ec80bf2b5e5a95a9c7584300c5a926934",
+    "bytes": 56192,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "sourceLabel": "Wikimedia Commons"
+  },
+  {
+    "slug": "lyre",
+    "src": "/images/memory-places/lermontov-pyatigorsk/lyre.webp",
+    "width": 600,
+    "height": 900,
+    "credit": "AlixSaz",
+    "source": "https://commons.wikimedia.org/wiki/File:Monument_Lermontov_M._Yu._IMG_5132.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "originalSha256": "dc5e54c7ff29130f3531f883fd889d79a8ad7970531f6355344c6782705c52af",
+    "sha256": "ac9b0b56fd48059610b68ecb51e1a093883397774e3d4a92c58ffd6e7cc631a8",
+    "bytes": 147002,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "sourceLabel": "Wikimedia Commons"
+  }
+]

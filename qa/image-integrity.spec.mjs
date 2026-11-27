@@ -46,40 +46,30 @@ async function settleImages(page) {
   // Steps no taller than the viewport: a 1800px jump can step straight over a
   // lazy figure without ever bringing it near enough to start loading.
   const step = Math.round(viewportHeight * 0.8);
-  const height = await page.evaluate(() => document.documentElement.scrollHeight);
-  for (let top = 0; top < height; top += step) {
-    await page.evaluate((y) => window.scrollTo(0, y), top);
+  // Re-read the height while walking: poet-scoped fetches and lazy sections
+  // can append real images after the first measurement.
+  for (let top = 0; top < await page.evaluate(() => document.documentElement.scrollHeight); top += step) {
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), top);
     await page.waitForTimeout(120);
   }
-  // Then bring anything still outstanding into the middle of the frame and give
-  // it a moment: an audit that waits for an image must have shown the image.
-  await page.evaluate(async () => {
-    const pending = () => [...document.querySelectorAll('img')]
-      .filter((img) => new URL(img.currentSrc || img.src, location.href).origin === location.origin)
-      .filter((img) => !img.complete);
-    for (let pass = 0; pass < 3 && pending().length > 0; pass += 1) {
-      for (const img of pending()) {
-        img.scrollIntoView({ block: 'center' });
-        await new Promise((resolve) => setTimeout(resolve, 250));
-      }
+  // Re-query laid-out local images on every poll. Native lazy loading needs
+  // viewport exposure even when the exhibit mounted after the initial walk.
+  // Do not force eager loading, replace URLs, or suppress genuine failures.
+  await expect.poll(async () => {
+    const pending = await page.evaluate(() => [...document.querySelectorAll('img')]
+      .filter(img => new URL(img.currentSrc || img.src, location.href).origin === location.origin)
+      .filter(img => img.getBoundingClientRect().width > 0 && img.getBoundingClientRect().height > 0)
+      .filter(img => !img.complete)
+      .map(img => img.currentSrc || img.src));
+    if (pending.length) {
+      await page.evaluate((url) => {
+        const img = [...document.querySelectorAll('img')].find(node => !node.complete && (node.currentSrc || node.src) === url);
+        img?.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }, pending[0]);
     }
-  });
-  await page.evaluate(() => window.scrollTo(0, 0));
-  // Remote Commons portraits are outside this contract and, in a sandbox with
-  // no egress, would hold a single await open until the test timed out. Only
-  // local files are waited for, and only until they report for themselves.
-  // Only images the page actually lays out are waited for. A lazy image inside
-  // a collapsed block never starts loading, and waiting for it would be waiting
-  // for something the reader is not being shown.
-  await expect
-    .poll(
-      () => page.evaluate(() => [...document.querySelectorAll('img')]
-        .filter((img) => new URL(img.currentSrc || img.src, location.href).origin === location.origin)
-        .filter((img) => img.getBoundingClientRect().width > 0 && img.getBoundingClientRect().height > 0)
-        .filter((img) => !img.complete).length),
-      { timeout: 20_000, intervals: [200, 300, 500, 800] },
-    )
-    .toBe(0);
+    return pending;
+  }, { timeout: 20_000, intervals: [200, 300, 500, 800] }).toEqual([]);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.waitForTimeout(250);
 }
 

@@ -15,6 +15,11 @@ export function pauseSmoothScroll(reason = 'overlay') {
     if (released) return;
     released = true;
     pauseTokens.delete(token);
+    // The final overlay has restored its body styles and scroll offset before
+    // releasing this token. Resume only after the last nested owner leaves.
+    if (pauseTokens.size === 0 && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('tlp-scroll-resumed'));
+    }
   };
 }
 

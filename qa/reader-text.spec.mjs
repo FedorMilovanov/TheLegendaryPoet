@@ -184,34 +184,44 @@ test('shared poem cards retain usable mobile reading width', async ({ page }, te
       const surfaces = page.locator('[data-poem-text]');
       await expect(surfaces.first()).toBeVisible();
       await page.evaluate(() => document.fonts.ready);
-      // The canonical and kinetic layers must finish their initial layout
-      // before evaluating clipping; a transient entrance measurement can
-      // exceed the final box even though the stable text has no overflow.
-      // This remains a strict visual requirement, not a fixed sleep or skip.
-      await expect.poll(() => surfaces.evaluateAll((nodes) => {
-        if (!nodes.length) return Number.POSITIVE_INFINITY;
-        return Math.max(...nodes.map((node) => {
-          const words = [...node.querySelectorAll('[data-poem-visual] > div > span')];
-          if (!words.length) return Number.POSITIVE_INFINITY;
-          return Math.max(...words.map((word) => word.getBoundingClientRect().bottom))
-            - node.getBoundingClientRect().bottom;
-        }));
-      }), { timeout: 10_000 }).toBeLessThanOrEqual(0);
-      const columns = await surfaces.evaluateAll((nodes) => nodes.map((node) => {
-        const canonical = node.querySelector('[data-poem-canonical]').getBoundingClientRect();
-        const visual = node.querySelector('[data-poem-visual]').getBoundingClientRect();
-        const lastWords = [...node.querySelectorAll('[data-poem-visual] > div > span')];
-        const visualBottom = Math.max(...lastWords.map((word) => word.getBoundingClientRect().bottom));
-        return { canonicalWidth: canonical.width, visualWidth: visual.width, delta: Math.abs(canonical.left - visual.left), clippedBottom: visualBottom - node.getBoundingClientRect().bottom };
-      }));
-      expect(columns.length).toBeGreaterThan(0);
-      for (const column of columns) {
-        expect(column.canonicalWidth).toBeGreaterThanOrEqual(width - 104);
-        expect(column.visualWidth).toBeGreaterThanOrEqual(width - 104);
-        expect(column.delta).toBeLessThanOrEqual(1);
-        expect(column.clippedBottom).toBeLessThanOrEqual(0);
-      }
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
+      // Late optional sections can move the poem while Motion settles.
+      // Poll the complete geometry together, requiring three consecutive
+      // frames to satisfy the same strict bounds. Do not validate a second,
+      // unrelated snapshot after the clipping check has already succeeded.
+      await expect(async () => {
+        const frames = await page.evaluate(async () => {
+          const samples = [];
+          for (let frame = 0; frame < 3; frame++) {
+            await new Promise(requestAnimationFrame);
+            const columns = [...document.querySelectorAll('[data-poem-text]')].map((node) => {
+              const canonical = node.querySelector('[data-poem-canonical]').getBoundingClientRect();
+              const visual = node.querySelector('[data-poem-visual]').getBoundingClientRect();
+              const words = [...node.querySelectorAll('[data-poem-visual] > div > span')];
+              const visualBottom = words.length
+                ? Math.max(...words.map((word) => word.getBoundingClientRect().bottom))
+                : Number.POSITIVE_INFINITY;
+              return {
+                canonicalWidth: canonical.width,
+                visualWidth: visual.width,
+                delta: Math.abs(canonical.left - visual.left),
+                clippedBottom: visualBottom - node.getBoundingClientRect().bottom,
+              };
+            });
+            samples.push({ columns, overflow: document.documentElement.scrollWidth - innerWidth });
+          }
+          return samples;
+        });
+        for (const { columns, overflow } of frames) {
+          expect(columns.length).toBeGreaterThan(0);
+          for (const column of columns) {
+            expect(column.canonicalWidth).toBeGreaterThanOrEqual(width - 104);
+            expect(column.visualWidth).toBeGreaterThanOrEqual(width - 104);
+            expect(column.delta).toBeLessThanOrEqual(1);
+            expect(column.clippedBottom).toBeLessThanOrEqual(0);
+          }
+          expect(overflow).toBeLessThanOrEqual(1);
+        }
+      }).toPass({ timeout: 10_000 });
     }
   }
 });
