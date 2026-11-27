@@ -36,6 +36,9 @@ export const EXTENDED_PAINTED_ROUTES = [
   // 175 is floor(0.9 * 195), preserving the same measured render guard as all
   // other routes. All four cells had zero text and gradient contrast offenders.
   { path: "/essays/pushkin-lermontov-dva-proroka", heading: "Пушкин и Лермонтов", minimumNodes: 175 },
+  // New Fet essay: provisional nonempty-content floor, not a measured census.
+  // Record all four cell counts and ratchet to floor(0.9 * min) after first exact-head evidence.
+  { path: "/essays/fet-perepletis-novyi-god", heading: "Зимняя Поэзия Афанасия Фета", minimumNodes: 100 },
   { path: "/essays/simonov-syn-artillerista-realnaya-istoriya", heading: "\u041e\u0433\u043e\u043d\u044c", minimumNodes: 231 },
   { path: "/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive", heading: "\u0411\u0435\u043d\u0438\u0441\u043b\u0430\u0432\u0441\u043a\u0430\u044f", minimumNodes: 241 },
   { path: "/essays/yesenin-kutezhi", heading: "\u0415\u0441\u0435\u043d\u0438\u043d", minimumNodes: 306 },

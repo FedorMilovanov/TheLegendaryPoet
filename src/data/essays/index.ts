@@ -1,4 +1,5 @@
 import type { Essay, EssaySource } from '../../types/essay';
+import { fetNewYearEssay } from './fetNewYearEssay';
 import { yeseninKutezhiVisual } from './yeseninVisual';
 import { yeseninArchiveSources } from './yeseninArchiveSources';
 import { yeseninDuncanFirstMeetingPublished } from './yeseninDuncanFirstMeetingPublished';
@@ -558,6 +559,7 @@ const brikCasePublished = publishEssay(brikCaseVisual, {
 });
 
 export const essays: readonly Essay[] = publishEssayCatalog([
+  publishEssay(fetNewYearEssay),
   simonovSonArtilleristaPublished,
   benislavskayaPublished,
   lermontovRoadPublished,

@@ -20,6 +20,7 @@ import { poets } from '../src/data/library/index';
 import { musicTracks } from '../src/data/library/musicTracks';
 import { essays } from '../src/data/essays/index';
 import { poetConnections } from '../src/data/poetConnections';
+import { poetryCollections } from '../src/data/poetryCollections';
 import type { Poet } from '../src/types/poet';
 
 type Level = 'ERROR' | 'WARN';
@@ -256,6 +257,52 @@ poetConnections.forEach((c, i) => {
   if (!isNonEmptyString(c.label) || !isNonEmptyString(c.note))
     err(where, 'missing label or note');
 });
+
+/* ---- Literary collections ---------------------------------------------- */
+
+// Check the existing source map against the same canonical objects as the
+// reader/library; never compare a generated link only to its own input.
+const normalizedFragment = (text: string) => text.normalize('NFC')
+  .toLocaleLowerCase('ru-RU').replace(/\u0301/gu, '').replace(/ё/gu, 'е')
+  .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+const collectionIds = new Set<string>();
+for (const collection of poetryCollections) {
+  const where = `collection:${collection.id}`;
+  if (!/^[a-z0-9-]+$/.test(collection.id) || collectionIds.has(collection.id))
+    err(where, 'invalid or duplicate collection anchor');
+  collectionIds.add(collection.id);
+  const entryIds = new Set<string>();
+  for (const entry of collection.entries) {
+    const location = `${where}/${entry.id}`;
+    if (!/^[a-z0-9-]+$/.test(entry.id) || entryIds.has(entry.id))
+      err(location, 'invalid or duplicate entry id');
+    entryIds.add(entry.id);
+    const poet = poets.find(p => p.id === entry.poetId);
+    const essay = essays.find(e => e.slug === entry.essaySlug);
+    if (!poet || poet.name !== entry.poetName) err(location, 'poet identity mismatch');
+    if (!essay || essay.poetId !== entry.poetId) err(location, 'essay identity mismatch');
+    const sourceIds = new Set<string>();
+    for (const source of entry.sources) {
+      const at = `${location}/${source.id}`;
+      if (!/^[a-z0-9-]+$/.test(source.id) || sourceIds.has(source.id))
+        err(at, 'invalid or duplicate source id');
+      sourceIds.add(source.id);
+      if (!essay?.blocks.some(b => b.type === 'section' && b.anchor === `literary-fragment-${source.id}`))
+        err(at, 'missing Reader anchor');
+      if (!essay?.sources?.some(s => s.id === source.id && s.url === source.url))
+        err(at, 'source bibliography mismatch');
+      if (source.prose && source.poemId) err(at, 'prose cannot be linked as a poem');
+      if (!source.poemId) continue;
+      const poem = poet?.poems.find(p => p.id === source.poemId);
+      if (!poem) { err(at, 'poem link does not belong to this poet'); continue; }
+      if (poem.sourceUrl !== source.url) err(at, 'linked poem edition differs from source map');
+      const fragment = normalizedFragment(source.fragment);
+      if (!fragment || !(` ${normalizedFragment(poem.text)} `).includes(` ${fragment} `))
+        err(at, 'fragment not found in the linked canonical poem');
+    }
+  }
+}
 
 /* ---- Report ------------------------------------------------------------ */
 

@@ -88,6 +88,14 @@ test.describe('painted contrast', () => {
             await page.waitForTimeout(1200);
           }
 
+          // The collection source map is collapsed on entry. Audit its visible
+          // open state here; the catalog journey covers the closed state and Tab order.
+          if (route.path === '/music') {
+            const details = page.locator('.poetry-collection-sources').first();
+            await expect(details.locator('.poetry-collection-source-list')).toBeHidden();
+            await details.locator('summary').click();
+            await expect(details.locator('.poetry-collection-source-list')).toBeVisible();
+          }
           const { measured, offenders, gradientOffenders, occluded, modal } = await paintedSweep(page);
           // A state that fails to open would otherwise be certified as the page
           // behind it, which is already covered by the same route's own cells.
