@@ -38,9 +38,9 @@ export const poetryCollections: readonly PoetryCollection[] = [
       essaySlug: fetNewYearEssaySlug,
       sources: fetNewYearSources,
       video: {
-        url: 'https://www.youtube.com/watch?v=bHOaewFhw7M',
+        url: 'https://www.youtube.com/watch?v=K9sZYuUnzCk',
         status: 'scheduled',
-        scheduledFor: '2026-11-28T17:00:00+03:00',
+        scheduledFor: '2026-11-27T17:30:00+03:00',
       },
     }],
   },

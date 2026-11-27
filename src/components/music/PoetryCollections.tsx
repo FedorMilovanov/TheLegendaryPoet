@@ -11,72 +11,72 @@ const releaseDateFormatter = new Intl.DateTimeFormat('ru-RU', {
 function CollectionCard({ collection }: { collection: PoetryCollection }) {
   return (
     <article id={collection.id} className="theme-dark-island poetry-collection" aria-labelledby={`${collection.id}-title`}>
-      <div className="poetry-collection-hero">
-        <div className="poetry-collection-intro">
-          <div className="poetry-collection-eyebrow"><span aria-hidden="true" /> Продолжающийся Цикл</div>
-          <h3 id={`${collection.id}-title`} className="font-serif poetry-collection-title">{collection.title}</h3>
+      <div className="poetry-collection-hero grid items-center gap-6 lg:gap-10 lg:grid-cols-2">
+        <div className="poetry-collection-intro min-w-0">
+          <div className="poetry-collection-eyebrow flex items-center gap-2 mb-4 text-xs font-semibold uppercase tracking-widest"><span aria-hidden="true" /> Продолжающийся Цикл</div>
+          <h3 id={`${collection.id}-title`} className="font-serif poetry-collection-title text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4 break-words text-balance">{collection.title}</h3>
           <p>{collection.description}</p>
-          <div className="poetry-collection-actions">
-            <a className="poetry-collection-primary" href={collection.playlistUrl} target="_blank" rel="noopener noreferrer">
+          <div className="poetry-collection-actions flex flex-wrap gap-2 mt-5">
+            <a className="poetry-collection-primary inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold" href={collection.playlistUrl} target="_blank" rel="noopener noreferrer">
               <Music2 size={18} aria-hidden="true" /> Плейлист на YouTube <ExternalLink size={15} aria-hidden="true" />
             </a>
-            <a className="poetry-collection-secondary" href={`#${collection.id}-releases`}>
+            <a className="poetry-collection-secondary inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold" href={`#${collection.id}-releases`}>
               Произведения <ArrowDownRight size={17} aria-hidden="true" />
             </a>
           </div>
         </div>
-        <figure className="poetry-collection-figure">
-          <div className="poetry-collection-image">
+        <figure className="poetry-collection-figure min-w-0 m-0 order-first lg:order-none">
+          <div className="poetry-collection-image relative aspect-video overflow-hidden rounded-2xl border">
             <ResilientImage src={collection.cover} alt={collection.coverAlt} width={1280} height={720} loading="lazy" />
-            <svg className="poetry-collection-ribbon" viewBox="0 0 640 360" preserveAspectRatio="none" aria-hidden="true">
+            <svg className="poetry-collection-ribbon absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 640 360" preserveAspectRatio="none" aria-hidden="true">
               <path d="M-30 320 C160 140 320 440 670 80" fill="none" stroke="currentColor" strokeWidth="1.5" />
               <path d="M-30 334 C150 154 340 430 670 100" fill="none" stroke="currentColor" strokeWidth=".7" opacity=".45" />
             </svg>
           </div>
-          <figcaption>{collection.coverCredit}</figcaption>
+          <figcaption className="text-xs leading-relaxed mt-2">{collection.coverCredit}</figcaption>
         </figure>
       </div>
-      <div id={`${collection.id}-releases`} className="poetry-collection-releases">
-        <div className="poetry-collection-section-heading">
-          <h4 className="font-serif">Произведения Цикла</h4>
+      <div id={`${collection.id}-releases`} className="poetry-collection-releases mt-8 pt-5 border-t">
+        <div className="poetry-collection-section-heading flex flex-wrap justify-between items-center gap-2 mb-4">
+          <h4 className="font-serif text-xl sm:text-2xl font-semibold">Произведения Цикла</h4>
           <span>{collection.entries.length === 1 ? '1 композиция' : `Композиций: ${collection.entries.length}`}</span>
         </div>
         {collection.entries.map((entry, index) => (
-          <div key={entry.id} className="poetry-collection-entry">
-            <div className="poetry-collection-entry-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
-            <div className="poetry-collection-entry-content">
-              <Link to={`/poets/${entry.poetId}`} className="poetry-collection-poet">{entry.poetName} <ArrowRight size={14} aria-hidden="true" /></Link>
-              <h5 className="font-serif">{entry.title}</h5>
+          <div key={entry.id} className="poetry-collection-entry grid gap-3 sm:grid-cols-[3rem_minmax(0,1fr)] rounded-2xl border p-4 sm:p-6">
+            <div className="poetry-collection-entry-number font-serif text-xl sm:text-2xl tabular-nums" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
+            <div className="poetry-collection-entry-content min-w-0">
+              <Link to={`/poets/${entry.poetId}`} className="poetry-collection-poet inline-flex items-center gap-1 text-sm font-semibold">{entry.poetName} <ArrowRight size={14} aria-hidden="true" /></Link>
+              <h5 className="font-serif text-2xl sm:text-3xl font-semibold leading-tight break-words mb-2">{entry.title}</h5>
               {entry.video.status === 'scheduled' && (
-                <p className="poetry-collection-date">Запланированный выпуск: <time dateTime={entry.video.scheduledFor}>{releaseDateFormatter.format(new Date(entry.video.scheduledFor))} МСК</time>. Видео доступно после публикации на YouTube.</p>
+                <p className="poetry-collection-date text-sm leading-relaxed">Запланированный выпуск: <time dateTime={entry.video.scheduledFor}>{releaseDateFormatter.format(new Date(entry.video.scheduledFor))} МСК</time>. Видео доступно после публикации на YouTube.</p>
               )}
-              <div className="poetry-collection-entry-actions">
-                <Link to={`/essays/${entry.essaySlug}`} className="poetry-collection-secondary">
+              <div className="poetry-collection-entry-actions flex flex-wrap gap-2 mt-4">
+                <Link to={`/essays/${entry.essaySlug}`} className="poetry-collection-secondary inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold">
                   <BookOpen size={17} aria-hidden="true" /> История и Смысл <ArrowRight size={16} aria-hidden="true" />
                 </Link>
-                <a className="poetry-collection-secondary" href={entry.video.url} target="_blank" rel="noopener noreferrer">
+                <a className="poetry-collection-secondary inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold" href={entry.video.url} target="_blank" rel="noopener noreferrer">
                   {entry.video.status === 'scheduled' ? 'Видео на YouTube' : 'Смотреть Клип'} <ExternalLink size={15} aria-hidden="true" />
                 </a>
               </div>
-              <details className="poetry-collection-sources">
-                <summary><span>Из Каких Строк Создана Композиция</span><span className="poetry-collection-source-count">{entry.sources.length} источников</span><span className="poetry-collection-chevron" aria-hidden="true">⌄</span></summary>
-                <ol className="poetry-collection-source-list">
+              <details className="poetry-collection-sources mt-5 border-t pt-2">
+                <summary className="flex items-center flex-wrap gap-2 rounded-lg py-2 text-sm font-semibold cursor-pointer"><span>Из Каких Строк Создана Композиция</span><span className="poetry-collection-source-count text-xs font-normal whitespace-nowrap">{entry.sources.length} источников</span><span className="poetry-collection-chevron text-2xl leading-none" aria-hidden="true">⌄</span></summary>
+                <ol className="poetry-collection-source-list grid gap-2 lg:grid-cols-2 list-none mt-2 p-0">
                   {entry.sources.map(source => (
-                    <li key={source.id}>
-                      <Link className="poetry-collection-source-main" to={`/essays/${entry.essaySlug}#literary-fragment-${source.id}`}>
-                        <span className="poetry-collection-source-date">{source.date}</span>
-                        <span className="poetry-collection-source-body">
+                    <li key={source.id} className="min-w-0 flex flex-col rounded-xl border">
+                      <Link className="poetry-collection-source-main grid gap-2 rounded-xl p-3" to={`/essays/${entry.essaySlug}#literary-fragment-${source.id}`}>
+                        <span className="poetry-collection-source-date text-xs tabular-nums">{source.date}</span>
+                        <span className="poetry-collection-source-body min-w-0 grid gap-1 text-sm leading-snug break-words">
                           <span>{source.title}</span>
-                          <span className="poetry-collection-fragment">«{source.fragment}»</span>
+                          <span className="poetry-collection-fragment font-serif italic">«{source.fragment}»</span>
                         </span>
-                        <ArrowRight className="poetry-collection-source-arrow" size={16} aria-hidden="true" />
+                        <ArrowRight className="poetry-collection-source-arrow mt-1" size={16} aria-hidden="true" />
                       </Link>
                       {source.poemId && (
-                        <Link className="poetry-collection-original poetry-collection-library-link" to={`/poets/${entry.poetId}#poem-${source.poemId}`} aria-label={`Читать в библиотеке: ${source.title}`}>
+                        <Link className="poetry-collection-original poetry-collection-library-link flex items-center justify-between gap-2 px-3 py-2 text-xs border-t" to={`/poets/${entry.poetId}#poem-${source.poemId}`} aria-label={`Читать в библиотеке: ${source.title}`}>
                           Читать в Библиотеке <BookOpen size={15} aria-hidden="true" />
                         </Link>
                       )}
-                      <a className="poetry-collection-original" href={source.url} target="_blank" rel="noopener noreferrer" aria-label={`Первоисточник: ${source.title}`}>
+                      <a className="poetry-collection-original flex items-center justify-between gap-2 px-3 py-2 text-xs border-t" href={source.url} target="_blank" rel="noopener noreferrer" aria-label={`Первоисточник: ${source.title}`}>
                         {source.prose ? 'Публикация Письма' : 'Полный Текст в Источнике'} <ExternalLink size={14} aria-hidden="true" />
                       </a>
                     </li>
@@ -95,7 +95,7 @@ export default function PoetryCollections() {
   if (!poetryCollections.length) return null;
   return (
     <section id="poetry-collections" className="poetry-collections mt-16 sm:mt-20" aria-labelledby="poetry-collections-title">
-      <div className="poetry-collections-heading">
+      <div className="poetry-collections-heading flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-6">
         <div>
           <div className="section-label mb-3">Поэзия · Музыка · История</div>
           <h2 id="poetry-collections-title" className="theme-text font-serif text-3xl font-bold sm:text-4xl">Поэтические Коллекции</h2>
@@ -110,10 +110,10 @@ export default function PoetryCollections() {
 export function CollectionReferences({ collections }: { collections: readonly PoetryCollection[] }) {
   if (!collections.length) return null;
   return (
-    <aside className="collection-reference theme-elevated-surface" aria-label="Связанные поэтические коллекции">
-      <div className="collection-reference-label"><Music2 size={17} aria-hidden="true" /> Поэтические Коллекции</div>
+    <aside className="collection-reference theme-elevated-surface rounded-2xl border px-5 py-4 my-5" aria-label="Связанные поэтические коллекции">
+      <div className="collection-reference-label flex items-center gap-2 text-xs font-semibold mb-2"><Music2 size={17} aria-hidden="true" /> Поэтические Коллекции</div>
       {collections.map(collection => (
-        <Link key={collection.id} to={collectionPath(collection.id)} className="collection-reference-link">
+        <Link key={collection.id} to={collectionPath(collection.id)} className="collection-reference-link flex items-center justify-between gap-3 font-semibold leading-snug rounded-md">
           <span>{collection.title}</span><ArrowRight size={19} aria-hidden="true" />
         </Link>
       ))}
