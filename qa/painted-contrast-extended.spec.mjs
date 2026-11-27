@@ -78,6 +78,9 @@ test.describe('canonical owner extension: real painted pixels', () => {
           await expect(page.locator('h1').first()).toContainText(route.heading);
           await page.waitForTimeout(600);
           const { measured, offenders, gradientOffenders, occluded } = await paintedSweep(page);
+          if (route.path === '/essays/fet-perepletis-novyi-god') {
+            console.log('[fet-painted-census] ' + JSON.stringify({ theme, viewport: viewport.label, measured: measured.length, offenders: offenders.length, gradientOffenders: gradientOffenders.length }));
+          }
           expect(measured.length,
             `${route.path}: ${occluded.length} nodes under fixed chrome; route did not render enough ink`)
             .toBeGreaterThan(route.minimumNodes);
