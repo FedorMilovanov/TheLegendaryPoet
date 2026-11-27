@@ -71,6 +71,62 @@ export const supplementaryPoemSearchIndex: readonly SupplementaryPoemSearchEntry
     "year": 1912
   },
   {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-14",
+    "title": "Ночь на Новый год",
+    "year": 1901
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-15",
+    "title": "Старый год уносит сны…",
+    "year": 1901
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-16",
+    "title": "Снежная вязь",
+    "year": 1907
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-17",
+    "title": "Настигнутый метелью",
+    "year": 1907
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-18",
+    "title": "На зов метелей",
+    "year": 1907
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-19",
+    "title": "Голоса",
+    "year": 1907
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-20",
+    "title": "Сквозь винный хрусталь",
+    "year": 1907
+  },
+  {
+    "poetId": "alexander-blok",
+    "poetName": "Александр Блок",
+    "id": "blok-21",
+    "title": "Вот явилась. Заслонила…",
+    "year": 1906
+  },
+  {
     "poetId": "alexander-pushkin",
     "poetName": "Александр Пушкин",
     "id": "pushkin-4",
