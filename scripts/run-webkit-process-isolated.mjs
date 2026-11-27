@@ -11,9 +11,10 @@ const common = [
 const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', 'ratings'];
 
 const suites = [
+  // Get the new museum witness before unrelated long-running suites.
+  { id: 'memory-places', file: 'qa/memory-places.spec.mjs' },
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'poets-status', file: 'qa/poets-status.spec.mjs' },
-  { id: 'memory-places', file: 'qa/memory-places.spec.mjs' },
   { id: 'poem-source-coverage-w83', file: 'qa/poem-source-coverage-w83.spec.mjs' },
   { id: 'poetry-first-editions-w84', file: 'qa/poetry-first-editions-w84.spec.mjs' },
   { id: 'poetry-first-edition-w85', file: 'qa/poetry-first-edition-w85.spec.mjs' },

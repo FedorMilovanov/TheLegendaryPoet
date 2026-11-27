@@ -144,8 +144,8 @@ jobs:
       - name: Verify museum reveal visual evidence
         run: |
           set -euo pipefail
-          for theme in dark light; do
-            file="qa-artifacts/museum-reveal-${theme}-story.png"
+          for witness in dark-story light-story gallery-start gallery-end; do
+            file="qa-artifacts/museum-reveal-${witness}.png"
             if [ ! -s "$file" ]; then
               echo "::error file=$file::Missing museum reveal screenshot: $file"
               exit 1

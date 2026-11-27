@@ -300,7 +300,8 @@ test('memory data is scoped to the current poet and retries without affecting th
 });
 
 // The preview and full photograph use the same source canvas, not two gallery entries.
-test('cutout reveals its documentary original and falls back without a second gallery', async ({ page }) => {
+test('cutout reveals its documentary original and falls back without a second gallery', async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto(base + '/poets/mikhail-lermontov#memory-places', { waitUntil: 'domcontentloaded' });
   const section = page.locator('#memory-places');
   const opener = section.locator('.memory-photo-trigger').nth(1);
@@ -338,16 +339,47 @@ test('cutout reveals its documentary original and falls back without a second ga
   expect(preview[0][3]).toBe(0);
   expect(preview[1][3]).toBe(255);
   expect(preview[2][3]).toBe(255);
-  await opener.click();
+  // Hold only the full photograph: prove the silhouette is painted first,
+  // not merely that the eventual original has the correct source pixels.
+  let releaseOriginal;
+  const gate = new Promise(resolve => { releaseOriginal = resolve; });
+  const holdOriginal = async route => { await gate; await route.continue(); };
+  await page.route('**/figure.webp', holdOriginal);
   const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
   const original = gallery.locator('img');
-  await expect(gallery).toBeVisible();
-  await expect(original).toHaveAttribute('src', /figure\.webp$/);
+  const stage = gallery.locator('.memory-gallery-stage');
+  try {
+    await opener.click();
+    await expect(gallery).toBeVisible();
+    await expect(original).toHaveAttribute('src', /figure\.webp$/);
+    await expect(original).toHaveAttribute('data-image-state', 'loading');
+    await expect(stage).toHaveAttribute('data-reveal', 'true');
+    await expect(original).toHaveCSS('opacity', '0');
+    const layer = await stage.evaluate(node => {
+      const style = getComputedStyle(node, '::before');
+      return { content: style.content, background: style.backgroundImage, position: style.position };
+    });
+    expect(layer.content).not.toBe('none');
+    expect(layer.background).toMatch(/figure-cutout\.webp/);
+    expect(layer.position).toBe('absolute');
+    if (info.project.name === 'chromium-core') {
+      await mkdir('qa-artifacts', { recursive: true });
+      await stage.screenshot({ path: 'qa-artifacts/museum-reveal-gallery-start.png', animations: 'disabled' });
+    }
+  } finally {
+    releaseOriginal();
+  }
   await expect(original).toHaveAttribute('data-image-state', 'loaded');
+  await page.unroute('**/figure.webp', holdOriginal);
   const full = await sample(original);
   expect(full[0][3]).toBe(255);
   expect(full.slice(1)).toEqual(preview.slice(1));
-  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-reveal', 'false');
+  await expect(stage).toHaveAttribute('data-reveal', 'false');
+  await expect(original).toHaveCSS('opacity', '1');
+  expect(await stage.evaluate(node => getComputedStyle(node, '::before').content)).toBe('none');
+  if (info.project.name === 'chromium-core') {
+    await stage.screenshot({ path: 'qa-artifacts/museum-reveal-gallery-end.png', animations: 'disabled' });
+  }
   await page.keyboard.press('Escape');
   await expect(gallery).toHaveCount(0);
   await expect(opener).toBeFocused();
