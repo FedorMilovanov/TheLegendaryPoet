@@ -19,7 +19,7 @@ import PoemPicker from '../components/poet-detail/PoemPicker';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
-import { CollectionReferences } from '../components/music/PoetryCollections';
+import { CollectionReferences } from '../components/music/CollectionReferences';
 import { collectionsForPoet } from '../data/poetryCollections';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';

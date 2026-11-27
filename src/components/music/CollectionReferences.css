@@ -1,0 +1,4 @@
+.collection-reference-link{min-height:44px}
+.collection-reference{border-color:var(--tlp-border,#52627a)}
+.collection-reference-label{color:var(--tlp-text-muted,inherit)}
+.collection-reference-link:hover{text-decoration:underline}

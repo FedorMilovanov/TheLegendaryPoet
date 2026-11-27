@@ -1,25 +1,7 @@
-import { fetNewYearCover, fetNewYearCoverAlt, fetNewYearCoverCredit, fetNewYearEssaySlug, fetNewYearSources, type CollectionSource } from './collections/fetNewYear';
+import { fetNewYearCover, fetNewYearCoverAlt, fetNewYearCoverCredit, fetNewYearEssaySlug, fetNewYearSources } from './collections/fetNewYear';
 
-export interface PoetryCollectionEntry {
-  id: string;
-  poetId: string;
-  poetName: string;
-  title: string;
-  essaySlug: string;
-  sources: readonly CollectionSource[];
-  video: { url: string; status: 'scheduled'; scheduledFor: string } | { url: string; status: 'published'; publishedAt: string };
-}
-
-export interface PoetryCollection {
-  id: string;
-  title: string;
-  description: string;
-  cover: string;
-  coverAlt: string;
-  coverCredit: string;
-  playlistUrl: string;
-  entries: readonly PoetryCollectionEntry[];
-}
+import type { PoetryCollection } from '../types/poetryCollection';
+export type { PoetryCollection, PoetryCollectionEntry } from '../types/poetryCollection';
 
 export const poetryCollections: readonly PoetryCollection[] = [
   {

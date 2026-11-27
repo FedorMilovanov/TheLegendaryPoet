@@ -1,7 +1,7 @@
 import { Suspense, use, useRef } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
-import { CollectionReferences } from '../components/music/PoetryCollections';
+import { CollectionReferences } from '../components/music/CollectionReferences';
 import { collectionsForEssay } from '../data/poetryCollections';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';

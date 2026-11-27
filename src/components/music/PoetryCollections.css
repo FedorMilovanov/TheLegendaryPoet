@@ -24,6 +24,7 @@
 .poetry-collection-releases,#poetry-collections{scroll-margin-top:8rem}
 .poetry-collection :is(.poetry-collection-releases,.poetry-collection-sources,.poetry-collection-entry,.poetry-collection-source-list li,.poetry-collection-original){border-color:var(--line)}
 .poetry-collection-entry{background:#0b1524}
+.poetry-collection-entry+.poetry-collection-entry{margin-block-start:.75rem}
 .poetry-collection-sources summary{list-style:none;min-height:48px}
 .poetry-collection-sources summary::-webkit-details-marker{display:none}
 .poetry-collection-source-count{margin-left:auto}
@@ -32,11 +33,8 @@
 .poetry-collection-source-list li{background:#142137}
 .poetry-collection-source-main{grid-template-columns: minmax(3.2rem,auto) minmax(0,1fr) auto;align-items:start;color:var(--ink);flex:1}
 .poetry-collection-original svg{flex:none}
-.poetry-collection-jump,.collection-reference-link{min-height:44px}
+.poetry-collection-jump{min-height:44px}
 .poetry-collection-jump{display:inline-flex;align-items:center;gap:.5rem;text-decoration:underline}
-.collection-reference{border-color:var(--tlp-border,#52627a)}
-.collection-reference-label{color:var(--tlp-text-muted,inherit)}
-.collection-reference-link:hover{text-decoration:underline}
 @media (hover:hover) and (pointer:fine){.poetry-collection-figure:hover img{transform:scale(1.035)}.poetry-collection-figure:hover .poetry-collection-ribbon{transform:translateY(-3px);opacity:1}}
 @media(max-width:420px){.poetry-collection :is(.poetry-collection-actions,.poetry-collection-entry-actions)>a{width:100%;justify-content:space-between}.poetry-collection-source-count{margin-left:0}.poetry-collection-chevron{margin-left:auto}}
 @media(prefers-reduced-motion:reduce){.poetry-collection :is(img,.poetry-collection-ribbon){transition:none!important;transform:none!important}}

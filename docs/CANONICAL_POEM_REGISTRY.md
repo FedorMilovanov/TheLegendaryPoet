@@ -61,6 +61,9 @@
 | Незнакомка | 1906 | [culture.ru](https://www.culture.ru/poems/284/neznakomka) — A; [slova.org.ru](https://slova.org.ru/blok/neznakomka/) — A; [ilibrary.ru (ПСС в 20 т., «Наука», т. II)](https://ilibrary.ru/text/1737/p.1/index.html) — **A+**; [РВБ (ПСС в 20 т., т. II, прямой текст «Незнакомки»)](https://rvb.ru/20vek/blok/pss20/vol2/text/0443.html) — **A+** |
 | О доблестях, о подвигах, о славе | 1908 | [culture.ru](https://www.culture.ru/poems/2565/o-doblestyakh-o-podvigakh-o-slave) — A; [Викитека](https://ru.wikisource.org/wiki/О_доблестях,_о_подвигах,_о_славе_(Блок)) — A; [ilibrary.ru](https://ilibrary.ru/text/4235/p.1/index.html) — **A+** |
 
+| «Рождество» (`blok-12`), 44 строки | 1906 | [iLibrary, ПССП 1999, т. 4, с. 193–194](https://ilibrary.ru/text/5113/p.1/index.html) — [снимки академического издания](https://djvu.online/jpg1/d/o/Z/doZyyXDXLRrt9/207.webp), [с. 194](https://djvu.online/jpg1/d/o/Z/doZyyXDXLRrt9/208.webp); независимое собрание 1960-х, разночтения описаны в #642 W22. Первая печать «На Рождестве», «Тропинка» 1907 №1, с. 3–4; скан первопечати не принят. |
+| «Сочельник в лесу» (`blok-13`), 24 строки | 1912 | [ПССП 1999, т. 4, с. 206](https://djvu.online/jpg1/d/o/Z/doZyyXDXLRrt9/220.webp) — [издание 1962](https://traumlibrary.ru/book/blok-ss09-03/blok-ss09-03.html), различия регистра и пунктуации в #642 W21. Первая печать «Огоньки» 25.12.1912, с. 3–4; факсимиле первопечати не просмотрено. |
+
 ## Николай Гумилёв
 
 | Стих | Год | Источники сверки |

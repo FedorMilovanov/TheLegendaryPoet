@@ -1,15 +1,6 @@
-/** Literary source map: first occurrence in the authored compilation, not a timecoded transcript. */
-export interface CollectionSource {
-  id: string;
-  title: string;
-  date: string;
-  fragment: string;
-  url: string;
-  prose?: boolean;
-  /** Existing canonical poem card, only after independent textual collation. */
-  poemId?: string;
-}
+import type { CollectionSource } from '../../types/poetryCollection';
 
+/** Literary source map: first occurrence in the authored compilation, not a timecoded transcript. */
 export const fetNewYearSources: readonly CollectionSource[] = [
   { id: 'letter', title: 'Письмо, предположительно к А. А. Григорьеву', date: '1847 (?)', fragment: 'давайте нам жизни и наслаждения', url: 'https://ru.wikisource.org/wiki/Письма_(Фет)', prose: true },
   { id: 'dithyramb', title: 'Дифирамб на Новый год', date: '1840 (?)', fragment: 'Переплетись, Новый год!', url: 'https://imwerden.de/pdf/fet_sobranie_sochinenij_v_20tt_tom01_2002__ocr.pdf#page=324', poemId: 'fet-11' },

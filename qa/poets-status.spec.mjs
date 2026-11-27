@@ -37,10 +37,13 @@ async function assertReachableBeyondDock(entry) {
   }, { message: 'Contents entry must be visible and unobscured by the mobile dock' }).toBe(true);
 }
 
+const BLOK_POEM_IDS = ['blok-1', 'blok-2', 'blok-3', 'blok-4', 'blok-5', 'blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11', 'blok-8', 'blok-12', 'blok-13'];
+const BLOK_LAST_ANCHOR = '#poem-' + BLOK_POEM_IDS.at(-1);
+
 test.describe('poets result status accessibility', () => {
   // Permanent selection must be reachable before the 8–16k px biography
   // and throughout long poem cards, without rewriting canonical fragments.
-  for (const [poetId, total] of [['alexander-pushkin', 10], ['alexander-blok', 11]]) {
+  for (const [poetId, total] of [['alexander-pushkin', 10], ['alexander-blok', BLOK_POEM_IDS.length]]) {
     for (const width of [390, 1440]) {
       test('persistent poem picker ' + poetId + ' at ' + width + 'px', async ({ page }, testInfo) => {
         test.skip(width === 1440 && testInfo.project.name !== 'chromium-core', 'Desktop belongs to Chromium QA');
@@ -478,9 +481,9 @@ test.describe('poets result status accessibility', () => {
           expect(geometry.dockGap, 'Resized menu must clear the measured mobile dock').toBeGreaterThanOrEqual(8);
           expect(geometry.overflow).toBe(false);
           const choices = nav.locator('a[href^="#poem-"]');
-          await expect(choices).toHaveCount(11);
+          await expect(choices).toHaveCount(BLOK_POEM_IDS.length);
           const last = choices.last();
-          await expect(last).toHaveAttribute('href', '#poem-blok-8');
+          await expect(last).toHaveAttribute('href', BLOK_LAST_ANCHOR);
           await page.evaluate(() => document.fonts.ready);
           // Scroll the actual menu before testing the final entry. WebKit's
           // automatic click-scroll waits for stability before issuing a scroll.
@@ -505,9 +508,9 @@ test.describe('poets result status accessibility', () => {
               message: 'Final canonical choice must be visible and hit-testable inside the resized menu',
             }).toBe(true);
             await last.click({ timeout: 10000 });
-            await expect.poll(() => page.evaluate(() => window.location.hash)).toBe('#poem-blok-8');
+            await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(BLOK_LAST_ANCHOR);
             await expect(picker).not.toHaveAttribute('open', '');
-            await expect(page.locator('#poem-blok-8')).toBeVisible();
+            await expect(page.locator(BLOK_LAST_ANCHOR)).toBeVisible();
           } catch (error) {
             const evidence = await readEntry().catch(() => null);
             const path = testInfo.outputPath('resized-picker-' + phase + '.json');
@@ -560,7 +563,7 @@ test.describe('poets result status accessibility', () => {
     await expect(pulse).toBeVisible();
     await expect(pulse.locator('xpath=..')).toContainText(/\d+(?:[.,]\d+)?/);
   });
-  test('Blok contents preserve eleven works and five Kulikovo parts and responsive two-column navigation', async ({ page }, testInfo) => {
+  test('Blok contents preserve the complete corpus and five Kulikovo parts and responsive two-column navigation', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
@@ -568,10 +571,11 @@ test.describe('poets result status accessibility', () => {
 
       const guide = page.getByRole('navigation', { name: 'Навигация по лирике' });
       const cards = page.locator('[id^="poem-blok-"]');
-      await expect(cards).toHaveCount(11);
+      await expect(cards).toHaveCount(BLOK_POEM_IDS.length);
+      expect(await cards.evaluateAll(elements => elements.map(el => el.id))).toEqual(BLOK_POEM_IDS.map(id => 'poem-' + id));
       // Both layers must agree on word indices, including NBSP before the
       // dash in «Скифы»; otherwise hover/focus affects the wrong visual word.
-      for (let i = 0; i < 11; i += 1) {
+      for (let i = 0; i < BLOK_POEM_IDS.length; i += 1) {
         const card = cards.nth(i);
         const canonicalWords = await card.locator('[data-poem-canonical-word]').count();
         expect(canonicalWords, `canonical words in Blok poem ${i + 1}`).toBeGreaterThan(0);
@@ -596,9 +600,10 @@ test.describe('poets result status accessibility', () => {
       await expect(page).toHaveURL(/#blok-contents$/);
 
       const anchors = guide.locator('a[href^="#poem-blok-"]');
-      await expect(anchors).toHaveCount(11);
+      await expect(anchors).toHaveCount(BLOK_POEM_IDS.length);
+      expect(await anchors.evaluateAll(elements => elements.map(el => el.getAttribute('href')))).toEqual(BLOK_POEM_IDS.map(id => '#poem-' + id));
       await expect(guide).toHaveClass(/poet-reading-index/);
-      await expect(guide.locator('ol > li')).toHaveCount(11);
+      await expect(guide.locator('ol > li')).toHaveCount(BLOK_POEM_IDS.length);
       await expect(guide.locator('[data-poem-cycle]')).toHaveCount(10);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
@@ -606,8 +611,13 @@ test.describe('poets result status accessibility', () => {
       await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
-      await expect(anchors.last()).toHaveAttribute('href', '#poem-blok-8');
-      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(11);
+      await expect(anchors.last()).toHaveAttribute('href', BLOK_LAST_ANCHOR);
+      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(BLOK_POEM_IDS.length);
+      for (const [id, lines, url] of [['blok-12', 44, 'https://ilibrary.ru/text/5113/p.1/index.html'], ['blok-13', 24, 'https://djvu.online/jpg1/d/o/Z/doZyyXDXLRrt9/220.webp']]) {
+        const card = page.locator('#poem-' + id);
+        expect((await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim()).length).toBe(lines);
+        await expect(card.getByRole('link', {name: 'Источник текста'})).toHaveAttribute('href', url);
+      }
       await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
       // Literary cycle I–V remains consecutive while only two parts have linked music.
       const kulikovoIds = ['blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11'];
