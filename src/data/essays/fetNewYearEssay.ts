@@ -5,7 +5,7 @@ import { estimateReadTime } from '../../utils/readTime';
 const sources: EssaySource[] = [
   ...fetNewYearSources.map((source): EssaySource => ({
     id: source.id, title: source.prose ? source.title : `А. А. Фет. ${source.title}`, url: source.url,
-    kind: 'primary', institution: source.prose ? 'Фет. Сочинения в двух томах, 1982, т. 2 (Викитека)' : source.id === 'song' ? 'Викитека · Полное собрание стихотворений, 1959, с. 182' : 'Русская виртуальная библиотека · Полное собрание стихотворений, 1959',
+    kind: 'primary', institution: source.prose ? 'Фет. Сочинения в двух томах, 1982, т. 2 (Викитека)' : source.id === 'song' ? 'Русская виртуальная библиотека · Полное собрание стихотворений, 1959, с. 182' : 'Русская виртуальная библиотека · Полное собрание стихотворений, 1959',
     note: source.note,
   })),
   { id: 'grigoriev', title: 'А. А. Григорьев. Другой из многих', url: 'https://ru.wikisource.org/wiki/Другой_из_многих_(Григорьев)', kind: 'primary', institution: 'Московский городской листок, 1847; электронная публикация', note: 'Рассказ в форме переписки, сохранивший письмо Зарницына; примечания объясняют гипотезу атрибуции.' },

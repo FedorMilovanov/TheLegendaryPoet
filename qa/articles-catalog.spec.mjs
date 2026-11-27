@@ -361,6 +361,7 @@ test('Fet collection links the album, source map, reader and poet across respons
   const card = page.locator('#new-year-symphony');
   await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeVisible();
   await expect(card.getByRole('link', { name: 'Плейлист на YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/playlist?list=PLZH4xU7Qrx5k');
+  await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeInViewport();
   await card.scrollIntoViewIfNeeded();
   await expect(card.locator('img')).toHaveAttribute('data-image-state', 'loaded');
   const sourceDetails = card.locator('details');
@@ -397,12 +398,19 @@ test('Fet collection links the album, source map, reader and poet across respons
   await expect(page.getByRole('heading', {level: 1, name: /Зимняя Поэзия Афанасия Фета/i})).toBeVisible();
   await expect(page.locator('#literary-fragment-dithyramb')).toHaveCount(1);
   await expect(page.locator('#literary-fragment-dithyramb')).toContainText('Дифирамб на Новый год');
+  await expect(page.locator('#literary-fragment-dithyramb')).toBeInViewport();
   await expect(page.locator('#source-dithyramb')).toHaveCount(1);
   const fragmentIds = await page.locator('[id^="literary-fragment-"]').evaluateAll(elements => elements.map(el => el.id));
   expect(fragmentIds).toHaveLength(9);
   expect(new Set(fragmentIds).size).toBe(9);
   await expect(page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' })).toHaveAttribute('href', '/music#new-year-symphony');
-  await page.goto(`${BASE_URL}/poets/afanasy-fet`, { waitUntil: 'domcontentloaded' });
+  await page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' }).click();
+  await expect(page).toHaveURL(/\/music#new-year-symphony$/);
+  await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeInViewport();
+  await summary.click();
+  await card.getByRole('link', {name: 'Читать в библиотеке: Певице'}).click();
+  await expect(page).toHaveURL(/\/poets\/afanasy-fet#poem-fet-4$/);
+  await expect(page.locator('#poem-fet-4')).toBeInViewport();
   await expect(page.getByRole('link', { name: /Зимняя Поэзия Афанасия Фета/i })).toHaveAttribute('href', '/essays/fet-perepletis-novyi-god');
   await expect(page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' })).toHaveAttribute('href', '/music#new-year-symphony');
   expect(errors).toEqual([]);
