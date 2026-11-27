@@ -1,3 +1,5 @@
+import { crc32 } from 'node:zlib';
+
 // Container and intrinsic-size reading for the raster formats the site ships.
 //
 // Everything here reads bytes only: no decoder, no native tool, no dependency.
@@ -48,8 +50,30 @@ export function assertWebPContainer(bytes) {
 }
 
 function pngSize(bytes) {
-  if (bytes.toString('ascii', 12, 16) !== 'IHDR') throw new Error('PNG IHDR is not the first chunk');
-  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+  let width, height;
+  for (let offset = 8; offset < bytes.length;) {
+    if (bytes.length - offset < 12) throw new Error('truncated PNG chunk header');
+    const length = bytes.readUInt32BE(offset);
+    const tag = bytes.toString('ascii', offset + 4, offset + 8);
+    const end = offset + 8 + length;
+    if (end + 4 > bytes.length) throw new Error(`truncated PNG ${tag} payload`);
+    if (offset === 8) {
+      if (tag !== 'IHDR' || length !== 13) throw new Error('PNG requires a 13-byte IHDR first');
+      width = bytes.readUInt32BE(offset + 8);
+      height = bytes.readUInt32BE(offset + 12);
+    } else if (tag === 'IHDR') {
+      throw new Error('duplicate PNG IHDR');
+    }
+    if (crc32(bytes.subarray(offset + 4, end)) !== bytes.readUInt32BE(end)) {
+      throw new Error(`PNG ${tag} CRC mismatch`);
+    }
+    if (tag === 'IEND') {
+      if (length !== 0 || end + 4 !== bytes.length) throw new Error('invalid PNG final IEND');
+      return { width, height };
+    }
+    offset = end + 4;
+  }
+  throw new Error('PNG missing final IEND');
 }
 
 function jpegSize(bytes) {

@@ -144,3 +144,23 @@ test('complete standalone GIF and JPEG retain their terminal markers', () => {
     }
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('PNG chunks retain their CRC and a complete terminal IEND', () => {
+  // Native FFmpeg can decode these CRC-only mutations without diagnostics.
+  const fixture = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABAAAAAKCAYAAAC9vt6cAAAADnRFWHRzb3VyY2UAZml4dHVyZSrejbQAAAAZSURBVHicY9So2PefgQLARInmUQNGDYABABUcAnF/LD4WAAAAAElFTkSuQmCC', 'base64');
+  assert.deepEqual(readIntrinsicSize(fixture, '.png'), { width: 16, height: 10 });
+  for (let offset = 8; offset < fixture.length;) {
+    const end = offset + 8 + fixture.readUInt32BE(offset);
+    const tag = fixture.toString('ascii', offset + 4, offset + 8);
+    const broken = Buffer.from(fixture);
+    broken[end] ^= 1;
+    assert.throws(() => readIntrinsicSize(broken, '.png'), new RegExp(`PNG ${tag} CRC mismatch`));
+    offset = end + 4;
+  }
+  assert.throws(() => readIntrinsicSize(fixture.subarray(0, -12)), /missing final IEND/);
+  assert.throws(() => readIntrinsicSize(fixture.subarray(0, -1)), /truncated PNG/);
+  assert.throws(() => readIntrinsicSize(Buffer.concat([fixture, Buffer.from('extra')])), /invalid PNG final IEND/);
+  const oversized = Buffer.from(fixture);
+  oversized.writeUInt32BE(0xffffffff, 33);
+  assert.throws(() => readIntrinsicSize(oversized), /truncated PNG/);
+});
