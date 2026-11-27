@@ -391,7 +391,13 @@ test('Fet collection links the album, source map, reader and poet across respons
   await expect(card.getByRole('link', {name: 'Читать в библиотеке: Певице'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-4');
   await expect(card.getByRole('link', {name: 'Читать в библиотеке: Скрип шагов вдоль улиц белых…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-5');
   await expect(card.getByRole('link', {name: 'Читать в библиотеке: Благовонная ночь, благодатная ночь…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-6');
-  await expect(card.getByRole('link', {name: 'Первоисточник: Дифирамб на Новый год'})).toHaveAttribute('href', 'https://rvb.ru/19vek/fet/bp/text/537.html');
+  await expect(card.locator('.poetry-collection-library-link')).toHaveCount(8);
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: На двойном стекле узоры…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-7');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Сегодня все звезды так пышно…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-8');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Если зимнее небо звезда́ми горит…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-9');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: В руке с тамбурином, в глазах с упоеньем…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-10');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Дифирамб на Новый год'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-11');
+  await expect(card.getByRole('link', {name: 'Первоисточник: Дифирамб на Новый год'})).toHaveAttribute('href', 'https://imwerden.de/pdf/fet_sobranie_sochinenij_v_20tt_tom01_2002__ocr.pdf#page=324');
   await expect(card.locator('.poetry-collection-source-list li').first()).toBeVisible();
   const bounds = await card.evaluate(el => ({ width: el.scrollWidth, client: el.clientWidth, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
   expect(bounds.width - bounds.client).toBeLessThanOrEqual(1);
