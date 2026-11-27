@@ -7,7 +7,7 @@ export interface PoetryCollectionEntry {
   title: string;
   essaySlug: string;
   sources: readonly CollectionSource[];
-  video: { url: string; status: 'scheduled'; scheduledFor: string } | { url: string; status: 'published' };
+  video: { url: string; status: 'scheduled'; scheduledFor: string } | { url: string; status: 'published'; publishedAt: string };
 }
 
 export interface PoetryCollection {
@@ -39,8 +39,8 @@ export const poetryCollections: readonly PoetryCollection[] = [
       sources: fetNewYearSources,
       video: {
         url: 'https://www.youtube.com/watch?v=K9sZYuUnzCk',
-        status: 'scheduled',
-        scheduledFor: '2026-11-27T17:30:00+03:00',
+        status: 'published',
+        publishedAt: '2026-11-27T17:30:27+03:00',
       },
     }],
   },

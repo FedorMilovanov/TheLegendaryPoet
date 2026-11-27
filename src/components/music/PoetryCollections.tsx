@@ -47,9 +47,7 @@ function CollectionCard({ collection }: { collection: PoetryCollection }) {
             <div className="poetry-collection-entry-content min-w-0">
               <Link to={`/poets/${entry.poetId}`} className="poetry-collection-poet inline-flex items-center gap-1 text-sm font-semibold">{entry.poetName} <ArrowRight size={14} aria-hidden="true" /></Link>
               <h5 className="font-serif text-2xl sm:text-3xl font-semibold leading-tight break-words mb-2">{entry.title}</h5>
-              {entry.video.status === 'scheduled' && (
-                <p className="poetry-collection-date text-sm leading-relaxed">Запланированный выпуск: <time dateTime={entry.video.scheduledFor}>{releaseDateFormatter.format(new Date(entry.video.scheduledFor))} МСК</time>. Видео доступно после публикации на YouTube.</p>
-              )}
+              <p className="poetry-collection-date text-sm leading-relaxed">{entry.video.status === 'scheduled' ? 'Запланированный выпуск: ' : 'Опубликовано: '}<time dateTime={entry.video.status === 'scheduled' ? entry.video.scheduledFor : entry.video.publishedAt}>{releaseDateFormatter.format(new Date(entry.video.status === 'scheduled' ? entry.video.scheduledFor : entry.video.publishedAt))} МСК</time>{entry.video.status === 'scheduled' ? '. Видео доступно после публикации на YouTube.' : '.'}</p>
               <div className="poetry-collection-entry-actions flex flex-wrap gap-2 mt-4">
                 <Link to={`/essays/${entry.essaySlug}`} className="poetry-collection-secondary inline-flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold">
                   <BookOpen size={17} aria-hidden="true" /> История и Смысл <ArrowRight size={16} aria-hidden="true" />

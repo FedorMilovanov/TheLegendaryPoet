@@ -361,8 +361,10 @@ test('Fet collection links the album, source map, reader and poet across respons
   const card = page.locator('#new-year-symphony');
   await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeVisible();
   await expect(card.getByRole('link', { name: 'Плейлист на YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/playlist?list=PLZH4xU7Qrx5k');
-  await expect(card.getByRole('link', { name: 'Видео на YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=K9sZYuUnzCk');
-  await expect(card.locator('time')).toHaveAttribute('datetime', '2026-11-27T17:30:00+03:00');
+  await expect(card.getByRole('link', { name: 'Смотреть Клип' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=K9sZYuUnzCk');
+  await expect(card.locator('time')).toHaveAttribute('datetime', '2026-11-27T17:30:27+03:00');
+  await expect(card.locator('.poetry-collection-date')).toContainText('Опубликовано:');
+  await expect(card.locator('.poetry-collection-date')).not.toContainText('Запланированный выпуск');
   await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeInViewport();
   await card.scrollIntoViewIfNeeded();
   await expect(card.locator('img')).toHaveAttribute('data-image-state', 'loaded');
