@@ -9,6 +9,14 @@ const compiled = ts.transpileModule(source, { compilerOptions: {
   module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX,
 } }).outputText;
 
+// Load the real shared fragment decoder; only pause ownership is stubbed.
+const utilitySource = readFileSync(new URL('../../src/utils/smoothScroll.ts', import.meta.url), 'utf8');
+const utilityCompiled = ts.transpileModule(utilitySource, { compilerOptions: {
+  module: ts.ModuleKind.CommonJS,
+} }).outputText;
+const scrollUtilities = {};
+vm.runInNewContext(utilityCompiled, { exports: scrollUtilities });
+
 // Execute the actual coordinator, retaining hook refs/effect cleanup and an
 // explicitly delayed animation frame. No browser timing or source-string check.
 function coordinator() {
@@ -50,7 +58,7 @@ function coordinator() {
         useEffect: registerEffect,
         useLayoutEffect: registerEffect,
       };
-      if (name.endsWith('/smoothScroll')) return { isSmoothScrollPaused: () => paused };
+      if (name.endsWith('/smoothScroll')) return { ...scrollUtilities, isSmoothScrollPaused: () => paused };
       if (name === 'react-router') return { useLocation: () => location, useNavigationType: () => navigation };
       if (name === 'react/jsx-runtime') return { Fragment: 'fragment', jsx: (_type, props) => props.children };
       if (name.endsWith('/focusRuntime')) return { scheduleProgrammaticFocus: () => { focusRequests++; return () => { focusCancels++; }; } };
@@ -103,6 +111,23 @@ test('initial hash still scrolls to its target with header clearance', () => {
   const app = coordinator();
   app.render({ key: 'first', pathname: '/essay', hash: '#target' }, 'POP'); app.frame();
   assert.equal(app.window.scrollY, 204);
+});
+
+test('encoded and malformed fragments use the real shared decoder', () => {
+  const valid = coordinator();
+  valid.render({ key: 'encoded', pathname: '/essay', hash: '#t%61rget' }, 'POP');
+  valid.frame();
+  assert.equal(valid.window.scrollY, 204);
+
+  for (const hash of ['#source-%', '#source-%E0%A4%A', '#source-%FF']) {
+    const invalid = coordinator();
+    invalid.render({ key: 'malformed', pathname: '/essay', hash }, 'POP');
+    assert.doesNotThrow(() => invalid.frame());
+    assert.deepEqual(invalid.calls, []);
+    assert.equal(invalid.focusStats().focusRequests, 0);
+    invalid.expireTimers();
+    assert.equal(invalid.hasObserver(), false);
+  }
 });
 
 test('same-path hash transition requests the universal chrome reveal event', () => {
@@ -297,8 +322,7 @@ test('expired POP cannot be restored by a late overlay release', () => {
 });
 
 test('only the last nested pause owner emits a resume event; release is idempotent', () => {
-  const pauseSource = readFileSync(new URL('../../src/utils/smoothScroll.ts', import.meta.url), 'utf8');
-  const code = ts.transpileModule(pauseSource, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const code = utilityCompiled;
   const exports = {}, events = [];
   vm.runInNewContext(code, {
     exports, Event: class { constructor(type) { this.type = type; } },
