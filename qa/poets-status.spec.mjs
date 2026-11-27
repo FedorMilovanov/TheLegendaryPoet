@@ -477,11 +477,44 @@ test.describe('poets result status accessibility', () => {
           expect(geometry.belowHeader, 'Resized picker must clear the fixed header').toBe(true);
           expect(geometry.dockGap, 'Resized menu must clear the measured mobile dock').toBeGreaterThanOrEqual(8);
           expect(geometry.overflow).toBe(false);
-          const last = nav.locator('a[href^="#poem-"]').last();
-          const hash = await last.getAttribute('href');
-          await last.click();
-          await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(hash);
-          await expect(picker).not.toHaveAttribute('open', '');
+          const choices = nav.locator('a[href^="#poem-"]');
+          await expect(choices).toHaveCount(11);
+          const last = choices.last();
+          await expect(last).toHaveAttribute('href', '#poem-blok-8');
+          await page.evaluate(() => document.fonts.ready);
+          // Scroll the actual menu before testing the final entry. WebKit's
+          // automatic click-scroll waits for stability before issuing a scroll.
+          await last.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+          const readEntry = () => last.evaluate(node => {
+            const link = node.getBoundingClientRect();
+            const menu = node.closest('nav')?.getBoundingClientRect();
+            const x = link.left + link.width / 2;
+            const y = link.top + link.height / 2;
+            const hit = document.elementFromPoint(x, y);
+            return {
+              link: { top: link.top, bottom: link.bottom, left: link.left, right: link.right },
+              menu: menu ? { top: menu.top, bottom: menu.bottom, left: menu.left, right: menu.right } : null,
+              viewport: { width: innerWidth, height: innerHeight },
+              reachable: Boolean(menu && link.width > 0 && link.height > 0 &&
+                y >= menu.top && y <= menu.bottom && x >= menu.left && x <= menu.right &&
+                hit && node.contains(hit)),
+            };
+          });
+          try {
+            await expect.poll(async () => (await readEntry()).reachable, {
+              message: 'Final canonical choice must be visible and hit-testable inside the resized menu',
+            }).toBe(true);
+            await last.click({ timeout: 10000 });
+            await expect.poll(() => page.evaluate(() => window.location.hash)).toBe('#poem-blok-8');
+            await expect(picker).not.toHaveAttribute('open', '');
+            await expect(page.locator('#poem-blok-8')).toBeVisible();
+          } catch (error) {
+            const evidence = await readEntry().catch(() => null);
+            const path = testInfo.outputPath('resized-picker-' + phase + '.json');
+            writeFileSync(path, JSON.stringify({ phase, scale, viewport, url: page.url(), evidence }, null, 2));
+            await testInfo.attach('resized-picker-' + phase, { path, contentType: 'application/json' });
+            throw error;
+          }
         }
       });
     }
