@@ -1,12 +1,12 @@
 import type { Essay, EssayBlock, EssaySource } from '../../types/essay';
-import { fetNewYearCover, fetNewYearCoverAlt, fetNewYearCoverCredit, fetNewYearEssaySlug, fetNewYearSources } from '../collections/fetNewYear';
+import { fetNewYearCover, fetNewYearCoverAlt, fetNewYearCoverCredit, fetNewYearEssaySlug, fetNewYearSources, fetNewYearSourceEditorial } from '../collections/fetNewYear';
 import { estimateReadTime } from '../../utils/readTime';
 
 const sources: EssaySource[] = [
   ...fetNewYearSources.map((source): EssaySource => ({
     id: source.id, title: source.prose ? source.title : `А. А. Фет. ${source.title}`, url: source.url,
-    kind: 'primary', institution: source.institution,
-    note: source.note,
+    kind: 'primary', institution: fetNewYearSourceEditorial[source.id].institution,
+    note: fetNewYearSourceEditorial[source.id].note,
   })),
   { id: 'grigoriev', title: 'А. А. Григорьев. Другой из многих', url: 'https://ru.wikisource.org/wiki/Другой_из_многих_(Григорьев)', kind: 'primary', institution: 'Московский городской листок, 1847; электронная публикация', note: 'Рассказ в форме переписки, сохранивший письмо Зарницына; примечания объясняют гипотезу атрибуции.' },
   { id: 'bibliography', title: 'А. А. Фет. Полное собрание стихотворений. Л., 1959', url: 'https://rvb.ru/19vek/fet/bp/toc.html', kind: 'research', institution: 'РВБ; издание под редакцией Б. Я. Бухштаба', note: 'Оглавление и навигация к текстам и академическим комментариям.' },
@@ -26,7 +26,7 @@ const sources: EssaySource[] = [
 ];
 
 const blocks: EssayBlock[] = [
-  { type: 'epigraph', text: 'Переплетись, новый год!', cite: 'А. А. Фет. «Дифирамб на Новый год» (1840)' },
+  { type: 'epigraph', text: 'Переплетись, Новый год!', cite: 'А. А. Фет. «Дифирамб на Новый год» (1840)' },
   { type: 'lead', text: 'В морозной темноте слышны шаги, на стенах сверкает лёд, над городом разгораются звёзды. Затем возникает светлое движение рук и лент, а за танцем — тишина комнаты и тепло горящих дров. «Переплетись, Новый Год!» — название современной музыкальной композиции The Legendary Poet, а не отдельного стихотворения Фета. Её литературная основа соединяет восемь стихотворений и одну прозаическую фразу, от ранних опытов 1840-х до поздней лирики 1880-х. Это путешествие по поэтическому миру, где радость не исключает печали, а музыка связывает разнесённые во времени впечатления.', sourceIds: ['dithyramb', 'snow', 'hearth', 'letter', 'stars', 'gold'] },
   { type: 'section', heading: 'Забытый дифирамб', anchor: 'dithyramb-history' },
   { type: 'paragraph', text: 'В 1840 году в Москве появился «Лирический пантеон» — первый сборник молодого Фета. К тому же году академическое издание относит «Дифирамб на Новый год». Однако совпадение дат не означает, что стихотворение входило в этот сборник. В оглавлении издания 1959 года дифирамб помещён среди лирических стихотворений, отдельно от первого сборника. Комментарий собрания 2002 года (с. 490) уточняет источник: письмо Фета к И. И. Введенскому от 28 ноября 1840 года, хранящееся в ИРЛИ, и первую публикацию в книге Георгия Блока «Рождение поэта» (1924, с. 65–66). В библиотечной карточке воспроизведён полный текст по скану 2002 года (с. 322). Сам автограф и страницы книги 1924 года непосредственно не просмотрены.', sourceIds: ['pantheon', 'bibliography', 'dithyramb', 'birth', 'edition2002'] },
@@ -50,7 +50,7 @@ const blocks: EssayBlock[] = [
   { type: 'paragraph', text: 'Ниже — девять источников по порядку первого появления их фрагментов в авторском тексте композиции. Это не партитура и не покадровая расшифровка финального клипа. Цитаты передают опознаваемые начала или характерные строки в орфографии источников; полный текст и редакция доступны по ссылкам в библиографии. Вступительная прозаическая фраза отделена от восьми стихотворений. Повторы и музыкальное расположение строк принадлежат современной обработке.' },
   ...fetNewYearSources.flatMap((source): EssayBlock[] => [
     { type: 'section', heading: `${source.title} · ${source.date}`, anchor: `literary-fragment-${source.id}` },
-    { type: 'paragraph', text: `«${source.fragment}». ${source.note}`, sourceIds: [source.id] },
+    { type: 'paragraph', text: `«${source.fragment}». ${fetNewYearSourceEditorial[source.id].note}`, sourceIds: [source.id] },
   ]),
   { type: 'section', heading: 'Бал как Современный Образ', anchor: 'ball' },
   { type: 'paragraph', text: 'Дворцовый зал, танец, люстры, праздничная ёлка и синяя лента в клипе образуют воображаемую сцену. Мы не связываем её с конкретным дворцом, реальным балом или документированным присутствием Фета. Исторический облик служит интерпретации поэзии. Важно и различие между зимними образами, рождественским праздником и Новым годом: далеко не все восемь стихотворений написаны о календарном торжестве. Новогоднюю тему задаёт дифирамб и выбранная композиционная связь.' , sourceIds: ['dithyramb', 'gold', 'dance'] },
