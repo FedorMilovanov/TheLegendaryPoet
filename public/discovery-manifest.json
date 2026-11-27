@@ -122,7 +122,7 @@
       "routeId": "home",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "956dcb65c454520bdae57493bad76c92647455703e197c24049c138130344d1c"
+      "fingerprint": "423618c4207beb8cf30ce1ca82e866c13f29642d24b91db780c028cc4d1acb5e"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/",
@@ -130,7 +130,7 @@
       "routeId": "poets",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "1fca2cc8655259dfc37ac3501e76b69bb41a48407dc3cc8d8025565d5626058b"
+      "fingerprint": "89d1628368beda11d6898e968337e5fbdcc75b13312b16d66da12ec8b89f6bc2"
     },
     {
       "url": "https://thelegendarypoet.ru/ratings/",
@@ -138,7 +138,7 @@
       "routeId": "ratings",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "a21e5f1d9350291483b7451ab92ee0808c2a2efccec3f46244b5105769d6bcb8"
+      "fingerprint": "d0bbe4076fa6dab3e052c28b21e19b0a322e12e1376d1297e1f5b8cc0889aaf6"
     },
     {
       "url": "https://thelegendarypoet.ru/articles/",
@@ -146,7 +146,7 @@
       "routeId": "articles",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "1f278336723ead313ca31fe93fb0ad24d272f3478c9e0da1eb8705a51953003e"
+      "fingerprint": "91bdab752c922c5c11c898cced141939c3b907571c5647dd07968f23c6db6f71"
     },
     {
       "url": "https://thelegendarypoet.ru/music/",
@@ -154,7 +154,7 @@
       "routeId": "music",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4c2e970672ab7b28ccf95f2f187664ed57cfea63564058fcff0d788b83ee15ab"
+      "fingerprint": "29fe56eab904c906a895014775b3c7b66a99ed0aff83ba0bcbc454ff7e2ff5f4"
     },
     {
       "url": "https://thelegendarypoet.ru/about/",
@@ -186,7 +186,7 @@
       "routeId": "essay",
       "state": "ready",
       "lastmod": "2026-11-27",
-      "fingerprint": "cc32a1e0d345f0e60e7c3574ac6e9ec54401e476052205a1d60d689081f64230"
+      "fingerprint": "7a4791f1c8b56ff2347d35aff6894b7c1f4d9e16f2724e777951cc84045884de"
     },
     {
       "url": "https://thelegendarypoet.ru/essays/simonov-syn-artillerista-realnaya-istoriya/",
@@ -410,7 +410,7 @@
       "routeId": "poet-detail",
       "state": "ready",
       "lastmod": null,
-      "fingerprint": "4b6ee6034536ec637077df3157cf839d7b321728f1fd49495a67fa2baf33f6c2"
+      "fingerprint": "b16c01e5ff6da67e5cf1554e85be5d3b7a6ad23d8691bbbb6d63c40d6a6f6806"
     },
     {
       "url": "https://thelegendarypoet.ru/poets/nikolay-gumilev/",

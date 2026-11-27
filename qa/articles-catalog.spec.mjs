@@ -387,6 +387,8 @@ test('Fet collection links the album, source map, reader and poet across respons
   await expect(card.locator('.poetry-collection-source-list li')).toHaveCount(9);
   await expect(card.locator('a.poetry-collection-original[target="_blank"]')).toHaveCount(9);
   await expect(card.getByRole('link', {name: 'Читать в библиотеке: Певице'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-4');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Скрип шагов вдоль улиц белых…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-5');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Благовонная ночь, благодатная ночь…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-6');
   await expect(card.getByRole('link', {name: 'Первоисточник: Дифирамб на Новый год'})).toHaveAttribute('href', 'https://rvb.ru/19vek/fet/bp/text/537.html');
   await expect(card.locator('.poetry-collection-source-list li').first()).toBeVisible();
   const bounds = await card.evaluate(el => ({ width: el.scrollWidth, client: el.clientWidth, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth }));

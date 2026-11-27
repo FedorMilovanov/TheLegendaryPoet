@@ -18,7 +18,9 @@ const editions = {
     ['fet-1', 'https://rvb.ru/19vek/fet/bp/text/221.html', false],
     ['fet-2', 'https://rvb.ru/19vek/fet/bp/text/285.html', false],
     ['fet-3', 'https://rvb.ru/19vek/fet/bp/text/174.html', false],
-    ['fet-4', 'https://ru.wikisource.org/wiki/Певице_(Фет)', false],
+    ['fet-4', 'https://rvb.ru/19vek/fet/bp/text/168.html', false],
+    ['fet-5', 'https://rvb.ru/19vek/fet/bp/text/129.html', false],
+    ['fet-6', 'https://ru.wikisource.org/wiki/Страница:Полное_собрание_стихотворений_А._А._Фета._Т._1_(1901).djvu/534', false],
   ],
   'nikolay-gumilev': [
     ['gumilev-1', 'https://ru.wikisource.org/wiki/Жираф_(Гумилёв)', false],
