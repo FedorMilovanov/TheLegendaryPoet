@@ -1,5 +1,10 @@
 # ARENA_PROJECT_PROTOCOL.md
 
+This document governs website/code work in Arena. For media work in ChatGPT or LM Arena,
+use [ARENA AGENT — Images](suno/clips/ARENA_AGENT_IMAGES.md) or
+[ARENA AGENT — Video](suno/clips/ARENA_AGENT_VIDEO.md). Website build requirements below
+are not prerequisites for prompt-only or media-editing tasks.
+
 ## Arena Rules For This Project
 
 - Do not treat `150 lines` or `12 KB` as hard architecture laws. They are transfer/readability safeguards for LM Arena, not design rules.
