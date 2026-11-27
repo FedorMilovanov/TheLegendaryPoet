@@ -37,7 +37,7 @@ async function assertReachableBeyondDock(entry) {
   }, { message: 'Contents entry must be visible and unobscured by the mobile dock' }).toBe(true);
 }
 
-const BLOK_POEM_IDS = ['blok-1', 'blok-2', 'blok-3', 'blok-4', 'blok-5', 'blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11', 'blok-8', 'blok-12', 'blok-13'];
+const BLOK_POEM_IDS = ['blok-1', 'blok-2', 'blok-3', 'blok-4', 'blok-5', 'blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11', 'blok-8', 'blok-12', 'blok-13', 'blok-14', 'blok-15', 'blok-16', 'blok-17', 'blok-18', 'blok-19', 'blok-20', 'blok-21'];
 const BLOK_LAST_ANCHOR = '#poem-' + BLOK_POEM_IDS.at(-1);
 
 test.describe('poets result status accessibility', () => {
@@ -604,7 +604,7 @@ test.describe('poets result status accessibility', () => {
       expect(await anchors.evaluateAll(elements => elements.map(el => el.getAttribute('href')))).toEqual(BLOK_POEM_IDS.map(id => '#poem-' + id));
       await expect(guide).toHaveClass(/poet-reading-index/);
       await expect(guide.locator('ol > li')).toHaveCount(BLOK_POEM_IDS.length);
-      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(10);
+      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(18);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
       if (width === 390) await expect(guide.locator('[data-poem-cycle]').first()).toBeVisible();
@@ -613,9 +613,15 @@ test.describe('poets result status accessibility', () => {
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
       await expect(anchors.last()).toHaveAttribute('href', BLOK_LAST_ANCHOR);
       await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(BLOK_POEM_IDS.length);
-      for (const [id, lines, url] of [['blok-12', 44, 'https://ilibrary.ru/text/5113/p.1/index.html'], ['blok-13', 24, 'https://djvu.online/jpg1/d/o/Z/doZyyXDXLRrt9/220.webp']]) {
+      for (const [id, lines, url] of [['blok-12', 44, 'https://ilibrary.ru/text/5113/p.1/index.html'], ['blok-13', 24, 'https://djvu.online/jpg1/d/o/Z/doZyyXDXLRrt9/220.webp'], ['blok-14', 28, 'https://ilibrary.ru/text/1995/p.1/index.html'], ['blok-15', 16, 'https://www.culture.ru/poems/2875/staryi-god-unosit-sny'], ['blok-16', 32, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0460.html'], ['blok-17', 46, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0464.html'], ['blok-18', 27, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0465.html'], ['blok-19', 46, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0473.html'], ['blok-20', 15, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0477.html'], ['blok-21', 28, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0489.html']]) {
         const card = page.locator('#poem-' + id);
-        expect((await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim()).length).toBe(lines);
+        const canonicalText = (await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim());
+        if (id === 'blok-19') {
+          expect(canonicalText.filter(line => /^(Он|Она)$/.test(line.trim()))).toHaveLength(11);
+          expect(canonicalText.filter(line => /^\(.*\)$/.test(line.trim()))).toHaveLength(2);
+          expect(canonicalText.filter(line => !/^(Он|Она|\(.*\))$/.test(line.trim()))).toHaveLength(lines);
+          await expect(card.locator('[data-poem-canonical]')).toContainText('ветер встречный!');
+        } else expect(canonicalText).toHaveLength(lines);
         await expect(card.getByRole('link', {name: 'Источник текста'})).toHaveAttribute('href', url);
       }
       await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
