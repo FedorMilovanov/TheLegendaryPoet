@@ -232,22 +232,35 @@ test('one-photo gallery does not render meaningless navigation and handles missi
 test('memory data is scoped to the current poet and retries without affecting the biography', async ({ page }) => {
   const requests = [];
   const endpoint = /\/data\/memory-places\/[^/?]+\.json/;
-  let fail = true;
+  let failure = 'http';
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
   await page.route(endpoint, async route => {
     const url = new URL(route.request().url());
     requests.push(url.pathname);
-    if (fail) await route.fulfill({ status: 503, body: 'unavailable' });
+    if (failure === 'http') await route.fulfill({ status: 503, body: 'unavailable' });
+    else if (failure === 'payload') await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{ poetId: 'mikhail-lermontov', id: 'broken-place', title: 'Broken', location: 'Place', date: 'Date', intro: 'Intro', photos: [null], facts: [null], timeline: [null], sources: [null] }]),
+    });
     else await route.continue();
   });
   await page.goto(base + '/poets/mikhail-lermontov', { waitUntil: 'domcontentloaded' });
   const section = page.locator('#memory-places');
   await expect(section.getByRole('button', { name: 'Повторить' })).toBeVisible();
   await expect(page.locator('h1')).toBeVisible();
-  fail = false;
+  failure = 'payload';
+  await section.getByRole('button', { name: 'Повторить' }).click();
+  await expect(section.getByRole('button', { name: 'Повторить' })).toBeVisible();
+  await expect(section.locator('article')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 2, name: /Полная Биография/i })).toBeVisible();
+  failure = 'none';
   await section.getByRole('button', { name: 'Повторить' }).click();
   await expect(section.locator('article')).toHaveCount(1);
   await expect(section.locator('figure:has(img)')).toHaveCount(3);
-  expect(requests.length).toBeGreaterThanOrEqual(2);
+  expect(errors).toEqual([]);
+  expect(requests.length).toBeGreaterThanOrEqual(3);
   expect(requests.every(path => path.endsWith('/mikhail-lermontov.json'))).toBe(true);
   requests.length = 0;
   await page.goto(base + '/poets', { waitUntil: 'networkidle' });
