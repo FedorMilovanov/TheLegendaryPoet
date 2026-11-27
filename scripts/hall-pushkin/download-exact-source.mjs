@@ -10,6 +10,37 @@ const ACCEPTED_FILES = new Set(['kiprensky-1827-source.jpg', 'onegin-1833-source
 const MAX_ATTEMPTS = 3;
 const MAX_RETRY_AFTER_MS = 60_000;
 
+// The two workflows own only these generated source directories and files.
+// Never recursively remove a caller-provided directory or traverse a symlink.
+export function prepareOfflineSourceOutput(root, outputDir) {
+  const base = path.resolve(root);
+  const target = path.resolve(outputDir);
+  const allowed = ['hall-pushkin-offline', 'hall-pushkin-lookdev']
+    .map(lane => path.join(base, 'qa-artifacts', lane, 'sources'));
+  if (!allowed.includes(target)) throw new Error('unapproved offline source output directory');
+  let current = base;
+  for (const part of path.relative(base, target).split(path.sep)) {
+    current = path.join(current, part);
+    let stat;
+    try { stat = fs.lstatSync(current); }
+    catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      fs.mkdirSync(current);
+      stat = fs.lstatSync(current);
+    }
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('unsafe offline source directory: ' + current);
+  }
+  const owned = new Set([...ACCEPTED_FILES, 'onegin-1833-title-page.png', 'source-assets-evidence.json']);
+  const entries = fs.readdirSync(target, { withFileTypes: true });
+  // Check every entry before removing anything, including a stale evidence receipt.
+  for (const entry of entries) {
+    if (!owned.has(entry.name) || !entry.isFile() || entry.isSymbolicLink()) {
+      throw new Error('unexpected offline source output entry: ' + entry.name);
+    }
+  }
+  for (const entry of entries) fs.unlinkSync(path.join(target, entry.name));
+}
+
 const retryDelay = (header, attempt, now) => {
   if (!header) return 8_000 * attempt;
   const seconds = Number(header);
