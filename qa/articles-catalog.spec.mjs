@@ -5,6 +5,7 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const EXPECTED_PUBLISHED_ESSAY_HREFS = [
+  '/essays/fet-perepletis-novyi-god',
   '/essays/simonov-syn-artillerista-realnaya-istoriya',
   '/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive',
   '/essays/vykhozhu-odin-ya-na-dorogu-lermontov',
@@ -351,4 +352,78 @@ test('Simonov diary source distinguishes the electronic host from the print edit
   await expect(source.locator('a')).toHaveAttribute('href', 'https://militera.lib.ru/db/simonov_km/1_19.html');
   await source.scrollIntoViewIfNeeded();
   await expect(source).toBeInViewport();
+});
+
+test('Fet collection links the album, source map, reader and poet across responsive layouts', async ({ page }, testInfo) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  await page.goto(`${BASE_URL}/music#new-year-symphony`, { waitUntil: 'domcontentloaded' });
+  const card = page.locator('#new-year-symphony');
+  await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeVisible();
+  await expect(card.getByRole('link', { name: 'Плейлист на YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/playlist?list=PLZH4xU7Qrx5k');
+  await expect(card.getByRole('link', { name: 'Смотреть Клип' })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=K9sZYuUnzCk');
+  await expect(card.locator('time')).toHaveAttribute('datetime', '2026-11-27T17:30:27+03:00');
+  await expect(card.locator('.poetry-collection-date')).toContainText('Опубликовано:');
+  await expect(card.locator('.poetry-collection-date')).not.toContainText('Запланированный выпуск');
+  await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeInViewport();
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.locator('img')).toHaveAttribute('data-image-state', 'loaded');
+  const sourceDetails = card.locator('details');
+  const sourceList = sourceDetails.locator('.poetry-collection-source-list');
+  const summary = sourceDetails.locator('summary');
+  await expect(sourceList).toBeHidden();
+  expect(await sourceList.evaluate(el => el.getBoundingClientRect().height)).toBe(0);
+  if (testInfo.project.name === 'chromium-core') {
+    await summary.focus();
+    await page.keyboard.press('Enter');
+    await expect(sourceDetails).toHaveAttribute('open', '');
+    await expect(sourceList).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(sourceDetails.locator('.poetry-collection-source-main').first()).toBeFocused();
+  } else {
+    await summary.click();
+    await expect(sourceList).toBeVisible();
+  }
+  await summary.click();
+  await expect(sourceList).toBeHidden();
+  expect(await sourceList.evaluate(el => el.getBoundingClientRect().height)).toBe(0);
+  await summary.click();
+  await expect(card.locator('.poetry-collection-source-list li')).toHaveCount(9);
+  await expect(card.locator('a.poetry-collection-original[target="_blank"]')).toHaveCount(9);
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Певице'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-4');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Скрип шагов вдоль улиц белых…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-5');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Благовонная ночь, благодатная ночь…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-6');
+  await expect(card.locator('.poetry-collection-library-link')).toHaveCount(8);
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: На двойном стекле узоры…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-7');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Сегодня все звезды так пышно…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-8');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Если зимнее небо звезда́ми горит…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-9');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: В руке с тамбурином, в глазах с упоеньем…'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-10');
+  await expect(card.getByRole('link', {name: 'Читать в библиотеке: Дифирамб на Новый год'})).toHaveAttribute('href', '/poets/afanasy-fet#poem-fet-11');
+  await expect(card.getByRole('link', {name: 'Первоисточник: Дифирамб на Новый год'})).toHaveAttribute('href', 'https://imwerden.de/pdf/fet_sobranie_sochinenij_v_20tt_tom01_2002__ocr.pdf#page=324');
+  await expect(card.locator('.poetry-collection-source-list li').first()).toBeVisible();
+  const bounds = await card.evaluate(el => ({ width: el.scrollWidth, client: el.clientWidth, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
+  expect(bounds.width - bounds.client).toBeLessThanOrEqual(1);
+  expect(bounds.overflow).toBeLessThanOrEqual(1);
+  await page.screenshot({path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-new-year-collection.png`)});
+  await card.locator('.poetry-collection-source-main').filter({ hasText: 'Дифирамб на Новый год' }).click();
+  await expect(page).toHaveURL(/\/essays\/fet-perepletis-novyi-god#literary-fragment-dithyramb$/);
+  await expect(page.getByRole('heading', {level: 1, name: /Зимняя Поэзия Афанасия Фета/i})).toBeVisible();
+  await expect(page.locator('#literary-fragment-dithyramb')).toHaveCount(1);
+  await expect(page.locator('#literary-fragment-dithyramb')).toContainText('Дифирамб на Новый Год · 1840');
+  await expect(page.locator('#literary-fragment-dithyramb')).toBeInViewport();
+  await expect(page.locator('#source-dithyramb')).toHaveCount(1);
+  const fragmentIds = await page.locator('[id^="literary-fragment-"]').evaluateAll(elements => elements.map(el => el.id));
+  expect(fragmentIds).toHaveLength(9);
+  expect(new Set(fragmentIds).size).toBe(9);
+  await expect(page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' })).toHaveAttribute('href', '/music#new-year-symphony');
+  await page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' }).click();
+  await expect(page).toHaveURL(/\/music#new-year-symphony$/);
+  await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeInViewport();
+  await summary.click();
+  await card.getByRole('link', {name: 'Читать в библиотеке: Певице'}).click();
+  await expect(page).toHaveURL(/\/poets\/afanasy-fet#poem-fet-4$/);
+  await expect(page.locator('#poem-fet-4')).toBeInViewport();
+  await expect(page.getByRole('link', { name: /Зимняя Поэзия Афанасия Фета/i })).toHaveAttribute('href', '/essays/fet-perepletis-novyi-god');
+  await expect(page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' })).toHaveAttribute('href', '/music#new-year-symphony');
+  expect(errors).toEqual([]);
 });

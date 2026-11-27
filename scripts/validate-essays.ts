@@ -101,6 +101,7 @@ function blockText(block: EssayBlock): string {
 
 function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
   const anchors = new Set<string>();
+  const bibliographyAnchors = new Set((essay.sources ?? []).flatMap(source => source.id ? [`source-${source.id}`] : []));
   let reflectionCount = 0;
   let mythCount = 0;
   let historicalBodyScriptureReferences = 0;
@@ -123,6 +124,7 @@ function validateBlocks(essay: Essay, blocks: EssayBlock[]) {
 
       const anchor = sectionAnchor(heading, block.anchor);
       if (anchors.has(anchor)) error(essay, `duplicate section anchor: ${anchor}`);
+      if (bibliographyAnchors.has(anchor)) error(essay, `section anchor collides with bibliography: ${anchor}`);
       anchors.add(anchor);
     }
 

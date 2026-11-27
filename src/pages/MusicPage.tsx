@@ -3,6 +3,8 @@ import { AudioWaveform, Sparkles } from '../components/PremiumIcons';
 import FeaturedTrackPlayer from '../components/music/FeaturedTrackPlayer';
 import MusicArchiveBrowser from '../components/music/MusicArchiveBrowser';
 import TrackAnnouncementCard from '../components/music/TrackAnnouncementCard';
+import PoetryCollections from '../components/music/PoetryCollections';
+import { musicPageTitle, musicPageDescription } from '../data/poetryCollections';
 import { allMusicTracks, musicTracks } from '../data/poets';
 import { getFeaturedMusicTrack, getMusicCatalogStats, getUpcomingMusicTracks } from '../data/musicCatalog';
 import { useSeo } from '../hooks/useSeo';
@@ -16,8 +18,8 @@ export default function MusicPage() {
   const archiveMinutes = Math.max(1, Math.round(stats.totalDurationSeconds / 60));
 
   useSeo({
-    title: 'Музыка — THE LEGENDARY POET',
-    description: 'Официальные музыкальные интерпретации русской поэзии от проекта The Legendary Poet: авторские плееры, обложки и отдельные страницы релизов.',
+    title: musicPageTitle,
+    description: musicPageDescription,
     path: '/music',
     image: featured?.wideCoverUrl ?? featured?.coverUrl,
   });
@@ -51,6 +53,7 @@ export default function MusicPage() {
               <p className="max-w-3xl text-base leading-relaxed text-cyan-100/58 sm:text-xl">
                 Не фоновые треки, а самостоятельные музыкальные публикации: с кинематографической обложкой, мастер-файлом, живой формой волны и отдельным пространством для вдумчивого прослушивания.
               </p>
+              <a href="#poetry-collections" className="poetry-collection-jump theme-text mt-4">Поэтические Коллекции <span aria-hidden="true">↓</span></a>
             </div>
 
             <div className="grid min-w-[250px] grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1">
@@ -90,6 +93,8 @@ export default function MusicPage() {
         ) : (
           <div className="rounded-3xl border border-cyan-400/10 p-12 text-center text-cyan-100/40">Первый релиз готовится.</div>
         )}
+
+        <PoetryCollections />
 
         {upcoming.length > 0 && (
           <section className="mt-16" aria-labelledby="upcoming-releases-title">
