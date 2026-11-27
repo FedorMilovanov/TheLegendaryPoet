@@ -47,6 +47,16 @@ for (const theme of ['dark', 'light']) {
       });
     });
     expect(overflow).toBe(false);
+    // Retain a bounded real-page visual witness in the existing HTML report.
+    if (info.project.name === 'chromium-core') {
+      const cutout = section.locator('.memory-photo-trigger[data-cutout="true"]');
+      await expect(cutout).toHaveCount(1);
+      await cutout.scrollIntoViewIfNeeded();
+      await info.attach(`museum-reveal-${theme}-story`, {
+        body: await section.locator('.memory-story').screenshot({ animations: 'disabled', style: '.site-header,.mobile-dock,.scroll-top-btn,[data-custom-cursor-dot],[data-custom-cursor-ring],.cursor-trail { visibility: hidden !important; }' }),
+        contentType: 'image/png',
+      });
+    }
     if (info.project.name === 'chromium-core' && process.env.QA_CAPTURE_MEMORY === '1') {
       await section.locator('h2').scrollIntoViewIfNeeded();
       await section.screenshot({ path: info.outputPath(`exhibit-${theme}.png`), animations: 'disabled', style: '.site-header,.mobile-dock,.scroll-top-btn,[data-custom-cursor-dot],[data-custom-cursor-ring],.cursor-trail { visibility: hidden !important; }' });
