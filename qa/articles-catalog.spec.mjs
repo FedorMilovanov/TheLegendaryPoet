@@ -5,6 +5,7 @@ import path from 'node:path';
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
 const ARTIFACT_DIR = path.resolve('qa-artifacts');
 const EXPECTED_PUBLISHED_ESSAY_HREFS = [
+  '/essays/fet-perepletis-novyi-god',
   '/essays/simonov-syn-artillerista-realnaya-istoriya',
   '/essays/galina-benislavskaya-yesenin-manuscripts-publishing-archive',
   '/essays/vykhozhu-odin-ya-na-dorogu-lermontov',
@@ -351,4 +352,31 @@ test('Simonov diary source distinguishes the electronic host from the print edit
   await expect(source.locator('a')).toHaveAttribute('href', 'https://militera.lib.ru/db/simonov_km/1_19.html');
   await source.scrollIntoViewIfNeeded();
   await expect(source).toBeInViewport();
+});
+
+test('Fet collection links the album, source map, reader and poet across responsive layouts', async ({ page }, testInfo) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  await page.goto(`${BASE_URL}/music#new-year-symphony`, { waitUntil: 'domcontentloaded' });
+  const card = page.locator('#new-year-symphony');
+  await expect(card.getByRole('heading', { name: 'Новогодняя Симфония Русской Поэзии' })).toBeVisible();
+  await expect(card.getByRole('link', { name: 'Плейлист на YouTube' })).toHaveAttribute('href', 'https://www.youtube.com/playlist?list=PLZH4xU7Qrx5k');
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.locator('img')).toHaveAttribute('data-image-state', 'loaded');
+  await card.locator('summary').click();
+  await expect(card.locator('.poetry-collection-source-list li')).toHaveCount(9);
+  await expect(card.locator('.poetry-collection-source-list li').first()).toBeVisible();
+  const bounds = await card.evaluate(el => ({ width: el.scrollWidth, client: el.clientWidth, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
+  expect(bounds.width - bounds.client).toBeLessThanOrEqual(1);
+  expect(bounds.overflow).toBeLessThanOrEqual(1);
+  await page.screenshot({path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-new-year-collection.png`)});
+  await card.getByRole('link', { name: /Дифирамб на Новый год/ }).click();
+  await expect(page).toHaveURL(/\/essays\/fet-perepletis-novyi-god#source-dithyramb$/);
+  await expect(page.getByRole('heading', {level: 1, name: /Зимняя Поэзия Афанасия Фета/i})).toBeVisible();
+  await expect(page.locator('#source-dithyramb')).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' })).toHaveAttribute('href', '/music#new-year-symphony');
+  await page.goto(`${BASE_URL}/poets/afanasy-fet`, { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('link', { name: /Зимняя Поэзия Афанасия Фета/i })).toHaveAttribute('href', '/essays/fet-perepletis-novyi-god');
+  await expect(page.getByRole('link', { name: 'Новогодняя Симфония Русской Поэзии' })).toHaveAttribute('href', '/music#new-year-symphony');
+  expect(errors).toEqual([]);
 });

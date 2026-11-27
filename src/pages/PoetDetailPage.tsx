@@ -18,6 +18,8 @@ import PoemPicker from '../components/poet-detail/PoemPicker';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
+import { CollectionReferences } from '../components/music/PoetryCollections';
+import { collectionsForPoet } from '../data/poetryCollections';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
@@ -143,6 +145,7 @@ export default function PoetDetailPage() {
             )}
 
             <Suspense fallback={null}><RelatedEssays poetId={poet.id} /></Suspense>
+            <CollectionReferences collections={collectionsForPoet(poet.id)} />
             {Boolean(poet.videos?.length) && <Suspense fallback={null}><PoetVideos poet={poet} /></Suspense>}
 
             <div className="space-y-8">

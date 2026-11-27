@@ -1,0 +1,57 @@
+/* Collection is an intentionally dark editorial island in both site themes. */
+.poetry-collections-heading{display:flex;align-items:end;justify-content:space-between;gap:1.5rem;margin-bottom:1.5rem}
+.poetry-collections-heading p{max-width:31rem;font-size:.95rem;line-height:1.65}
+.poetry-collection{--collection-ink:#f4f6ff;--collection-muted:#bccce3;--collection-gold:#f0d399;--collection-blue:#a7ccff;scroll-margin-top:8rem;border:1px solid #536a8d;background:radial-gradient(ellipse at 92% 5%,#1d3557 0%,transparent 42%),linear-gradient(145deg,#101d31,#090f1a 72%);color:var(--collection-ink);border-radius:clamp(1.25rem,3vw,2.25rem);padding:clamp(1rem,3vw,2.5rem);box-shadow:0 24px 64px #0005}
+.poetry-collection-hero{display:grid;grid-template-columns:minmax(0, .9fr) minmax(0, 1.1fr);align-items:center;gap:clamp(1.25rem,4vw,3rem)}
+.poetry-collection-intro{min-width:0}
+.poetry-collection-eyebrow{display:flex;align-items:center;gap:.65rem;font-size:.72rem;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--collection-gold);margin-bottom:1rem}
+.poetry-collection-eyebrow>span{display:block;width:2.2rem;height:1px;background:linear-gradient(90deg,transparent,var(--collection-gold));flex:none}
+.poetry-collection-title{font-size:clamp(2rem,4.2vw,4.15rem);font-weight:700;line-height:1.12;letter-spacing:-.02em;color:var(--collection-ink);overflow-wrap:anywhere;margin:0 0 1.1rem;text-wrap:balance}
+.poetry-collection-intro>p{font-size:clamp(.95rem,1.3vw,1.1rem);line-height:1.7;color:var(--collection-muted);max-width:34rem}
+.poetry-collection-actions,.poetry-collection-entry-actions{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center;margin-top:1.4rem}
+.poetry-collection-primary,.poetry-collection-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;min-height:44px;padding:.65rem .95rem;border-radius:.9rem;font-weight:600;font-size:.85rem;line-height:1.35;text-decoration:none;transition:background-color .2s,border-color .2s,color .2s,box-shadow .2s;max-width:100%}
+.poetry-collection-primary{background:var(--collection-gold);color:#182033;border:1px solid var(--collection-gold)}
+.poetry-collection-secondary{background:#12243c;color:var(--collection-ink);border:1px solid #496385}
+.poetry-collection-primary:hover{background:#ffe5b6;color:#111927}
+.poetry-collection-secondary:hover{background:#1d385b;border-color:#95b9ec;color:#fff}
+.poetry-collection :is(a,summary):focus-visible,.collection-reference a:focus-visible{outline:2px solid #ffd58a;outline-offset:3px}
+.poetry-collection-figure{min-width:0;margin:0}
+.poetry-collection-image{position:relative;isolation:isolate;aspect-ratio:16/9;overflow:hidden;border-radius:1.25rem;border:1px solid #63758d;background:radial-gradient(ellipse at 50% 20%,#2d4260,#101a2b)}
+.poetry-collection-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform 1s cubic-bezier(.2,.7,.2,1)}
+.poetry-collection-image img[data-image-state="failed"]{opacity:0}
+.poetry-collection-image::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,#060d1b50,transparent 45%)}
+.poetry-collection-ribbon{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;color:#a6c8ff;opacity:.65;transform:translateY(4px);transition:transform .9s cubic-bezier(.2,.7,.2,1),opacity .9s}
+.poetry-collection-figure figcaption{font-size:.72rem;line-height:1.45;color:var(--collection-muted);margin:.65rem .2rem 0}
+.poetry-collection-releases{scroll-margin-top:8rem;border-top:1px solid #42536c;margin-top:clamp(1.5rem,4vw,2.8rem);padding-top:1.25rem}
+.poetry-collection-section-heading{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1rem}
+.poetry-collection-section-heading h4{font-size:clamp(1.3rem,2.1vw,1.7rem);font-weight:650;margin:0;color:var(--collection-ink)}
+.poetry-collection-section-heading>span{font-size:.8rem;color:var(--collection-muted);flex:none}
+.poetry-collection-entry{display:grid;grid-template-columns:3rem minmax(0,1fr);gap:1rem;border:1px solid #3c526f;background:#0b1524;border-radius:1.25rem;padding:clamp(.85rem,2.5vw,1.5rem)}
+.poetry-collection-entry-number{font-variant-numeric:tabular-nums;font-family:Georgia,serif;color:var(--collection-gold);font-size:1.65rem;line-height:1.2}
+.poetry-collection-entry-content{min-width:0}
+.poetry-collection-poet{display:inline-flex;align-items:center;gap:.4rem;color:var(--collection-blue);font-size:.86rem;font-weight:600;text-decoration:none;min-height:32px}
+.poetry-collection-poet:hover{text-decoration:underline}
+.poetry-collection-entry h5{font-size:clamp(1.4rem,2.7vw,2.15rem);line-height:1.22;color:var(--collection-ink);margin:.1rem 0 .45rem;font-weight:650;overflow-wrap:anywhere}
+.poetry-collection-date{font-size:.82rem;color:var(--collection-muted);line-height:1.5}
+.poetry-collection-entry-actions{margin-top:.9rem}
+.poetry-collection-sources{margin-top:1.15rem;border-top:1px solid #394d69;padding-top:.45rem}
+.poetry-collection-sources summary{list-style:none;display:flex;align-items:center;gap:.7rem;min-height:48px;cursor:pointer;font-size:.87rem;font-weight:650;color:var(--collection-ink);border-radius:.5rem;padding:.45rem .2rem}
+.poetry-collection-sources summary::-webkit-details-marker{display:none}
+.poetry-collection-source-count{color:var(--collection-muted);font-weight:400;font-size:.75rem;margin-left:auto;white-space:nowrap}
+.poetry-collection-chevron{color:var(--collection-blue);font-size:1.5rem;line-height:1;transition:transform .25s}
+.poetry-collection-sources[open] .poetry-collection-chevron{transform:rotate(180deg)}
+.poetry-collection-source-list{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin:.5rem 0 0;padding:0}
+.poetry-collection-source-list a{display:grid;grid-template-columns:minmax(3.2rem,auto) minmax(0,1fr) auto;align-items:start;gap:.6rem;min-height:72px;height:100%;border:1px solid #3e5371;border-radius:.75rem;padding:.7rem;color:var(--collection-ink);text-decoration:none;background:#142137;transition:background-color .2s,border-color .2s}
+.poetry-collection-source-list a:hover{background:#203554;border-color:#87aad6}
+.poetry-collection-source-date{font-size:.74rem;line-height:1.5;color:var(--collection-gold);font-variant-numeric:tabular-nums}
+.poetry-collection-source-body{min-width:0;display:grid;gap:.28rem;font-size:.83rem;line-height:1.45;overflow-wrap:anywhere}
+.poetry-collection-fragment{font-family:Georgia,serif;font-size:.87rem;font-style:italic;color:var(--collection-muted)}
+.poetry-collection-source-arrow{margin-top:.15rem;color:var(--collection-blue)}
+.collection-reference{border:1px solid var(--tlp-border, #52627a);border-radius:1.15rem;padding:1rem 1.2rem;margin-block:1.25rem}
+.collection-reference-label{display:flex;align-items:center;gap:.55rem;font-size:.76rem;font-weight:650;color:var(--tlp-text-muted,inherit);margin-bottom:.55rem}
+.collection-reference-link{display:flex;min-height:44px;align-items:center;justify-content:space-between;gap:.75rem;font-size:1rem;font-weight:600;line-height:1.4;color:inherit;text-decoration:none;border-radius:.4rem}
+.collection-reference-link:hover{text-decoration:underline;text-underline-offset:.2em}
+@media (hover:hover) and (pointer:fine){.poetry-collection-figure:hover img{transform:scale(1.035)}.poetry-collection-figure:hover .poetry-collection-ribbon{transform:translateY(-3px);opacity:1}}
+@media (max-width:850px){.poetry-collections-heading{align-items:start;flex-direction:column;gap:.75rem}.poetry-collection-hero{grid-template-columns:minmax(0,1fr)}.poetry-collection-figure{grid-row:1}.poetry-collection-image{border-radius:1rem}.poetry-collection-title{max-width:21ch}.poetry-collection-source-list{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:420px){.poetry-collection-entry{grid-template-columns:minmax(0,1fr);gap:.5rem}.poetry-collection-entry-number{font-size:1.1rem}.poetry-collection-section-heading{align-items:start;flex-direction:column;gap:.25rem}.poetry-collection-actions,.poetry-collection-entry-actions{align-items:stretch;flex-direction:column}.poetry-collection-primary,.poetry-collection-secondary{justify-content:space-between;width:100%}.poetry-collection-sources summary{flex-wrap:wrap;gap:.35rem}.poetry-collection-source-count{margin-left:0}.poetry-collection-chevron{margin-left:auto}}
+@media(prefers-reduced-motion:reduce){.poetry-collection *, .poetry-collection *::before,.poetry-collection *::after{transition:none!important;animation:none!important;transform:none!important}}

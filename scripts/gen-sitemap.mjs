@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, poets } from '../src/data/poets.ts';
+import { poetryCollections, collectionsForPoet, collectionsForEssay } from '../src/data/poetryCollections.ts';
 import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
@@ -174,13 +175,13 @@ const dataDependencies = {
   poets,
   ratings: poets,
   articles: essays,
-  music: publishedTracks,
+  music: { tracks: publishedTracks, collections: poetryCollections },
 };
 
 const dynamicContentByPath = new Map([
-  ...essays.map((essay) => [canonicalRoutePath(`/essays/${essay.slug}`), essay]),
+  ...essays.map((essay) => [canonicalRoutePath(`/essays/${essay.slug}`), collectionsForEssay(essay.slug).length ? { essay, collections: collectionsForEssay(essay.slug) } : essay]),
   ...publishedTracks.map((track) => [canonicalRoutePath(`/music/${track.id}`), track]),
-  ...poets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), poet]),
+  ...poets.map((poet) => [canonicalRoutePath(`/poets/${poet.id}`), collectionsForPoet(poet.id).length ? { poet, collections: collectionsForPoet(poet.id) } : poet]),
 ]);
 
 const manifestRoutes = urls.map((item) => {

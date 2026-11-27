@@ -483,3 +483,21 @@ assets:
     source_use: primary_publication_facsimile
     alteration: "None; source bytes preserved (no crop, recolor, upscale or watermark removal)"
     notes: "Annual volume titled 'Severnye tsvety na 1830 god'; bibliographic imprint is Saint Petersburg, 1829 (FEB Pushkin critical apparatus, vol. 3, pt. 2, p. 1193). Year 1830 names the annual, not the publication year. Wikimedia original is public domain with Google digitization footer; no image bytes changed. Two other Google Books scans remain local rights-review only."
+
+  - path: public/images/essays/fet/fet-new-year-ball.webp
+    role: essay_hero_and_card_and_collection
+    origin_class: local_cinematic_editorial_reconstruction
+    evidence: docs/research/FET_NEW_YEAR_COLLECTION_2026-11-27.md
+    source_video: "https://www.youtube.com/watch?v=bHOaewFhw7M"
+    source_video_sha256: aba8fc4d201e1063bb551b8948aedde0f9bf993994e88f6559bb3bf0e58ebe1d
+    source_video_bytes: 548360296
+    source_frame_seconds: 350
+    production_recipe: "FFmpeg seek 350 s; scale 1280:-2; libwebp quality 82; no composited objects"
+    intrinsic: 1280x720
+    bytes: 129422
+    sha256: 034be8e5d3c5963731c688bd3d6886fcd0151802bc4ce93f8d32aaf366b64a69
+    review_status: VERIFIED-LOCAL-EDITORIAL
+    source_use: not_primary_evidence
+    credit: "THE LEGENDARY POET — frame from owner's final clip"
+    depiction_disclosure: "Imagined palace ball interior, not a historical photograph or identified building."
+    notes: "Frame extracted from the owner-confirmed final MP4 for this site integration; separate artwork approval/visual acceptance is pending before promotion."
