@@ -1,6 +1,13 @@
 const FIXED_HEADER_OFFSET = 96;
 const pauseTokens = new Set<symbol>();
 
+// A malformed URL fragment is an unresolved target, not a reader crash.
+export function decodeHash(hash: string) {
+  const raw = hash.replace(/^#/, '');
+  if (!raw) return '';
+  try { return decodeURIComponent(raw); } catch { return raw; }
+}
+
 /**
  * Records nested overlay ownership. The overlay itself remains responsible for
  * its body lock; native document scrolling has no animation target that needs
