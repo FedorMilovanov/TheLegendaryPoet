@@ -29,7 +29,7 @@
 .poetry-collection-entry{display:grid;grid-template-columns:3rem minmax(0,1fr);gap:1rem;border:1px solid #3c526f;background:#0b1524;border-radius:1.25rem;padding:clamp(.85rem,2.5vw,1.5rem)}
 .poetry-collection-entry-number{font-variant-numeric:tabular-nums;font-family:Georgia,serif;color:var(--collection-gold);font-size:1.65rem;line-height:1.2}
 .poetry-collection-entry-content{min-width:0}
-.poetry-collection-poet{display:inline-flex;align-items:center;gap:.4rem;color:var(--collection-blue);font-size:.86rem;font-weight:600;text-decoration:none;min-height:32px}
+.poetry-collection-poet{display:inline-flex;align-items:center;gap:.4rem;color:var(--collection-blue);font-size:.86rem;font-weight:600;text-decoration:none;min-height:44px}
 .poetry-collection-poet:hover{text-decoration:underline}
 .poetry-collection-entry h5{font-size:clamp(1.4rem,2.7vw,2.15rem);line-height:1.22;color:var(--collection-ink);margin:.1rem 0 .45rem;font-weight:650;overflow-wrap:anywhere}
 .poetry-collection-date{font-size:.82rem;color:var(--collection-muted);line-height:1.5}
@@ -41,8 +41,15 @@
 .poetry-collection-chevron{color:var(--collection-blue);font-size:1.5rem;line-height:1;transition:transform .25s}
 .poetry-collection-sources[open] .poetry-collection-chevron{transform:rotate(180deg)}
 .poetry-collection-source-list{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin:.5rem 0 0;padding:0}
-.poetry-collection-source-list a{display:grid;grid-template-columns:minmax(3.2rem,auto) minmax(0,1fr) auto;align-items:start;gap:.6rem;min-height:72px;height:100%;border:1px solid #3e5371;border-radius:.75rem;padding:.7rem;color:var(--collection-ink);text-decoration:none;background:#142137;transition:background-color .2s,border-color .2s}
-.poetry-collection-source-list a:hover{background:#203554;border-color:#87aad6}
+.poetry-collection-source-list li{min-width:0;display:flex;flex-direction:column;border:1px solid #3e5371;border-radius:.75rem;background:#142137}
+.poetry-collection-source-main{display:grid;grid-template-columns:minmax(3.2rem,auto) minmax(0,1fr) auto;align-items:start;gap:.6rem;min-height:72px;flex:1;border-radius:.7rem;padding:.7rem;color:var(--collection-ink);text-decoration:none;background:#142137;transition:background-color .2s,border-color .2s}
+.poetry-collection-source-main:hover{background:#203554}
+.poetry-collection-original{display:flex;align-items:center;justify-content:space-between;gap:.45rem;min-height:44px;padding:.5rem .7rem;border-top:1px solid #3e5371;border-radius:0 0 .7rem .7rem;font-size:.78rem;color:var(--collection-blue);line-height:1.35;text-decoration:none}
+.poetry-collection-original:hover{background:#203554;text-decoration:underline}
+.poetry-collection-original svg{flex:none}
+#poetry-collections{scroll-margin-top:8rem}
+.poetry-collection-jump{display:inline-flex;align-items:center;gap:.55rem;min-height:44px;font-size:.95rem;font-weight:600;text-decoration:underline;text-underline-offset:.25em;color:inherit}
+.poetry-collection-jump:focus-visible{outline:2px solid var(--tlp-focus-ring);outline-offset:3px}
 .poetry-collection-source-date{font-size:.74rem;line-height:1.5;color:var(--collection-gold);font-variant-numeric:tabular-nums}
 .poetry-collection-source-body{min-width:0;display:grid;gap:.28rem;font-size:.83rem;line-height:1.45;overflow-wrap:anywhere}
 .poetry-collection-fragment{font-family:Georgia,serif;font-size:.87rem;font-style:italic;color:var(--collection-muted)}

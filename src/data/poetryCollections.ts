@@ -7,7 +7,7 @@ export interface PoetryCollectionEntry {
   title: string;
   essaySlug: string;
   sources: readonly CollectionSource[];
-  video: { url: string; status: 'scheduled' | 'published'; scheduledFor?: string; scheduleLabel?: string };
+  video: { url: string; status: 'scheduled'; scheduledFor: string } | { url: string; status: 'published' };
 }
 
 export interface PoetryCollection {
@@ -41,7 +41,6 @@ export const poetryCollections: readonly PoetryCollection[] = [
         url: 'https://www.youtube.com/watch?v=bHOaewFhw7M',
         status: 'scheduled',
         scheduledFor: '2026-11-28T17:00:00+03:00',
-        scheduleLabel: '28 ноября, 17:00 МСК',
       },
     }],
   },

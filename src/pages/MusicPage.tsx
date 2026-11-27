@@ -53,6 +53,7 @@ export default function MusicPage() {
               <p className="max-w-3xl text-base leading-relaxed text-cyan-100/58 sm:text-xl">
                 Не фоновые треки, а самостоятельные музыкальные публикации: с кинематографической обложкой, мастер-файлом, живой формой волны и отдельным пространством для вдумчивого прослушивания.
               </p>
+              <a href="#poetry-collections" className="poetry-collection-jump theme-text mt-4">Поэтические Коллекции <span aria-hidden="true">↓</span></a>
             </div>
 
             <div className="grid min-w-[250px] grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-1">

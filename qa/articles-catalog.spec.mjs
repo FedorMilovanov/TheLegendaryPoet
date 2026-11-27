@@ -365,12 +365,14 @@ test('Fet collection links the album, source map, reader and poet across respons
   await expect(card.locator('img')).toHaveAttribute('data-image-state', 'loaded');
   await card.locator('summary').click();
   await expect(card.locator('.poetry-collection-source-list li')).toHaveCount(9);
+  await expect(card.locator('.poetry-collection-original')).toHaveCount(9);
+  await expect(card.getByRole('link', {name: 'Первоисточник: Дифирамб на Новый год'})).toHaveAttribute('href', 'https://rvb.ru/19vek/fet/bp/text/537.html');
   await expect(card.locator('.poetry-collection-source-list li').first()).toBeVisible();
   const bounds = await card.evaluate(el => ({ width: el.scrollWidth, client: el.clientWidth, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
   expect(bounds.width - bounds.client).toBeLessThanOrEqual(1);
   expect(bounds.overflow).toBeLessThanOrEqual(1);
   await page.screenshot({path: path.join(ARTIFACT_DIR, `${testInfo.project.name}-new-year-collection.png`)});
-  await card.getByRole('link', { name: /Дифирамб на Новый год/ }).click();
+  await card.locator('.poetry-collection-source-main').filter({ hasText: 'Дифирамб на Новый год' }).click();
   await expect(page).toHaveURL(/\/essays\/fet-perepletis-novyi-god#source-dithyramb$/);
   await expect(page.getByRole('heading', {level: 1, name: /Зимняя Поэзия Афанасия Фета/i})).toBeVisible();
   await expect(page.locator('#source-dithyramb')).toHaveCount(1);

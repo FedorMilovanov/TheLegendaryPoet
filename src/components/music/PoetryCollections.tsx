@@ -4,6 +4,10 @@ import { Link } from '../ui/Link';
 import ResilientImage from '../media/ResilientImage';
 import './PoetryCollections.css';
 
+const releaseDateFormatter = new Intl.DateTimeFormat('ru-RU', {
+  timeZone: 'Europe/Moscow', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+});
+
 function CollectionCard({ collection }: { collection: PoetryCollection }) {
   return (
     <article id={collection.id} className="theme-dark-island poetry-collection" aria-labelledby={`${collection.id}-title`}>
@@ -43,15 +47,15 @@ function CollectionCard({ collection }: { collection: PoetryCollection }) {
             <div className="poetry-collection-entry-content">
               <Link to={`/poets/${entry.poetId}`} className="poetry-collection-poet">{entry.poetName} <ArrowRight size={14} aria-hidden="true" /></Link>
               <h5 className="font-serif">{entry.title}</h5>
-              {entry.video.status === 'scheduled' && entry.video.scheduledFor && (
-                <p className="poetry-collection-date">Премьера запланирована: <time dateTime={entry.video.scheduledFor}>{entry.video.scheduleLabel}</time></p>
+              {entry.video.status === 'scheduled' && (
+                <p className="poetry-collection-date">Запланированный выпуск: <time dateTime={entry.video.scheduledFor}>{releaseDateFormatter.format(new Date(entry.video.scheduledFor))} МСК</time>. Видео доступно после публикации на YouTube.</p>
               )}
               <div className="poetry-collection-entry-actions">
                 <Link to={`/essays/${entry.essaySlug}`} className="poetry-collection-secondary">
                   <BookOpen size={17} aria-hidden="true" /> История и Смысл <ArrowRight size={16} aria-hidden="true" />
                 </Link>
                 <a className="poetry-collection-secondary" href={entry.video.url} target="_blank" rel="noopener noreferrer">
-                  {entry.video.status === 'scheduled' ? 'Страница Премьеры' : 'Смотреть Клип'} <ExternalLink size={15} aria-hidden="true" />
+                  {entry.video.status === 'scheduled' ? 'Видео на YouTube' : 'Смотреть Клип'} <ExternalLink size={15} aria-hidden="true" />
                 </a>
               </div>
               <details className="poetry-collection-sources">
@@ -59,7 +63,7 @@ function CollectionCard({ collection }: { collection: PoetryCollection }) {
                 <ol className="poetry-collection-source-list">
                   {entry.sources.map(source => (
                     <li key={source.id}>
-                      <Link to={`/essays/${entry.essaySlug}#source-${source.id}`}>
+                      <Link className="poetry-collection-source-main" to={`/essays/${entry.essaySlug}#source-${source.id}`}>
                         <span className="poetry-collection-source-date">{source.date}</span>
                         <span className="poetry-collection-source-body">
                           <span>{source.title}</span>
@@ -67,6 +71,9 @@ function CollectionCard({ collection }: { collection: PoetryCollection }) {
                         </span>
                         <ArrowRight className="poetry-collection-source-arrow" size={16} aria-hidden="true" />
                       </Link>
+                      <a className="poetry-collection-original" href={source.url} target="_blank" rel="noopener noreferrer" aria-label={`Первоисточник: ${source.title}`}>
+                        {source.prose ? 'Публикация Письма' : 'Полный Текст в Источнике'} <ExternalLink size={14} aria-hidden="true" />
+                      </a>
                     </li>
                   ))}
                 </ol>
