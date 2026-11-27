@@ -184,9 +184,26 @@ if (evidence.issue !== 440 || evidence.productionBoundary?.productionAsset !== f
 if (sourceAssets.purpose !== 'offline-source-evidence-only-not-production-media' || sourceAssets.productionManifestAllowed !== false) fail('source assets are not bounded offline evidence');
 if (Number(rawReport.issues?.numErrors ?? 0) !== 0 || Number(optimizedReport.issues?.numErrors ?? 0) !== 0) fail('budget may only be measured from Khronos error-free raw+optimized GLBs');
 
-const raw = inventory(parseGlb(rawPath), rawPath);
-const optimized = inventory(parseGlb(optimizedPath), optimizedPath);
-if (raw.triangles !== optimized.triangles) fail(`Meshopt changed candidate triangle count: raw=${raw.triangles} optimized=${optimized.triangles}`);
+const rawGlb = parseGlb(rawPath);
+const optimizedGlb = parseGlb(optimizedPath);
+const raw = inventory(rawGlb, rawPath);
+const optimized = inventory(optimizedGlb, optimizedPath);
+if (raw.triangles !== optimized.triangles) {
+  // Both GLBs are already Khronos-valid. Retain the exact identities and
+  // mesh-level counts before failing the unchanged preservation gate.
+  const breakdown = (glb) => (glb.json.meshes ?? []).map((mesh, index) => ({
+    index,
+    name: mesh.name ?? null,
+    nodes: (glb.json.nodes ?? []).filter(node => node.mesh === index).map(node => node.name ?? null),
+    triangles: triangleCount({ json: { ...glb.json, meshes: [mesh] } }),
+  }));
+  console.error(JSON.stringify({
+    status: 'candidate-triangle-preservation-failed',
+    raw: { sha256: raw.sha256, bytes: raw.bytes, triangles: raw.triangles, meshes: breakdown(rawGlb) },
+    optimized: { sha256: optimized.sha256, bytes: optimized.bytes, triangles: optimized.triangles, meshes: breakdown(optimizedGlb) },
+  }, null, 2));
+  fail(`Meshopt changed candidate triangle count: raw=${raw.triangles} optimized=${optimized.triangles}`);
+}
 if (raw.drawMaterialCount !== optimized.drawMaterialCount) fail(`Meshopt changed candidate draw-material count: raw=${raw.drawMaterialCount} optimized=${optimized.drawMaterialCount}`);
 
 const rawImageMultiset = raw.images.map((item) => `${item.sha256}:${item.compressedBytes}:${item.dimensions.join('x')}`).sort();

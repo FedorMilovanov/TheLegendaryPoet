@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { inspectSource } from './lib/source-contract-ast';
 import { validateThemeContract } from './validate-theme-contract';
+import { decodeHash } from '../src/utils/smoothScroll';
 
 const root = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), 'utf8');
@@ -134,7 +135,29 @@ expect(smooth.includes("scrollRestoration = 'manual'"), 'SPA navigation must own
 expect(smooth.includes("navigationType === 'POP'"), 'back/forward navigation must restore a saved position');
 expect(smooth.includes('prefers-reduced-motion: reduce'), 'programmatic scroll commands must respect reduced motion');
 expect(smooth.includes('positionsRef.current.size > 80'), 'scroll history must remain bounded during long sessions');
-expect(smooth.includes('function decodeHash'), 'malformed percent-encoded hashes must not crash navigation');
+// Exercise the shared decoder itself, not the location of a function declaration.
+for (const [hash, expected] of [
+  ['', ''],
+  ['#', ''],
+  ['#source-normal', 'source-normal'],
+  ['#t%61rget', 'target'],
+  ['#source-%D0%A4%D0%B5%D1%82', 'source-Фет'],
+  ['#source-%25', 'source-%'],
+  ['#source-%', 'source-%'],
+  ['#source-%E0%A4%A', 'source-%E0%A4%A'],
+  ['#source-%FF', 'source-%FF'],
+] as const) {
+  try {
+    expect(decodeHash(hash) === expected, `shared fragment decoder returned a wrong target: ${JSON.stringify(hash)}`);
+  } catch {
+    expect(false, `malformed percent-encoded hashes must not crash navigation: ${JSON.stringify(hash)}`);
+  }
+}
+const sourceLibraryAst = inspectSource(read('src/components/essay/SourceLibrary.tsx'), 'SourceLibrary.tsx');
+expect(smoothAst.hasModuleImport('../utils/smoothScroll') && smoothAst.hasMethodCall('decodeHash') && !smoothAst.hasMethodCall('decodeURIComponent'),
+  'the hash coordinator must use the shared safe fragment decoder');
+expect(sourceLibraryAst.hasModuleImport('../../utils/smoothScroll') && sourceLibraryAst.hasMethodCall('decodeHash') && !sourceLibraryAst.hasMethodCall('decodeURIComponent'),
+  'the source library must use the same safe fragment decoder');
 expect(smooth.includes('FIXED_HEADER_OFFSET'), 'hash navigation must compensate for the fixed header');
 expect(smooth.includes('getBoundingClientRect().top + window.scrollY'), 'native hash scrolling must apply the fixed-header offset');
 expect(smoothAst.hasEventListener('tlp-scroll-top'), 'the persistent shell must retain the explicit scroll-to-top command');

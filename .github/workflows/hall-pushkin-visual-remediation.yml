@@ -234,6 +234,7 @@ jobs:
         run: node scripts/hall-material/validate-gltf.mjs --tool-root .tools/hall-lookdev-gltf --input "$CANDIDATE_DIR/pushkin-lookdev-candidate-optimized.glb" --output "$CANDIDATE_DIR/gltf-candidate-optimized-report.json"
 
       - name: Measure candidate against existing first-slice budget contract
+        id: candidate_budget
         run: |
           node scripts/hall-lookdev/build-pushkin-candidate-budget.mjs \
             --policy docs/hall-v3/pushkin-offline-budget.json \
@@ -244,6 +245,25 @@ jobs:
             --optimized-report "$CANDIDATE_DIR/gltf-candidate-optimized-report.json" \
             --source-assets-evidence "$SOURCE_DIR/source-assets-evidence.json" \
             --output "$CANDIDATE_DIR/first-slice-budget-report.json"
+
+      # Preserve failed optimizer inputs without confusing them with a certified candidate.
+      - name: Retain failed candidate budget evidence
+        if: ${{ failure() && steps.candidate_budget.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: hall-pushkin-visual-diagnostic-${{ env.TESTED_SHA }}
+          path: |
+            hall-pushkin-visual-remediation-tested-head.txt
+            hall-pushkin-visual-remediation-blender-version.txt
+            qa-artifacts/hall-pushkin-lookdev/sources/source-assets-evidence.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/visual-remediation-evidence.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/pushkin-lookdev-candidate.blend
+            qa-artifacts/hall-pushkin-lookdev/candidate/pushkin-lookdev-candidate-raw.glb
+            qa-artifacts/hall-pushkin-lookdev/candidate/pushkin-lookdev-candidate-optimized.glb
+            qa-artifacts/hall-pushkin-lookdev/candidate/gltf-candidate-raw-report.json
+            qa-artifacts/hall-pushkin-lookdev/candidate/gltf-candidate-optimized-report.json
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Build candidate 5x2 contact sheet
         run: |
