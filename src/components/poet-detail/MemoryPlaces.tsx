@@ -6,17 +6,19 @@ import type { MemoryPhoto, MemoryPlace } from '../../data/memory-places';
 import { loadMemoryPlaces } from '../../data/runtime/memoryPlaces';
 import ResilientImage, { type ImageLoadState } from '../media/ResilientImage';
 import { useDialogSurface } from '../../hooks/useDialogSurface';
+import { asset } from '../../utils/asset';
 
 const linkClass = 'theme-poet-accent underline decoration-current/40 underline-offset-4 hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
 
 function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: number; onOpen: (index: number) => void }) {
   const [imageState, setImageState] = useState<ImageLoadState>('loading');
+  const cutout = Boolean(photo.preview && imageState === 'loaded');
   return (
     <figure className="memory-photo min-w-0">
-      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index); }}>
-        <ResilientImage src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
+      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" data-cutout={cutout} aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index); }}>
+        <ResilientImage src={photo.preview?.src ?? photo.src} fallbackSrc={photo.preview ? photo.src : undefined} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
         <span className="memory-image-failure theme-functional-muted" aria-hidden="true">Фотография недоступна</span>
-        <span aria-hidden="true" className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-black/80 text-white"><Maximize2 size={18} /></span>
+        <span aria-hidden="true" className={`absolute bottom-3 right-3 flex h-11 items-center justify-center gap-2 rounded-full bg-black/80 text-white ${cutout ? 'px-3' : 'w-11'}`}><Maximize2 size={18} />{cutout && <span className="text-xs">Оригинал</span>}</span>
       </button>
       <figcaption className="memory-caption">
         <p className="theme-text memory-caption-text">{photo.caption}</p>
@@ -24,6 +26,7 @@ function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: numbe
           <a href={photo.source} target="_blank" rel="noopener noreferrer" className={linkClass}>{photo.credit} · {photo.sourceLabel}</a>
           {' · '}<a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>{photo.license}</a>
           <span className="memory-photo-changes">{photo.changes}</span>
+          {cutout && <span className="memory-photo-changes">{photo.preview?.changes}</span>}
         </p>
       </figcaption>
     </figure>
@@ -35,12 +38,14 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
   const closeRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(false);
+  const [reveal, setReveal] = useState(Boolean(photos[index]?.preview));
   const [imageState, setImageState] = useState<ImageLoadState>('loading');
   const imageReady = imageState === 'loaded' || imageState === 'fallback';
   const { isTopmost } = useDialogSurface({ open: true, dialogRef, initialFocusRef: closeRef, onClose, label: 'memory-photo-gallery' });
   const photo = photos[index];
   const step = (direction: number) => {
     setZoom(false);
+    setReveal(false);
     setImageState('loading');
     onChange((index + direction + photos.length) % photos.length);
   };
@@ -66,13 +71,13 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
             <button className="memory-gallery-control" type="button" aria-label="Предыдущая фотография" onClick={() => step(-1)}><ChevronLeft size={20} /></button>
             <button className="memory-gallery-control" type="button" aria-label="Следующая фотография" onClick={() => step(1)}><ChevronRight size={20} /></button>
           </>}
-          <button className="memory-gallery-control" type="button" aria-label={zoom ? 'Уменьшить фотографию' : 'Увеличить фотографию'} aria-pressed={zoom} disabled={!imageReady} onClick={() => setZoom((value) => !value)}>{zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}</button>
+          <button className="memory-gallery-control" type="button" aria-label={zoom ? 'Уменьшить фотографию' : 'Увеличить фотографию'} aria-pressed={zoom} disabled={!imageReady} onClick={() => { setReveal(false); setZoom((value) => !value); }}>{zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}</button>
           <button ref={closeRef} className="memory-gallery-control" type="button" aria-label="Закрыть фотографии" onClick={onClose}><X size={22} /></button>
         </div>
       </header>
-      <div className="memory-gallery-stage" ref={stageRef} data-zoom={zoom}
+      <div className="memory-gallery-stage" ref={stageRef} data-zoom={zoom} data-reveal={reveal && Boolean(photo.preview) && imageState !== 'failed'}
         role="region" aria-label="Область фотографии" tabIndex={zoom ? 0 : -1}
-        style={{ '--memory-photo-ratio': photo.width / photo.height, '--memory-photo-native': photo.width + 'px' } as CSSProperties}>
+        style={{ '--memory-photo-ratio': photo.width / photo.height, '--memory-photo-native': photo.width + 'px', '--memory-reveal-preview': photo.preview ? `url("${asset(photo.preview.src)}")` : undefined } as CSSProperties}>
         <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" onStateChange={setImageState} />
         <span className="memory-image-failure theme-dark-island-muted" aria-hidden="true">Фотография недоступна</span>
       </div>

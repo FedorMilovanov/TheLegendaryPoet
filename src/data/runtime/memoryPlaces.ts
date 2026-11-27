@@ -27,7 +27,12 @@ function renderablePlace(value: unknown, poetId: string): boolean {
     textFields(photo, ['src', 'alt', 'caption', 'credit', 'sourceLabel', 'license', 'changes']) &&
     typeof photo.src === 'string' && /^\/images\/memory-places\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/.test(photo.src) &&
     positiveDimension(photo.width) && positiveDimension(photo.height) &&
-    httpsUrl(photo.source) && httpsUrl(photo.licenseUrl)
+    httpsUrl(photo.source) && httpsUrl(photo.licenseUrl) &&
+    (photo.preview === undefined || (
+      textFields(photo.preview, ['src', 'sha256', 'changes']) &&
+      typeof photo.preview.src === 'string' && /^\/images\/memory-places\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/.test(photo.preview.src) &&
+      photo.preview.src !== photo.src && positiveDimension(photo.preview.bytes)
+    ))
   ) &&
     Array.isArray(facts) && facts.every(fact => textFields(fact, ['label', 'value'])) &&
     Array.isArray(timeline) && timeline.every(event => textFields(event, ['date', 'text'])) &&

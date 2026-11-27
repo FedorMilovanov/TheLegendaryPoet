@@ -8,6 +8,8 @@ export type MemoryPhoto = {
   src: string; width: number; height: number; alt: string; caption: string;
   credit: string; source: string; sourceLabel: string; license: string; licenseUrl: string;
   originalSha256: string; sha256: string; bytes: number; changes: string;
+  /** Optional same-canvas editorial cutout. The gallery always uses src. */
+  preview?: { src: string; sha256: string; bytes: number; changes: string };
 };
 export type MemoryPlace = {
   id: string; poetId: string; kind: 'monument' | 'museum' | 'estate' | 'grave' | 'other';

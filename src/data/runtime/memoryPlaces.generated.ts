@@ -9,7 +9,7 @@ export const memoryPlaceRevisions: Readonly<Record<string, string>> = {
   "fyodor-tyutchev": "e0f845a2dc9b6415",
   "konstantin-simonov": "cb820dea3254b364",
   "marina-tsvetaeva": "ec7da4cb46acb67e",
-  "mikhail-lermontov": "3518d68b78215d8f",
+  "mikhail-lermontov": "103aecbf094efa83",
   "nikolay-gumilev": "ec38a4141f941788",
   "nikolay-nekrasov": "bc77067fbd46be64",
   "osip-mandelstam": "34088526daf42111",

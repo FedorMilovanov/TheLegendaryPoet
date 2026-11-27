@@ -267,3 +267,43 @@ test('memory data is scoped to the current poet and retries without affecting th
   await expect(page.locator('#memory-places')).toHaveCount(0);
   expect(requests).toEqual([]);
 });
+
+// The preview and full photograph use the same source canvas, not two gallery entries.
+test('cutout reveals its documentary original and falls back without a second gallery', async ({ page }) => {
+  await page.goto(base + '/poets/mikhail-lermontov#memory-places', { waitUntil: 'domcontentloaded' });
+  const section = page.locator('#memory-places');
+  const opener = section.locator('.memory-photo-trigger').nth(1);
+  await opener.scrollIntoViewIfNeeded();
+  const image = opener.locator('img');
+  await expect(image).toHaveAttribute('data-image-state', 'loaded');
+  await expect(image).toHaveAttribute('src', /figure-cutout\.webp$/);
+  await expect(opener).toHaveAttribute('data-cutout', 'true');
+  const sample = locator => locator.evaluate(node => {
+    const canvas = document.createElement('canvas');
+    canvas.width = node.naturalWidth; canvas.height = node.naturalHeight;
+    const ctx = canvas.getContext('2d'); ctx.drawImage(node, 0, 0);
+    return [[20,20],[410,450],[400,800]].map(([x,y]) => [...ctx.getImageData(x,y,1,1).data]);
+  });
+  const preview = await sample(image);
+  expect(preview[0][3]).toBe(0);
+  expect(preview[1][3]).toBe(255);
+  expect(preview[2][3]).toBe(255);
+  await opener.click();
+  const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
+  const original = gallery.locator('img');
+  await expect(gallery).toBeVisible();
+  await expect(original).toHaveAttribute('src', /figure\.webp$/);
+  await expect(original).toHaveAttribute('data-image-state', 'loaded');
+  const full = await sample(original);
+  expect(full[0][3]).toBe(255);
+  expect(full.slice(1)).toEqual(preview.slice(1));
+  await page.keyboard.press('Escape');
+  await expect(gallery).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await page.route('**/figure-cutout.webp', route => route.abort());
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await opener.scrollIntoViewIfNeeded();
+  await expect(image).toHaveAttribute('data-image-state', 'fallback');
+  await expect(opener).toHaveAttribute('data-cutout', 'false');
+  await expect(image).toHaveAttribute('src', /figure\.webp$/);
+});

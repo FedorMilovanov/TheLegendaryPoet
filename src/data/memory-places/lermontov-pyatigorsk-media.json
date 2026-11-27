@@ -27,7 +27,13 @@
     "sha256": "e543db787b9f4b0890479945f7c2733ec80bf2b5e5a95a9c7584300c5a926934",
     "bytes": 56192,
     "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
-    "sourceLabel": "Wikimedia Commons"
+    "sourceLabel": "Wikimedia Commons",
+    "preview": {
+      "src": "/images/memory-places/lermontov-pyatigorsk/figure-cutout.webp",
+      "sha256": "f08839a1af0919cce41a2b605d2f33960e0030ca1b453a1036f43fe856aea604",
+      "bytes": 59802,
+      "changes": "Предпросмотр: фон отделён; исходный кадр открывается целиком. CC BY-SA 4.0."
+    }
   },
   {
     "slug": "lyre",
