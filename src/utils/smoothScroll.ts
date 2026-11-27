@@ -1,6 +1,13 @@
 const FIXED_HEADER_OFFSET = 96;
 const pauseTokens = new Set<symbol>();
 
+// A malformed URL fragment is an unresolved target, not a reader crash.
+export function decodeHash(hash: string) {
+  const raw = hash.replace(/^#/, '');
+  if (!raw) return '';
+  try { return decodeURIComponent(raw); } catch { return raw; }
+}
+
 /**
  * Records nested overlay ownership. The overlay itself remains responsible for
  * its body lock; native document scrolling has no animation target that needs
@@ -15,6 +22,11 @@ export function pauseSmoothScroll(reason = 'overlay') {
     if (released) return;
     released = true;
     pauseTokens.delete(token);
+    // The final overlay has restored its body styles and scroll offset before
+    // releasing this token. Resume only after the last nested owner leaves.
+    if (pauseTokens.size === 0 && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('tlp-scroll-resumed'));
+    }
   };
 }
 

@@ -9,6 +9,7 @@ interface RawEssayModule {
 }
 
 const rawModules: RawEssayModule[] = [
+  { path: '../src/data/essays/fetNewYearEssay', exportName: 'fetNewYearEssay' },
   { path: '../src/data/essays/simonovSonArtilleristaDraft', exportName: 'simonovSonArtilleristaDraft' },
   { path: '../src/data/essays/benislavskayaDraft', exportName: 'benislavskayaDraft' },
   { path: '../src/data/essays/lermontovRoadEssay', exportName: 'lermontovRoadEssay' },

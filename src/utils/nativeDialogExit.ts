@@ -86,7 +86,13 @@ export function startNativeDialogExit(
     complete();
   }, duration * 4);
   exit.addEventListener('finish', complete);
-  void exit.finished.then(complete, complete);
+  void exit.finished.then(complete, () => {
+    if (!active || !isCurrent() || settled) return;
+    // Cancellation can restore the pre-animation opacity. Conceal the still
+    // mounted root before requesting its terminal removal, just as on timeout.
+    conceal();
+    complete();
+  });
   document.addEventListener('visibilitychange', onVisibilityChange);
   return cleanup;
 }

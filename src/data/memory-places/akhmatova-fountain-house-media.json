@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/akhmatova-fountain-house/museum.webp",
+    "width": 1200,
+    "height": 900,
+    "alt": "Музей Анны Ахматовой в Фонтанном доме",
+    "caption": "Фонтанный дом. 27 июня 2014 года.",
+    "credit": "Olgvasil",
+    "source": "https://commons.wikimedia.org/wiki/File:Muzej_Akhmatovoj_v_Fontannogom_Dome.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "originalSha256": "ec46631dd6bc8e42949e9353f435a9c7e14e4bc3cad9b5db188ea304c886b1bf",
+    "sha256": "93982d5943307a6d6d9f97b26ae35cb1959075815711be8229798e23ff89bf28",
+    "bytes": 63746,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/Muzej_Akhmatovoj_v_Fontannogom_Dome.jpg"
+  },
+  {
+    "src": "/images/memory-places/akhmatova-fountain-house/garden.webp",
+    "width": 1200,
+    "height": 900,
+    "alt": "Сад Фонтанного дома",
+    "caption": "Шереметевский сад. 27 июня 2014 года.",
+    "credit": "Olgvasil",
+    "source": "https://commons.wikimedia.org/wiki/File:Sad_Fontannogo_Doma_01.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "originalSha256": "d5f7fb1e117043298ec9a841822c5bbb549bc8d3b3f018440f86982484922201",
+    "sha256": "30b1f2ed9fd3fce9d6e39bbe7d24529651b5e1c9099db480dd9394fb4b7fabdf",
+    "bytes": 273392,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/be/Sad_Fontannogo_Doma_01.jpg"
+  }
+]

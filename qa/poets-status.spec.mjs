@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { contrastRatio } from './contrast-helpers.mjs';
 
 const BASE_URL = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
@@ -110,20 +110,58 @@ test.describe('poets result status accessibility', () => {
 
   test('closed floating picker yields to visible inline index and returns at poem text', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'webkit-reader-desktop', 'Core and mobile index visibility coverage');
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
-    const index = page.locator('.poet-reading-index');
-    const picker = page.locator('[data-poem-picker]');
-    await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
-    await index.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
-    await expect(picker).toHaveAttribute('data-index-visible', 'true');
-    await expect(picker.locator('summary')).toBeHidden();
-    await index.locator('a[href="#poem-blok-11"]').click();
-    await expect(page).toHaveURL(/#poem-blok-11$/);
-    await expect(picker).toHaveAttribute('data-index-visible', 'false');
-    await expect(picker.locator('summary')).toBeVisible();
-    await picker.locator('summary').click();
-    await expect(picker).toHaveAttribute('open', '');
+    const viewports = [{ width: 390, height: 844 }];
+    if (testInfo.project.name === 'chromium-core') viewports.push({ width: 1440, height: 900 });
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.goto(BASE_URL + '/poets/alexander-blok/', { waitUntil: 'domcontentloaded' });
+      const index = page.locator('.poet-reading-index');
+      const picker = page.locator('[data-poem-picker]');
+      await expect(index.locator('a[href="#poem-blok-11"]')).toBeAttached();
+      const geometry = () => index.evaluate(node => {
+        const rect = node.getBoundingClientRect();
+        const shortcut = document.querySelector('[data-poem-picker]');
+        return {
+          top: rect.top, bottom: rect.bottom, width: rect.width,
+          viewportHeight: innerHeight, scrollY,
+          indexVisible: shortcut?.getAttribute('data-index-visible'),
+          // Independently verify the reading viewport, not only the component's
+          // IntersectionObserver state. The shortcut leaves 100px at either edge.
+          intersectsReadingViewport: rect.width > 0 && rect.bottom > 100 && rect.top < innerHeight - 100,
+        };
+      });
+      try {
+        // A one-shot synthetic scroll can land before late biography/museum
+        // geometry changes, especially in WebKit. Exercise the reader's actual
+        // anchor navigation and existing hash-layout correction instead.
+        const jump = page.getByRole('link', { name: /К оглавлению стихов/ });
+        await expect(jump).toHaveAttribute('href', '#blok-contents');
+        await jump.click();
+        await expect(page).toHaveURL(/#blok-contents$/);
+        await expect.poll(async () => (await geometry()).intersectsReadingViewport, {
+          message: 'Inline index must actually intersect the reading viewport',
+        }).toBe(true);
+        await expect(picker).toHaveAttribute('data-index-visible', 'true');
+        await expect(picker.locator('summary')).toBeHidden();
+        await index.locator('a[href="#poem-blok-11"]').click();
+        await expect(page).toHaveURL(/#poem-blok-11$/);
+        await expect.poll(async () => (await geometry()).intersectsReadingViewport, {
+          message: 'Inline index must leave the reading viewport after poem navigation',
+        }).toBe(false);
+        await expect(picker).toHaveAttribute('data-index-visible', 'false');
+        await expect(picker.locator('summary')).toBeVisible();
+        await picker.locator('summary').click();
+        await expect(picker).toHaveAttribute('open', '');
+      } catch (error) {
+        const evidence = await geometry().catch(() => null);
+        const path = testInfo.outputPath('inline-index-geometry-' + viewport.width + '.json');
+        writeFileSync(path, JSON.stringify({ viewport, url: page.url(), evidence }, null, 2));
+        await testInfo.attach('inline-index-geometry-' + viewport.width, {
+          path, contentType: 'application/json',
+        });
+        throw error;
+      }
+    }
   });
 
   test('same-author SPA search and native fragment history keep both poem indexes current', async ({ page }, testInfo) => {
@@ -208,7 +246,13 @@ test.describe('poets result status accessibility', () => {
       const trigger = picker.locator('summary');
       const scrollTop = page.locator('.scroll-top-btn');
       await expect(trigger).toBeVisible();
-      await page.evaluate(() => window.scrollTo(0, 3200));
+      // Measure the two controls where both are meant to be available:
+      // inside a hydrated poem, not at an arbitrary offset in the inline index.
+      const lastPoem = page.locator('.luxury-card[id^="poem-"]').last();
+      await expect(page.locator('.luxury-card[id^="poem-"]')).toHaveCount(10);
+      await lastPoem.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await expect(picker).toHaveAttribute('data-index-visible', 'false');
+      await expect(trigger).toBeVisible();
       await expect(scrollTop).toBeVisible();
 
       const gap = await page.evaluate(() => {
@@ -433,11 +477,44 @@ test.describe('poets result status accessibility', () => {
           expect(geometry.belowHeader, 'Resized picker must clear the fixed header').toBe(true);
           expect(geometry.dockGap, 'Resized menu must clear the measured mobile dock').toBeGreaterThanOrEqual(8);
           expect(geometry.overflow).toBe(false);
-          const last = nav.locator('a[href^="#poem-"]').last();
-          const hash = await last.getAttribute('href');
-          await last.click();
-          await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(hash);
-          await expect(picker).not.toHaveAttribute('open', '');
+          const choices = nav.locator('a[href^="#poem-"]');
+          await expect(choices).toHaveCount(11);
+          const last = choices.last();
+          await expect(last).toHaveAttribute('href', '#poem-blok-8');
+          await page.evaluate(() => document.fonts.ready);
+          // Scroll the actual menu before testing the final entry. WebKit's
+          // automatic click-scroll waits for stability before issuing a scroll.
+          await last.evaluate(node => node.scrollIntoView({ block: 'center', behavior: 'instant' }));
+          const readEntry = () => last.evaluate(node => {
+            const link = node.getBoundingClientRect();
+            const menu = node.closest('nav')?.getBoundingClientRect();
+            const x = link.left + link.width / 2;
+            const y = link.top + link.height / 2;
+            const hit = document.elementFromPoint(x, y);
+            return {
+              link: { top: link.top, bottom: link.bottom, left: link.left, right: link.right },
+              menu: menu ? { top: menu.top, bottom: menu.bottom, left: menu.left, right: menu.right } : null,
+              viewport: { width: innerWidth, height: innerHeight },
+              reachable: Boolean(menu && link.width > 0 && link.height > 0 &&
+                y >= menu.top && y <= menu.bottom && x >= menu.left && x <= menu.right &&
+                hit && node.contains(hit)),
+            };
+          });
+          try {
+            await expect.poll(async () => (await readEntry()).reachable, {
+              message: 'Final canonical choice must be visible and hit-testable inside the resized menu',
+            }).toBe(true);
+            await last.click({ timeout: 10000 });
+            await expect.poll(() => page.evaluate(() => window.location.hash)).toBe('#poem-blok-8');
+            await expect(picker).not.toHaveAttribute('open', '');
+            await expect(page.locator('#poem-blok-8')).toBeVisible();
+          } catch (error) {
+            const evidence = await readEntry().catch(() => null);
+            const path = testInfo.outputPath('resized-picker-' + phase + '.json');
+            writeFileSync(path, JSON.stringify({ phase, scale, viewport, url: page.url(), evidence }, null, 2));
+            await testInfo.attach('resized-picker-' + phase, { path, contentType: 'application/json' });
+            throw error;
+          }
         }
       });
     }

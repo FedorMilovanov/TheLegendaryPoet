@@ -29,6 +29,7 @@ const htmlStyle: Record<string, string> = { overflow: '', overscrollBehavior: ''
 const bodyClasses = new TokenList();
 const htmlClasses = new TokenList();
 const scrollCalls: Array<[number, number]> = [];
+const resumeEvents: Array<{ type: string; position: string; scrollCount: number }> = [];
 const documentListeners = new Map<string, Set<(event: KeyboardEvent) => void>>();
 
 const fakeWindow = {
@@ -37,6 +38,10 @@ const fakeWindow = {
   innerWidth: 1200,
   getComputedStyle: () => ({ paddingRight: '4px' }),
   scrollTo: (x: number, y: number) => scrollCalls.push([x, y]),
+  dispatchEvent: (event: Event) => {
+    resumeEvents.push({ type: event.type, position: bodyStyle.position, scrollCount: scrollCalls.length });
+    return true;
+  },
 };
 const fakeDocument = {
   body: { style: bodyStyle, classList: bodyClasses },
@@ -81,6 +86,7 @@ expect(!first.isTopmost() && second.isTopmost(), 'stacked overlays must expose t
 first.release();
 expect(bodyStyle.position === 'fixed', 'closing a lower overlay must not unlock a higher overlay');
 expect(overlay.hasOpenOverlay(), 'the stack must remain open while one overlay survives');
+expect(resumeEvents.length === 0, 'partial modal release must not resume document scroll');
 second.release();
 const restoredScroll = scrollCalls[scrollCalls.length - 1];
 expect(bodyStyle.position === 'relative' && bodyStyle.overflow === 'visible', 'the final release must restore body styles');
@@ -91,6 +97,7 @@ expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_
 expect((documentListeners.get('keydown')?.size ?? 0) === 0, 'the shared Escape listener must be removed after the final overlay');
 second.release();
 expect(scrollCalls.length === 1, 'overlay release must be idempotent');
+expect(resumeEvents.length === 1 && resumeEvents[0]?.type === 'tlp-scroll-resumed' && resumeEvents[0]?.position === 'relative' && resumeEvents[0]?.scrollCount === 1, 'final modal release must notify once after body and scroll restoration');
 
 const lowerControl = {} as HTMLElement;
 const upperControl = {} as HTMLElement;
@@ -109,6 +116,7 @@ upper.release();
 expect(overlay.canRestoreOverlayFocus(lowerControl), 'closing the top dialog must return focus ownership to the lower dialog');
 lower.release();
 expect(scrollCalls.length === 2, 'each complete overlay session must restore scroll exactly once');
+expect(resumeEvents.length === 2, 'each complete overlay session must notify scroll ownership exactly once');
 
 const survivingControl = {} as HTMLElement;
 const survivingRoot = {
@@ -244,7 +252,7 @@ async function checkNativeExit(kind: string) {
     expect(completions === 1 && opacity === '0' && priority === 'important' && finishCalls === 1, 'stalled exit must force terminal visual state before completing, even if finish throws');
   } else if (kind === 'cancel') {
     reject(new Error('cancel')); await Promise.resolve();
-    expect(completions === 1 && tasks.size === 0, 'cancelled native animation must settle and clear its watchdog');
+    expect(completions === 1 && opacity === '0' && priority === 'important' && tasks.size === 0, 'cancelled native animation must conceal before completing and clear its watchdog');
   } else if (kind === 'hidden') {
     Object.assign(fakeDocument, { visibilityState: 'hidden' });
     for (const listener of documentListeners.get('visibilitychange') ?? []) listener({} as KeyboardEvent);
@@ -252,13 +260,19 @@ async function checkNativeExit(kind: string) {
   } else if (kind === 'reopen') {
     current = false; cleanup(); advance(5000); resolve(); await Promise.resolve();
     expect(completions === 0 && opacity === '0.8', 'old native exit must not close a reopened dialog');
+  } else if (kind === 'reopenCancelled') {
+    current = false; cleanup(); reject(new Error('old cancellation')); await Promise.resolve();
+    expect(completions === 0 && opacity === '0.8', 'stale rejection must not conceal a reopened dialog');
+  } else if (kind === 'cancelAfterFinish') {
+    animation.dispatchEvent(new Event('finish')); reject(new Error('late cancellation')); await Promise.resolve();
+    expect(completions === 1 && opacity === '0.8', 'late rejection after a finish event must not settle or conceal again');
   } else if (kind === 'animateThrows') {
     expect(completions === 1 && opacity === '0' && priority === 'important', 'synchronous native animation failure must be nonvisual and complete');
   }
   cleanup();
   expect(opacity === '0.8' && priority === '' && tasks.size === 0 && !(documentListeners.get('visibilitychange')?.size), 'exit cleanup must restore prior opacity and remove all callbacks');
 }
-for (const kind of ['normal', 'eventOnly', 'stalled', 'finishThrows', 'cancel', 'hidden', 'reopen', 'animateThrows']) {
+for (const kind of ['normal', 'eventOnly', 'stalled', 'finishThrows', 'cancel', 'hidden', 'reopen', 'reopenCancelled', 'cancelAfterFinish', 'animateThrows']) {
   await checkNativeExit(kind);
 }
 Object.assign(fakeDocument, { visibilityState: 'visible' });

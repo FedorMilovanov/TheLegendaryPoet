@@ -64,7 +64,7 @@ test('optional essay catalog failure cannot block primary poet or essay routes',
 });
 
 test.describe('optional poet chunk independence', () => {
-  for (const chunk of ['MoralPortrait', 'PoetSources', 'PoetVideos']) {
+  for (const chunk of ['MoralPortrait', 'PoetSources', 'PoetVideos', 'MemoryPlaces']) {
     test(`failure of ${chunk} preserves the complete poet corpus`, async ({ context, page }) => {
       const id = chunk === 'PoetVideos' ? 'aleksey-konstantinovich-tolstoy' : 'alexander-blok';
       let blocked = 0;
@@ -84,6 +84,15 @@ test.describe('optional poet chunk independence', () => {
       await expect(page.locator('[data-poem-canonical]').first()).toBeVisible();
       await expect(page.getByText('Дополнительный раздел недоступен. Обновите страницу.', { exact: true })).toBeVisible();
       await expectNoRouteRecovery(page);
+      if (chunk === 'MemoryPlaces') {
+        const jump = page.locator('a[href="#memory-places"]');
+        const section = page.locator('#memory-places');
+        await expect(section.getByRole('heading', { level: 2, name: 'Места памяти' })).toBeVisible();
+        await expect(section.getByRole('status')).toContainText('Дополнительный раздел недоступен');
+        await jump.click();
+        await expect.poll(() => new URL(page.url()).hash).toBe('#memory-places');
+        await expect.poll(() => section.evaluate(node => Math.abs(node.getBoundingClientRect().top - 112))).toBeLessThan(48);
+      }
     });
   }
   test('held portrait does not postpone the biography or poems', async ({ context, page }) => {
