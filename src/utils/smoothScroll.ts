@@ -3,9 +3,7 @@ const pauseTokens = new Set<symbol>();
 
 // A malformed URL fragment is an unresolved target, not a reader crash.
 export function decodeHash(hash: string) {
-  // Browsers that expose text directives still resolve the ordinary anchor.
-  // Strip the literal delimiter before decoding so encoded IDs stay intact.
-  const raw = hash.replace(/^#/, '').split(':~:', 1)[0];
+  const raw = hash.replace(/^#/, '');
   if (!raw) return '';
   try { return decodeURIComponent(raw); } catch { return raw; }
 }

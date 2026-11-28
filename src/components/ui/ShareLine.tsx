@@ -17,19 +17,18 @@ function encodeFragmentPart(s: string): string {
   return encodeURIComponent(s).replace(/-/g, '%2D');
 }
 
-/** Add a published poem/source anchor when the selection lies inside one.
- * It remains useful even if the browser cannot highlight a text directive. */
-function buildFragmentUrl(text: string, anchor = ''): string {
+/** Build `#:~:text=` URL for the current page pointing at `text`. */
+function buildFragmentUrl(text: string): string {
   const clean = text.replace(/\s+/g, ' ').trim();
-  const base = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(anchor)}`;
+  const base = `${window.location.origin}${window.location.pathname}`;
   const words = clean.split(' ');
   if (clean.length <= 120 || words.length <= 10) {
-    return `${base}:~:text=${encodeFragmentPart(clean)}`;
+    return `${base}#:~:text=${encodeFragmentPart(clean)}`;
   }
   // Long selections: range syntax (textStart,textEnd) keeps the URL short.
   const start = words.slice(0, 5).join(' ');
   const end = words.slice(-5).join(' ');
-  return `${base}:~:text=${encodeFragmentPart(start)},${encodeFragmentPart(end)}`;
+  return `${base}#:~:text=${encodeFragmentPart(start)},${encodeFragmentPart(end)}`;
 }
 
 
@@ -122,13 +121,9 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
     copiedRange.current = snapshot;
     window.clearTimeout(copiedTimer.current);
     setFeedback(null);
-    const common = range.commonAncestorContainer;
-    const host = common instanceof Element ? common : common.parentElement;
-    const target = host?.closest<HTMLElement>('[id^="poem-"], li[id^="source-"], h2[id^="sec-"]');
-    const anchor = target && scopeRef.current?.contains(target) ? target.id : '';
     let result: 'copied' | 'failed' = 'copied';
     try {
-      await navigator.clipboard.writeText(buildFragmentUrl(text, anchor));
+      await navigator.clipboard.writeText(buildFragmentUrl(text));
     } catch {
       result = 'failed';
     }

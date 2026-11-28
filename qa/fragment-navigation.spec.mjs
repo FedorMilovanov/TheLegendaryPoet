@@ -168,7 +168,7 @@ test('share selection rejects private or stale ranges and preserves later reader
   await expect(chip).toHaveText('Ссылка на строку');
 });
 
-test('shared poem link retains its published anchor and reports clipboard rejection', async ({ page }) => {
+test('share selection reports clipboard rejection and supports retry', async ({ page }) => {
   await page.addInitScript(() => {
     window.__shareWrites = [];
     window.__rejectShare = false;
@@ -184,7 +184,6 @@ test('shared poem link retains its published anchor and reports clipboard reject
   const verse = page.locator('[data-poem-canonical]').first();
   const word = verse.locator('[data-poem-canonical-word]').first();
   await word.scrollIntoViewIfNeeded();
-  const id = await verse.evaluate(node => node.closest('[id^="poem-"]').id);
   await word.evaluate(node => {
     const range = document.createRange();
     range.selectNodeContents(node);
@@ -198,15 +197,12 @@ test('shared poem link retains its published anchor and reports clipboard reject
   await chip.evaluate(node => node.click());
   await expect(chip).toHaveText('Скопировано');
   const shared = await page.evaluate(() => window.__shareWrites[0]);
-  expect(new URL(shared).hash).toContain('#' + id + ':~:text=');
+  expect(new URL(shared).hash).toContain('#:~:text=');
   await page.evaluate(() => { window.__rejectShare = true; });
   await chip.evaluate(node => node.click());
   await expect(chip).toHaveText('Не удалось скопировать');
-  // Simulate a recipient without text-fragment highlighting, using the
-  // ordinary anchor retained in the same copied URL.
-  await page.goto(shared.split(':~:')[0], { waitUntil: 'domcontentloaded' });
-  const target = page.locator('[id="' + id + '"]');
-  await expect(target).toBeVisible();
-  await expect.poll(() => target.evaluate(node => node.getBoundingClientRect().top)).toBeGreaterThan(70);
-  await expect.poll(() => target.evaluate(node => node.getBoundingClientRect().top)).toBeLessThan(180);
+  await page.evaluate(() => { window.__rejectShare = false; });
+  await chip.evaluate(node => node.click());
+  await expect(chip).toHaveText('Скопировано');
+  expect(await page.evaluate(() => window.__shareWrites)).toEqual([shared, shared]);
 });
