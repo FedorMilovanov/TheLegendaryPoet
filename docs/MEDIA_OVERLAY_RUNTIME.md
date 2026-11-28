@@ -4,7 +4,7 @@ This document defines the interaction contract for modal surfaces, responsive im
 
 ## Modal surfaces
 
-Every modal surface must use `useDialogSurface`. Animated Framer Motion surfaces use `useDialogExitLifetime`, passing its `lockOpen` to the dialog hook, `deferReleaseUntilUnmount: true`, and `onExitComplete` to `AnimatePresence`. The immersive player uses the same overlay lock with `useNativeDialogExitLifetime`, binding its exit to the painted dialog's compositor animation (`Animation.finished`) because WebKit can stall Framer's presence callback. In both cases, focus isolation, scroll locking and overlay ownership remain in force until the dialog is no longer painted; neither a fixed timer nor a second overlay manager may release them.
+Every modal surface must use `useDialogSurface`. Animated Framer Motion surfaces use `useDialogExitLifetime`, passing its `lockOpen` to the dialog hook, `deferReleaseUntilUnmount: true`, and `onExitComplete` to `AnimatePresence`. The immersive player uses the same overlay lock with `useNativeDialogExitLifetime`, binding its exit to the painted dialog's compositor animation (`Animation.finished`) because WebKit can stall Framer's presence callback. Both the native finish event and finished promise are observed. The stable immersive root has a single native opacity owner for entrance and exit; entrance cleanup captures painted opacity and cancels the old animation before exit, while track artwork and details retain their independent child reveals. In both cases, focus isolation, scroll locking and overlay ownership remain in force until the dialog is no longer painted; no timer or second overlay manager may directly release them. If both native signals stall, the single exit owner forces terminal opacity (0, important) after four authored durations (1.8s for the 450ms fade), then removes the portal through the same React lifetime. Normal animation duration is unchanged.
 
 The hook provides:
 
@@ -16,7 +16,7 @@ The hook provides:
 - initial focus placement;
 - focus containment with Tab and Shift+Tab;
 - Escape handling only for the topmost surface;
-- focus restoration with `preventScroll`.
+- focus restoration with `preventScroll`, using an explicit invoker ref when activation can move browser focus before opening; delayed restoration yields to any newer focus owner.
 
 A component must still provide:
 
@@ -70,7 +70,7 @@ Pointer coordinates stay outside React state, painting is limited to one animati
 
 ## Adding a new modal
 
-1. For animated surfaces, retain the modal stack lease throughout exit. Framer Motion surfaces release on `AnimatePresence` completion; the immersive player releases on the compositor-owned `Animation.finished` of its actual root. An already-detached or backgrounded surface may complete immediately. Cancellation of the current native exit or a transition to a hidden document also completes that exit; cleanup invalidates stale operations before cancelling on rapid reopen. Reduced-motion mode preserves the opacity-only fade, matching the previous visual behavior; unmount still releases synchronously through effect cleanup.
+1. For animated surfaces, retain the modal stack lease throughout exit. Framer Motion surfaces release on `AnimatePresence` completion; the immersive player releases on the compositor-owned `Animation.finished` of its actual root. An already-detached or backgrounded surface may complete immediately. Cancellation of the current native exit forces terminal opacity before completing; a transition to a hidden document also completes that exit; synchronous animation failure and a stalled native completion have a non-painted fallback; cleanup invalidates stale operations before cancelling on rapid reopen. Reduced-motion mode preserves the opacity-only fade, matching the previous visual behavior; unmount still releases synchronously through effect cleanup.
 2. Create refs for the dialog and preferred initial control.
 3. Call `useDialogSurface` with a stable close callback.
 4. Mark the dialog correctly and make its content independently scrollable.
@@ -87,3 +87,7 @@ npm run build
 ```
 
 The interaction validator runs an actual nested-lock simulation and then verifies the source-level contracts for shared dialogs, resilient images, smooth-scroll pausing and bounded tilt effects.
+
+### Natural vs interrupted entrance acceptance
+
+The natural exit test requires three consecutive browser-local animation frames at root opacity >= 0.99 with no pending/running root opacity animation, a connected root and a visible document. A five-second entrance timeout reports the real last opacity, animation count, sample count and maximum frame gap. This is a separate readiness gate, not a fixed delay or a relaxation of the existing exit sample/ownership/unmount thresholds. Interrupted entrance and stalled native completion remain independently exercised. The previous insufficient-frame failures are not yet explained or certified; compare the new entrance and exit traces on the same exact head.
