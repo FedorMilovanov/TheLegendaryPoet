@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { acquireExactOfflineSource } from './download-exact-source.mjs';
+import { acquireExactOfflineSource, prepareOfflineSourceOutput } from './download-exact-source.mjs';
 
 const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x11, 0x55, 0x22]);
 const hash = 'sha256:' + crypto.createHash('sha256').update(bytes).digest('hex');
@@ -75,4 +75,52 @@ test('unauthorized source and off-Wikimedia redirect are refused', async (t) => 
   await assert.rejects(acquireExactOfflineSource({ asset, ...paths,
     fetchImpl: async () => ({...response(200), url:'https://example.org/hijack'}),
   }), /unapproved source redirect/);
+});
+
+test('offline source cleanup is confined to the two generated source directories', (t) => {
+  const root = path.dirname(make(t).outputDir);
+  const keep = path.join(root, 'keep.txt');
+  fs.writeFileSync(keep, 'keep');
+  for (const target of [root, path.dirname(root), path.join(root, 'qa-artifacts'), path.join(root, 'other')]) {
+    assert.throws(() => prepareOfflineSourceOutput(root, target), /unapproved offline source output directory/);
+  }
+  for (const lane of ['hall-pushkin-offline', 'hall-pushkin-lookdev']) {
+    const target = path.join(root, 'qa-artifacts', lane, 'sources');
+    prepareOfflineSourceOutput(root, target);
+    for (const name of ['kiprensky-1827-source.jpg', 'onegin-1833-source.pdf', 'onegin-1833-title-page.png', 'source-assets-evidence.json']) {
+      fs.writeFileSync(path.join(target, name), 'old generated output');
+    }
+    prepareOfflineSourceOutput(root, target);
+    assert.deepEqual(fs.readdirSync(target), []);
+  }
+  assert.equal(fs.readFileSync(keep, 'utf8'), 'keep');
+});
+
+test('offline source cleanup refuses foreign files before deleting owned output', (t) => {
+  const root = path.dirname(make(t).outputDir);
+  const target = path.join(root, 'qa-artifacts', 'hall-pushkin-offline', 'sources');
+  prepareOfflineSourceOutput(root, target);
+  const owned = path.join(target, 'source-assets-evidence.json');
+  fs.writeFileSync(owned, 'receipt');
+  fs.writeFileSync(path.join(target, 'notes.txt'), 'keep');
+  assert.throws(() => prepareOfflineSourceOutput(root, target), /unexpected offline source output entry/);
+  assert.equal(fs.readFileSync(owned, 'utf8'), 'receipt');
+  assert.equal(fs.readFileSync(path.join(target, 'notes.txt'), 'utf8'), 'keep');
+});
+
+test('offline source cleanup refuses symlinked directories and files', (t) => {
+  const root = path.dirname(make(t).outputDir);
+  const external = path.join(root, 'outside');
+  fs.mkdirSync(external);
+  const keep = path.join(external, 'source-assets-evidence.json');
+  fs.writeFileSync(keep, 'keep');
+  const parent = path.join(root, 'qa-artifacts');
+  fs.symlinkSync(external, parent, 'junction');
+  const target = path.join(parent, 'hall-pushkin-offline', 'sources');
+  assert.throws(() => prepareOfflineSourceOutput(root, target), /unsafe offline source directory/);
+  fs.unlinkSync(parent);
+  prepareOfflineSourceOutput(root, target);
+  fs.symlinkSync(external, path.join(target, 'onegin-1833-source.pdf'), 'junction');
+  assert.throws(() => prepareOfflineSourceOutput(root, target), /unexpected offline source output entry/);
+  assert.equal(fs.readFileSync(keep, 'utf8'), 'keep');
 });
