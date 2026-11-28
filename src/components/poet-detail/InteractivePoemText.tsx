@@ -1,5 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+
+// Reuse fixed motion targets instead of rebuilding identical objects per word.
+const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
+const sharp = { filter: 'blur(0px)', opacity: 1 };
+const still = { ...sharp, scale: 1, x: 0, y: 0 };
+const reading = { ...still, transition: { duration: 0.55, ease } };
+const resting = { ...reading, color: 'rgba(255,255,255,0.90)', textShadow: 'none' };
+const read = { ...reading, color: '#d4af37', textShadow: '0 0 8px rgba(212,175,55,0.22)' };
+const returning = { ...still, scale: 1.06, y: -1, color: '#d4af37', textShadow: '0 0 10px rgba(212,175,55,0.34)', transition: { duration: 0.7, ease } };
+const focused = { ...sharp, scale: 1.42, y: -7, color: '#f5e6a3', textShadow: '0 0 16px rgba(245,230,163,0.62), 0 0 42px rgba(212,175,55,0.22)', transition: { duration: 0.82, ease } };
+const blurred = { scale: 0.98, y: 0, filter: 'blur(3.2px)', opacity: 0.42, color: 'rgba(255,255,255,0.68)', textShadow: 'none', transition: { duration: 0.62, ease } };
+const hovered = { ...sharp, scale: 1.1, y: -3, color: '#d4af37', textShadow: '0 0 12px rgba(212,175,55,0.45), 0 0 24px rgba(212,175,55,0.12)', transition: { type: 'spring' as const, stiffness: 420, damping: 16 } };
+const neighbor = { scale: 1.035, y: -1, filter: sharp.filter, opacity: 0.9, color: 'rgba(255,255,255,0.86)', textShadow: 'none', transition: { type: 'spring' as const, stiffness: 360, damping: 12, mass: 0.55 } };
 
 /**
  * Word-by-word reading effect with a separate semantic/canonical text layer.
@@ -9,7 +22,7 @@ import { motion } from 'framer-motion';
  * from the accessibility tree.
  */
 export default function InteractivePoemText({ text }: { text: string }) {
-  const lines = text.split('\n').map((line) => line.split(/(\s+)/u));
+  const lines = useMemo(() => text.split('\n').map((line) => line.split(/(\s+)/u)), [text]);
   const [focusedWord, setFocusedWord] = useState<string | null>(null);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   const [returningWord, setReturningWord] = useState<string | null>(null);
@@ -51,6 +64,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
   }, []);
 
   const focusActive = focusedWord !== null;
+  const [hoveredLine, hoveredIdx] = hoveredWord?.split('-').map(Number) || [];
 
   return (
     <div
@@ -111,9 +125,6 @@ export default function InteractivePoemText({ text }: { text: string }) {
                   const isReturning = returningWord === key;
                   const hasBeenRead = readWords.has(key);
                   const isSiblingBlurred = focusActive && !isFocused;
-                  const hoveredParts = hoveredWord?.split('-').map(Number) || [];
-                  const hoveredLine = hoveredParts[0];
-                  const hoveredIdx = hoveredParts[1];
                   const isNeighbor = !focusActive && hoveredLine === lineIdx && Math.abs(hoveredIdx - wordIdx) === 1;
                   const neighborDirection = hoveredIdx < wordIdx ? 1 : -1;
 
@@ -121,20 +132,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
                     <motion.span
                       key={key}
                       className="relative inline-block max-w-full break-words"
-                      animate={
-                        isFocused
-                          ? { scale: 1.42, y: -7, color: '#f5e6a3', filter: 'blur(0px)', opacity: 1, textShadow: '0 0 16px rgba(245,230,163,0.62), 0 0 42px rgba(212,175,55,0.22)', transition: { duration: 0.82, ease: [0.16, 1, 0.3, 1] } }
-                          : isSiblingBlurred
-                            ? { scale: 0.98, y: 0, filter: 'blur(3.2px)', opacity: 0.42, color: 'rgba(255,255,255,0.68)', textShadow: 'none', transition: { duration: 0.62, ease: [0.16, 1, 0.3, 1] } }
-                            : isHovered
-                              ? { scale: 1.1, y: -3, filter: 'blur(0px)', opacity: 1, color: '#d4af37', textShadow: '0 0 12px rgba(212,175,55,0.45), 0 0 24px rgba(212,175,55,0.12)', transition: { type: 'spring' as const, stiffness: 420, damping: 16 } }
-                              : isNeighbor
-                                ? { scale: 1.035, x: neighborDirection * 7, y: -1, filter: 'blur(0px)', opacity: 0.9, color: 'rgba(255,255,255,0.86)', textShadow: 'none', transition: { type: 'spring' as const, stiffness: 360, damping: 12, mass: 0.55 } }
-                                : isReturning
-                                  ? { scale: 1.06, x: 0, y: -1, filter: 'blur(0px)', opacity: 1, color: '#d4af37', textShadow: '0 0 10px rgba(212,175,55,0.34)', transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
-                                  : hasBeenRead
-                                    ? { scale: 1, x: 0, y: 0, filter: 'blur(0px)', opacity: 1, color: '#d4af37', textShadow: '0 0 8px rgba(212,175,55,0.22)', transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
-                                    : { scale: 1, x: 0, y: 0, filter: 'blur(0px)', opacity: 1, color: 'rgba(255,255,255,0.90)', textShadow: 'none', transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
+                      animate={isFocused ? focused : isSiblingBlurred ? blurred : isHovered ? hovered : isNeighbor ? { ...neighbor, x: neighborDirection * 7 } : isReturning ? returning : hasBeenRead ? read : resting
                       }
                       whileHover={!focusActive ? { scale: 1.14, y: -3, color: '#d4af37', textShadow: '0 0 12px rgba(212,175,55,0.5), 0 0 24px rgba(212,175,55,0.15)' } : undefined}
                       transition={{ type: 'spring', stiffness: 350, damping: 14 }}
