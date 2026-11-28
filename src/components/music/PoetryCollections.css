@@ -1,0 +1,42 @@
+/* Collection is an intentionally dark editorial island in both themes. */
+.poetry-collection {
+  --ink:#f4f6ff;--muted:#bccce3;--gold:#f0d399;--blue:#a7ccff;--line:#42536c;
+  scroll-margin-top:8rem;border:1px solid #536a8d;background:radial-gradient(ellipse at 92% 5%,#1d3557,transparent 42%),linear-gradient(145deg,#101d31,#090f1a 72%);
+  color:var(--ink);border-radius:clamp(1.25rem,3vw,2.25rem);padding:clamp(1rem,3vw,2.5rem);box-shadow:0 24px 64px #0005;
+}
+.poetry-collections-heading p,.poetry-collection-intro>p{max-width:34rem;line-height:1.7}
+.poetry-collection :is(h3,h4,h5,summary){color:var(--ink)}
+.poetry-collection :is(figcaption,.poetry-collection-date,.poetry-collection-source-count,.poetry-collection-fragment,.poetry-collection-section-heading>span,.poetry-collection-intro>p){color:var(--muted)}
+.poetry-collection :is(.poetry-collection-eyebrow,.poetry-collection-entry-number,.poetry-collection-source-date,.poetry-collection-library-link){color:var(--gold)}
+.poetry-collection :is(.poetry-collection-poet,.poetry-collection-original,.poetry-collection-chevron,.poetry-collection-source-arrow){color:var(--blue)}
+.poetry-collection .poetry-collection-library-link{color:var(--gold)}
+.poetry-collection-eyebrow>span{width:2.2rem;height:1px;background:var(--gold)}
+.poetry-collection :is(a,summary){min-height:44px;text-decoration:none}
+.poetry-collection :is(a,summary):focus-visible{outline:2px solid #ffd58a;outline-offset:3px}
+.poetry-collection-primary{background:var(--gold);color:#182033}
+.poetry-collection-secondary{background:#12243c;color:var(--ink);border:1px solid #496385}
+.poetry-collection-primary:hover{background:#ffe5b6;color:#111927}
+.poetry-collection :is(.poetry-collection-secondary,.poetry-collection-source-main,.poetry-collection-original):hover{background:#203554}
+.poetry-collection-image{border-color:#63758d;background:#101a2b}
+.poetry-collection-image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform 1s}
+.poetry-collection-image img[data-image-state="failed"]{opacity:0}
+.poetry-collection-ribbon{color:#a6c8ff;opacity:.65;transition:transform .9s,opacity .9s}
+.poetry-collection-releases,#poetry-collections{scroll-margin-top:8rem}
+.poetry-collection :is(.poetry-collection-releases,.poetry-collection-sources,.poetry-collection-entry,.poetry-collection-source-list li,.poetry-collection-original){border-color:var(--line)}
+.poetry-collection-entry{background:#0b1524}
+.poetry-collection-sources summary{list-style:none;min-height:48px}
+.poetry-collection-sources summary::-webkit-details-marker{display:none}
+.poetry-collection-source-count{margin-left:auto}
+.poetry-collection-sources[open] .poetry-collection-chevron{transform:rotate(180deg)}
+.poetry-collection-sources:not([open])>.poetry-collection-source-list{display:none}
+.poetry-collection-source-list li{background:#142137}
+.poetry-collection-source-main{grid-template-columns: minmax(3.2rem,auto) minmax(0,1fr) auto;align-items:start;color:var(--ink);flex:1}
+.poetry-collection-original svg{flex:none}
+.poetry-collection-jump,.collection-reference-link{min-height:44px}
+.poetry-collection-jump{display:inline-flex;align-items:center;gap:.5rem;text-decoration:underline}
+.collection-reference{border-color:var(--tlp-border,#52627a)}
+.collection-reference-label{color:var(--tlp-text-muted,inherit)}
+.collection-reference-link:hover{text-decoration:underline}
+@media (hover:hover) and (pointer:fine){.poetry-collection-figure:hover img{transform:scale(1.035)}.poetry-collection-figure:hover .poetry-collection-ribbon{transform:translateY(-3px);opacity:1}}
+@media(max-width:420px){.poetry-collection :is(.poetry-collection-actions,.poetry-collection-entry-actions)>a{width:100%;justify-content:space-between}.poetry-collection-source-count{margin-left:0}.poetry-collection-chevron{margin-left:auto}}
+@media(prefers-reduced-motion:reduce){.poetry-collection :is(img,.poetry-collection-ribbon){transition:none!important;transform:none!important}}

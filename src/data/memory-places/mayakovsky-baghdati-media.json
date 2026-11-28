@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/mayakovsky-baghdati/house.webp",
+    "width": 1000,
+    "height": 667,
+    "alt": "Дом, где родился Маяковский, в Багдати",
+    "caption": "Дом, где родился Маяковский, в Багдати. 13 мая 2017 года.",
+    "credit": "Yasuhiro Kojima",
+    "source": "https://commons.wikimedia.org/wiki/File:Mayakovsky_House_Museum_1.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "originalSha256": "581169bd336e1f110444d3a2354a2d963599a2f389139ae8549216fc2fa8545d",
+    "sha256": "40972dc642d15af1842e7acf1609cabbd84ee8f8fcfdebe31e18a7c7b3495994",
+    "bytes": 227600,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Mayakovsky_House_Museum_1.jpg"
+  },
+  {
+    "src": "/images/memory-places/mayakovsky-baghdati/view.webp",
+    "width": 1200,
+    "height": 800,
+    "alt": "Другой ракурс дома-музея Маяковского",
+    "caption": "Дом-музей Маяковского с другого ракурса. 13 мая 2017 года.",
+    "credit": "Yasuhiro Kojima",
+    "source": "https://commons.wikimedia.org/wiki/File:Mayakovsky_House_Museum_2.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "originalSha256": "33bb6ab45530423957a204ced37cf70682d6b4bc769f7387c740d7c52b38ab9d",
+    "sha256": "2f20f675f79e8d5183fc2e73a1006ba3e967cb17abf8f843cb972de2c5878230",
+    "bytes": 232560,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Mayakovsky_House_Museum_2.jpg"
+  }
+]

@@ -18,6 +18,14 @@ const editions = {
     ['fet-1', 'https://rvb.ru/19vek/fet/bp/text/221.html', false],
     ['fet-2', 'https://rvb.ru/19vek/fet/bp/text/285.html', false],
     ['fet-3', 'https://rvb.ru/19vek/fet/bp/text/174.html', false],
+    ['fet-4', 'https://rvb.ru/19vek/fet/bp/text/168.html', false],
+    ['fet-5', 'https://rvb.ru/19vek/fet/bp/text/129.html', false],
+    ['fet-6', 'https://ru.wikisource.org/wiki/Страница:Полное_собрание_стихотворений_А._А._Фета._Т._1_(1901).djvu/534', false],
+    ['fet-7', 'https://rvb.ru/19vek/fet/bp/text/128.html', false],
+    ['fet-8', 'https://ru.wikisource.org/wiki/Страница:Полное_собрание_стихотворений_А._А._Фета._Т._1_(1901).djvu/553', false],
+    ['fet-9', 'https://rvb.ru/19vek/fet/bp/text/147.html', false],
+    ['fet-10', 'https://imwerden.de/pdf/fet_sobranie_sochinenij_v_20tt_tom01_2002__ocr.pdf#page=69', false],
+    ['fet-11', 'https://imwerden.de/pdf/fet_sobranie_sochinenij_v_20tt_tom01_2002__ocr.pdf#page=324', false],
   ],
   'nikolay-gumilev': [
     ['gumilev-1', 'https://ru.wikisource.org/wiki/Жираф_(Гумилёв)', false],
@@ -52,6 +60,14 @@ for (const [author, works] of Object.entries(editions)) {
         } else {
           await expect(marker).toHaveCount(0);
         }
+      }
+      if (author === 'afanasy-fet') {
+        const canonical = page.locator('#poem-fet-11 [data-poem-canonical]');
+        await expect(canonical).toContainText('навек <пот>ушила');
+        await expect(canonical).toContainText('ког<о не>т надежды?');
+        await expect(canonical).toContainText('Виват! пейте заздравие смело');
+        await expect(page.locator('#poem-fet-8 [data-poem-canonical]')).toContainText('мощно, и нежно');
+        await expect(page.locator('#poem-fet-9 [data-poem-canonical]')).toContainText('звезда́ми горит');
       }
       if (author === 'anna-akhmatova') {
         await expect(page.locator('#poem-akhmatova-1 .poem-card-title')).toContainText('фрагмент «Посвящения»');

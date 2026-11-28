@@ -80,3 +80,87 @@ test('the figure layout widths are the ones the renderer paints', () => {
   assert.equal(figureLayoutWidth('wide'), 768);
   assert.equal(figureLayoutWidth('cinematic'), 768);
 });
+
+// Real tiny images encoded with Pillow; no fixture files or decoder dependency.
+const gif = Buffer.from('R0lGODdhEAAKAIEAACh4vgAAAAAAAAAAACwAAAAAEAAKAAAIFwABCBxIsKDBgwgTKlzIsKHDhxAjHgwIADs=', 'base64');
+const avif = Buffer.from('AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAADrbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAOcGl0bQAAAAAAAQAAAB5pbG9jAAAAAEQAAAEAAQAAAAEAAAETAAAAKgAAAChpaW5mAAAAAAABAAAAGmluZmUCAAAAAAEAAGF2MDFDb2xvcgAAAABqaXBycAAAAEtpcGNvAAAAFGlzcGUAAAAAAAAAEAAAAAoAAAAQcGl4aQAAAAADCAgIAAAADGF2MUOBAAwAAAAAE2NvbHJuY2x4AAEADQAGgAAAABdpcG1hAAAAAAAAAAEAAQQBAoMEAAAAMm1kYXQSAAoJGAz+WiAhoNCAMhsUx4eGZQIIIJ5QAAAAOtxBfmJT+NZ+j7A6RHg=', 'base64');
+test('valid GIF and AVIF have readable intrinsic dimensions', () => {
+  assert.deepEqual(readIntrinsicSize(gif), { width: 16, height: 10 });
+  assert.deepEqual(readIntrinsicSize(avif), { width: 16, height: 10 });
+});
+test('AVIF follows the primary item association and rejects malformed bounds', () => {
+  // Header-only test: the first spatial extent belongs to a different item.
+  const box = (type, ...parts) => {
+    const header = Buffer.alloc(8);
+    header.writeUInt32BE(8 + parts.reduce((sum, part) => sum + part.length, 0));
+    header.write(type, 4, 'ascii');
+    return Buffer.concat([header, ...parts]);
+  };
+  const extent = (width, height) => {
+    const payload = Buffer.alloc(12);
+    payload.writeUInt32BE(width, 4);
+    payload.writeUInt32BE(height, 8);
+    return box('ispe', payload);
+  };
+  const primary = box('pitm', Buffer.from([0, 0, 0, 0, 0, 2]));
+  const associations = box('ipma', Buffer.from([0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 1, 1, 0, 2, 1, 2]));
+  const metadata = box('meta', Buffer.alloc(4), primary, box('iprp', box('ipco', extent(3, 4), extent(16, 10)), associations));
+  const header = Buffer.concat([avif.subarray(0, 32), metadata]);
+  assert.deepEqual(readIntrinsicSize(header), { width: 16, height: 10 });
+  const bad = Buffer.from(header);
+  bad[bad.length - 1] = 3;
+  assert.throws(() => readIntrinsicSize(bad), /invalid AVIF property index/);
+  assert.throws(() => readIntrinsicSize(avif.subarray(0, -1)), /invalid AVIF box length/);
+});
+
+test('raster extension must agree with the actual container', () => {
+  assert.throws(() => readIntrinsicSize(png, '.jpg'), /raster extension/);
+  assert.throws(() => readIntrinsicSize(jpeg, '.png'), /raster extension/);
+  assert.deepEqual(readIntrinsicSize(jpeg, '.JPG'), readIntrinsicSize(jpeg));
+  const otherBrand = Buffer.from(avif);
+  otherBrand.write('mif1', 8, 'ascii');
+  otherBrand.write('mif1', 16, 'ascii');
+  assert.throws(() => readIntrinsicSize(otherBrand, '.avif'), /AVIF requires an avif or avis brand/);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tlp-raster-type-'));
+  try {
+    const file = path.join(dir, 'wrong.jpg');
+    fs.writeFileSync(file, png);
+    assert.throws(() => validateImage(file, selectDecoder()), /raster extension|full decode failed/);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+test('complete standalone GIF and JPEG retain their terminal markers', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tlp-raster-trailer-'));
+  try {
+    const decoder = selectDecoder();
+    for (const [name, bytes, message] of [
+      ['image.gif', gif, /GIF missing final trailer|full decode failed/],
+      ['image.jpg', jpeg, /JPEG missing final EOI marker|full decode failed/],
+    ]) {
+      const file = path.join(dir, name);
+      fs.writeFileSync(file, bytes);
+      assert.deepEqual(validateImage(file, decoder), readIntrinsicSize(bytes));
+      fs.writeFileSync(file, bytes.subarray(0, -1));
+      assert.throws(() => validateImage(file, decoder), message);
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('PNG chunks retain their CRC and a complete terminal IEND', () => {
+  // Native FFmpeg can decode these CRC-only mutations without diagnostics.
+  const fixture = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABAAAAAKCAYAAAC9vt6cAAAADnRFWHRzb3VyY2UAZml4dHVyZSrejbQAAAAZSURBVHicY9So2PefgQLARInmUQNGDYABABUcAnF/LD4WAAAAAElFTkSuQmCC', 'base64');
+  assert.deepEqual(readIntrinsicSize(fixture, '.png'), { width: 16, height: 10 });
+  for (let offset = 8; offset < fixture.length;) {
+    const end = offset + 8 + fixture.readUInt32BE(offset);
+    const tag = fixture.toString('ascii', offset + 4, offset + 8);
+    const broken = Buffer.from(fixture);
+    broken[end] ^= 1;
+    assert.throws(() => readIntrinsicSize(broken, '.png'), new RegExp(`PNG ${tag} CRC mismatch`));
+    offset = end + 4;
+  }
+  assert.throws(() => readIntrinsicSize(fixture.subarray(0, -12)), /missing final IEND/);
+  assert.throws(() => readIntrinsicSize(fixture.subarray(0, -1)), /truncated PNG/);
+  assert.throws(() => readIntrinsicSize(Buffer.concat([fixture, Buffer.from('extra')])), /invalid PNG final IEND/);
+  const oversized = Buffer.from(fixture);
+  oversized.writeUInt32BE(0xffffffff, 33);
+  assert.throws(() => readIntrinsicSize(oversized), /truncated PNG/);
+});

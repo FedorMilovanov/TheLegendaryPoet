@@ -42,6 +42,18 @@ Generic radio pop, soft lounge, weak bass, thin kick, muddy low end, clipping, e
 Использовать только релевантные ограничения. Для мягкого DJ можно выбрать
 другой groove, плотность, тембры и вокальную режиссуру, в том числе без дропов.
 
+### TRAGIC POST-ROCK NOIR — GENERATED / owner preference / audio-QA open
+
+Контекст: Лермонтов, «1-е января» (новогодняя трилогия); прежние dub rock, cello rock и gothic waltz не удовлетворили владельца. Переход от красивой баллады к трагической психологической драме опирался на сохранённые профили «Чёрного человека» (post-rock, noir, cinematic). По сообщению владельца предпочтительна версия Б, А также неплоха. Аудиоанализ сообщил все семь строф, исправленное чтение «бестре́петные», полное «злостью»; возможный обрыв последнего эха «маски» остаётся открытым. Это художественный выбор, не RELEASE-READY. Приватные идентификаторы остаются в Suno.
+
+Style 736 UTF-16, v6, influence 0.92, weirdness 0.32, variety 0; темп задан, не измерен. Авторские 42 строки + 5 повторных строк, холодное forward echo, контраст воспоминаний, пауза перед последней строфой, надрыв и тихий неразрешённый исход. Профиль — пример, не универсальный рецепт.
+
+```text
+Post-rock, noir, cinematic, bleak, depressive, nocturnal. Slow grave pulse around 76 BPM, deep solitary male baritone, close weary half-spoken melodic delivery, clear Russian diction and complete word endings. Cold low guitar arpeggios, exposed cello, sustained bass drone, distant toms, descending minor motifs, dissonant suspended harmony. Stark pauses and isolated self-echoes. Childhood memories briefly soften the texture before the cold ballroom returns. Nervous crescendos, huge distorted guitar and drum impact reserved for the final stanza, raw anguished vocal climax. Sudden collapse into bare voice and cold unresolved cello resonance. Compact instrumental passages, all supplied lines fully sung, respect stress marks and ё.
+```
+
+Урок: при повторяющейся неудовлетворённости менять музыкальную логику и референс, а не бесконечно заменять тембры; проверять ранее принятые записи до запуска, особенно при прямой ссылке владельца на прежнюю работу. Успех здесь не доказывает, что такой стиль предпочтителен для всех новогодних песен.
+
 ## 2. Антибиблиотека — проверенные наблюдения и открытые вопросы
 
 | ID | Наблюдение | Доказательность | Как использовать |

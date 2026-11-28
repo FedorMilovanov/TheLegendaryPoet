@@ -4,6 +4,7 @@ import { Link } from '../components/ui/Link';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { poets } from '../data/poets';
+import { memoryPlaceRevisions } from '../data/runtime/memoryPlaces.generated';
 import { supplementaryPoetIds, loadSupplementaryPoet } from '../data/runtime/supplementaryPoets.generated';
 import type { Poet } from '../types/poet';
 import HeroSection from '../components/poet-detail/HeroSection';
@@ -18,6 +19,8 @@ import PoemPicker from '../components/poet-detail/PoemPicker';
 import KindredSpirits from '../components/poet-detail/KindredSpirits';
 import Testimonies from '../components/poet-detail/Testimonies';
 import RelatedEssays from '../components/poet-detail/RelatedEssays';
+import { CollectionReferences } from '../components/music/PoetryCollections';
+import { collectionsForPoet } from '../data/poetryCollections';
 import CommunityPanel from '../components/community/CommunityPanel';
 import { poetRatingDimensions } from '../data/ratingDimensions';
 import { useSeo } from '../hooks/useSeo';
@@ -29,13 +32,25 @@ function UnavailableSection() {
 }
 
 // Optional sections may degrade locally, never the canonical poems or biography.
-const lazyOptional = <P,>(load: () => Promise<{ default: ComponentType<P> }>) =>
-  lazy(() => load().catch(() => ({ default: UnavailableSection })));
+const lazyOptional = <P,>(load: () => Promise<{ default: ComponentType<P> }>, fallback: ComponentType<P> = UnavailableSection) =>
+  lazy(() => load().catch(() => ({ default: fallback })));
+
+function MemoryPlacesUnavailable({ poetId }: { poetId: string }) {
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('tlp-poet-corpus-hydrated', { detail: { poetId } })));
+    return () => cancelAnimationFrame(frame);
+  }, [poetId]);
+  return <section id="memory-places" aria-labelledby="memory-places-heading" className="scroll-mt-28 space-y-4">
+    <h2 id="memory-places-heading" className="theme-text font-serif text-3xl leading-tight sm:text-4xl">Места памяти</h2>
+    <UnavailableSection />
+  </section>;
+}
 
 const MoralPortrait = lazyOptional(() => import('../components/poet-detail/MoralPortrait'));
 const PoemCard = lazy(() => import('../components/poet-detail/PoemCard'));
 const PoetVideos = lazyOptional(() => import('../components/poet-detail/PoetVideos'));
 const PoetSources = lazyOptional(() => import('../components/poet-detail/PoetSources'));
+const MemoryPlaces = lazyOptional(() => import('../components/poet-detail/MemoryPlaces'), MemoryPlacesUnavailable);
 
 export default function PoetDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -130,6 +145,7 @@ export default function PoetDetailPage() {
 
           <div ref={contentRef} className="space-y-16 lg:col-span-8">
             <ShareLine scopeRef={contentRef} />
+            {Object.prototype.hasOwnProperty.call(memoryPlaceRevisions, poet.id) && <a className="poet-contents-jump" href="#memory-places">К местам памяти <span aria-hidden="true">↓</span></a>}
             {biographyError && supplementaryPoetIds.includes(poet.id) && (
               <p role="status" className="text-sm text-luxury-gold">
                 Не удалось загрузить полный корпус стихов и биографию. Показана резервная подборка.
@@ -143,6 +159,7 @@ export default function PoetDetailPage() {
             )}
 
             <Suspense fallback={null}><RelatedEssays poetId={poet.id} /></Suspense>
+            <CollectionReferences collections={collectionsForPoet(poet.id)} />
             {Boolean(poet.videos?.length) && <Suspense fallback={null}><PoetVideos poet={poet} /></Suspense>}
 
             <div className="space-y-8">
@@ -175,6 +192,8 @@ export default function PoetDetailPage() {
                 </p>
               </div>
             )}
+
+            {Object.prototype.hasOwnProperty.call(memoryPlaceRevisions, poet.id) && <Suspense fallback={null}><MemoryPlaces key={poet.id} poetId={poet.id} revision={memoryPlaceRevisions[poet.id]} /></Suspense>}
 
             {Boolean(poet.sources?.length) && <Suspense fallback={null}><PoetSources poet={poet} /></Suspense>}
 

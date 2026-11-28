@@ -58,6 +58,31 @@ test.describe('native fragment navigation and stable geometry', () => {
     expect(await page.evaluate(() => history.length)).toBe(historyBefore);
   });
 
+  test('malformed source fragments do not break the article or subsequent citations', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await openEssay(page, 'brik-case', '#source-%');
+    const citation = page.locator('.essay-body a[href^="#source-"]').first();
+    await expect(citation).toBeVisible();
+    await expect(page.locator('#sources')).toBeVisible();
+    const hash = await citation.getAttribute('href');
+    const source = page.locator('[id="' + hash.slice(1) + '"]');
+    await citation.click();
+    await expect(page).toHaveURL(url => url.hash === hash);
+    await expect(source).toBeVisible();
+
+    // Exercise the already-mounted hashchange handler as well as cold entry.
+    await page.evaluate(() => new Promise(resolve => {
+      window.addEventListener('hashchange', () => resolve(), { once: true });
+      window.location.hash = '#source-%E0%A4%A';
+    }));
+    await expect(page.locator('#sources')).toBeVisible();
+    await citation.click();
+    await expect(page).toHaveURL(url => url.hash === hash);
+    await expect(source).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
   test('fresh source and section deep links expose their published targets', async ({ page }) => {
     await openEssay(page, 'brik-case');
     const section = await page.locator('aside nav a[href^="#sec-"]').first().getAttribute('href');

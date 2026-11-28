@@ -1,0 +1,36 @@
+[
+  {
+    "src": "/images/memory-places/ak-tolstoy-krasny-rog/house.webp",
+    "width": 1200,
+    "height": 734,
+    "alt": "Воссозданный главный дом Красного Рога",
+    "caption": "Воссозданный главный дом усадьбы Красный Рог. 17 июля 2012 года.",
+    "credit": "Alexey Gomankov",
+    "source": "https://commons.wikimedia.org/wiki/File:The_house_of_Aleksey_Konstantinovich_Tolstoy.jpg",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "originalSha256": "35c91e63a9893820f9c7fe0b95f0492041d3972b2a26fbfab163c78c5dca4675",
+    "sha256": "7d042ad0b4c6b84d6f6d551c8b0ecc151f7debfef6e026bda143650a0500c49d",
+    "bytes": 151596,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bd/The_house_of_Aleksey_Konstantinovich_Tolstoy.jpg"
+  },
+  {
+    "src": "/images/memory-places/ak-tolstoy-krasny-rog/grave.webp",
+    "width": 1057,
+    "height": 1200,
+    "alt": "Усыпальница Алексея Константиновича Толстого",
+    "caption": "Усыпальница Алексея Константиновича Толстого. Сентябрь 2009 года.",
+    "credit": "София Юрашевич",
+    "source": "https://commons.wikimedia.org/wiki/File:TolstoyGrave.JPG",
+    "sourceLabel": "Wikimedia Commons",
+    "license": "Public domain",
+    "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+    "originalSha256": "321e020119e01a926145337c37c3a928ece67f3fa08b96eb361e516ec726d60d",
+    "sha256": "5093800ed0a9f13f61d168ce3870e2fef50bac122edb4ed2b5c04c68a0bc80ff",
+    "bytes": 194254,
+    "changes": "Уменьшенный WebP, без кадрирования; ориентация по EXIF",
+    "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d0/TolstoyGrave.JPG"
+  }
+]
