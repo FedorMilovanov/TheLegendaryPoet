@@ -89,7 +89,7 @@ export default function GlobalMiniPlayer() {
               <span
                 aria-hidden="true"
                 data-seek-focus-indicator="mini"
-                className="seek-focus-indicator pointer-events-none absolute inset-x-1 -top-1 h-4 rounded-full border"
+                className="seek-focus-indicator pointer-events-none absolute inset-x-5 top-0.5 h-3 rounded-full border-2"
               />
             </div>
 

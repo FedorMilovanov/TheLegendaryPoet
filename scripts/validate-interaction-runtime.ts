@@ -387,7 +387,8 @@ expect(miniPlayerSource.includes('seek-focus-shell') && miniPlayerSource.include
 expect(audioPlayerStyleSource.includes('max-width: 760px'), 'mini-player must retain a bounded responsive width without motion-owned transform centering');
 expect(!audioPlayerStyleSource.includes('transform: translateX(-50%)'), 'mini-player centering must not compete with Framer Motion transform ownership');
 expect(immersiveSource.includes('seek-focus-shell') && immersiveSource.includes('seek-focus-indicator'), 'immersive seek must expose the shared visible focus owner');
-expect(audioPlayerStyleSource.includes('.seek-focus-shell:focus-within .seek-focus-indicator'), 'seek focus visibility must be owned by the cross-browser focus-within contract');
+expect(audioPlayerStyleSource.includes('.seek-focus-shell:focus-within .seek-focus-indicator') && audioPlayerStyleSource.includes('.seek-focus-shell input:focus + .seek-focus-indicator'), 'seek focus visibility must support both focus-within and direct focused input');
+expect(!/\.seek-focus-indicator\s*\{[^}]*transition\s*:/u.test(audioPlayerStyleSource), 'seek focus visibility must not wait for an animation frame');
 expect(analyticsConsentSource.includes('analytics-consent-banner theme-dark-island'), 'analytics consent must be an explicit dark fixed-chrome surface');
 expect(analyticsConsentSource.includes('z-[105]'), 'analytics consent must remain below true modal surfaces');
 expect(audioPlayerStyleSource.includes('html.global-audio-active .analytics-consent-banner'), 'analytics consent must move clear of persistent audio chrome');

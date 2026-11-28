@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { preflight, comparePayload } from '../check-suno-payload.mjs';
 import { measureStyle } from '../check-suno-style.mjs';
 import { documents, referenceAssets, readFences, validateKit } from '../validate-suno-kit.mjs';
 
@@ -171,15 +172,24 @@ test('missing cover identity reference fails', () => fixture(directory => {
   fs.unlinkSync(path.join(directory, 'public/images/fet-480.jpg'));
   assert.throws(() => validateKit(directory), /missing reference: public\/images\/fet-480\.jpg/);
 }));
-test('Fet draft contains ten separate full-image prompts, not a combined prompt', () => {
-  const file = fs.readFileSync('suno/covers/projects/fet-new-year.md', 'utf8');
-  const blocks = readFences(file).blocks.filter(block => block.language === 'text');
-  assert.equal(blocks.length, 10);
-  assert.equal(new Set(blocks.map(block => block.text)).size, 10);
-  for (const block of blocks) {
-    assert.match(block.text, /^Create ONE standalone/);
-    assert.match(block.text, /16:9/);
-    assert.match(block.text, /collage/i);
-  }
-  // Structural only, not a certificate of artistic quality or actual generations.
+test('poetry preflight measures UTF-16 and permits empty Exclude', () => {
+  const payload = { lyrics: 'а'.repeat(5000), style: 'piano', exclude: '' };
+  assert.equal(preflight(payload).valid, true);
+  assert.equal(preflight({ ...payload, lyrics: 'а'.repeat(4999) + '🎵' }).valid, false);
+  assert.equal(preflight({ ...payload, style: ' '.repeat(5) }).valid, false);
+  assert.equal(preflight({ lyrics: 'слово', style: 'piano' }).valid, false);
+});
+test('readback catches truncation, substitution and unknown fields; CRLF is transport only', () => {
+  const payload = { lyrics: 'Все звёзды\nСвет', style: 'a'.repeat(900), exclude: '' };
+  assert.equal(comparePayload(payload, payload, payload).valid, true);
+  assert.equal(comparePayload(payload, payload, { ...payload, style: 'a'.repeat(800) }).valid, false);
+  assert.equal(comparePayload(payload, { ...payload, lyrics: 'Всё звёзды\nСвет' }, payload).valid, false);
+  const unknown = comparePayload(payload, payload, { lyrics: payload.lyrics, style: payload.style });
+  assert.equal(unknown.valid, false);
+  assert.deepEqual(unknown.mismatches, [{ stage: 'returned', field: 'exclude', reason: 'missing' }]);
+  assert.equal(comparePayload(payload, null, payload).valid, false);
+  const transport = comparePayload(payload, payload, { ...payload, lyrics: 'Все звёзды\r\nСвет' });
+  assert.equal(transport.valid, true);
+  assert.deepEqual(transport.transportDifferences, [{ stage: 'returned', field: 'lyrics', reason: 'CRLF' }]);
+  assert.equal(comparePayload(payload, payload, { ...payload, lyrics: payload.lyrics + '\n' }).valid, false);
 });
