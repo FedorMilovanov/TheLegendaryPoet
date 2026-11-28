@@ -15,12 +15,9 @@ type RouteContractRecord = {
   id: string;
   path: string;
   page: string;
-  module: string;
   prefetch: boolean;
-  sitemap: boolean;
   audit: RouteAuditKind;
   discoveryState: Extract<DiscoveryStateName, 'ready' | 'noindex' | 'not-found'>;
-  budgetBytes: number;
 };
 
 type RedirectContractRecord = { from: string; to: string };

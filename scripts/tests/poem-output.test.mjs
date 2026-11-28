@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { poemTextDigest } from '../lib/poem-discovery.mjs';
 import { poemOutputErrors } from '../lib/poem-output-contract.mjs';
-import { hasApprovedPoemPages } from '../lib/poem-build-admission.mjs';
+import { hasApprovedPoemPages, projectBrowserRouteContract } from '../lib/poem-build-admission.mjs';
 
 const route = '/poets/author-a/fixed-slug/';
 const authorPath = '/poets/author-a/';
@@ -78,4 +78,10 @@ test('standalone reader build admission is driven by the exact generated index',
     { schemaVersion: 1, pages: { '/poets/a/b': 'work' } },
     { schemaVersion: 1, pages: { '/poets/a/b/': '' } },
   ]) assert.throws(() => hasApprovedPoemPages(index), /Invalid standalone poem build admission/);
+});
+
+test('browser route projection preserves navigation and excludes build-only metadata', () => {
+  const contract = { schemaVersion: 1, routes: [{ id: 'poem-detail', path: '/poets/:id/:slug', page: 'PoemDetailPage', prefetch: false, audit: 'dynamic', discoveryState: 'ready', module: 'src/pages/PoemDetailPage.tsx', budgetBytes: 18000, sitemap: false }], redirects: [{ from: '/old', to: '/poets' }], notFoundProbes: ['/missing'] };
+  assert.deepEqual(projectBrowserRouteContract(contract), { schemaVersion: 1, routes: [{ id: 'poem-detail', path: '/poets/:id/:slug', page: 'PoemDetailPage', prefetch: false, audit: 'dynamic', discoveryState: 'ready' }], redirects: contract.redirects });
+  assert.throws(() => projectBrowserRouteContract({ schemaVersion: 2, routes: [], redirects: [] }), /Invalid browser route contract/);
 });

@@ -12,3 +12,15 @@ export function hasApprovedPoemPages(index) {
   }
   return entries.length > 0;
 }
+
+/** Only runtime navigation fields enter the browser; the full contract remains the build/QA authority. */
+export function projectBrowserRouteContract(contract) {
+  if (contract?.schemaVersion !== 1 || !Array.isArray(contract.routes) || !Array.isArray(contract.redirects)) {
+    throw new Error('Invalid browser route contract');
+  }
+  return {
+    schemaVersion: contract.schemaVersion,
+    routes: contract.routes.map(({ id, path, page, prefetch, audit, discoveryState }) => ({ id, path, page, prefetch, audit, discoveryState })),
+    redirects: contract.redirects.map(({ from, to }) => ({ from, to })),
+  };
+}
