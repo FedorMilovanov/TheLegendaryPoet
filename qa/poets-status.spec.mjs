@@ -709,8 +709,8 @@ test.describe('poets result status accessibility', () => {
 
   const expandedPoets = [
       ['alexander-pushkin', 10],
-      ['mikhail-lermontov', 11],
-      ['sergei-yesenin', 10],
+      ['mikhail-lermontov', 17],
+      ['sergei-yesenin', 19],
       ['fyodor-tyutchev', 11],
     ];
   // Keep every author, viewport, and editorial assertion, but give each
@@ -813,7 +813,14 @@ test.describe('poets result status accessibility', () => {
           expect(actualColumns, 'single analysis panel must fill the poem card').toBe(1);
         }
         if (poetId === 'mikhail-lermontov') {
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(17);
+          for (const [offset, [count, source, witness]] of [[42,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/380.html","https://feb-web.ru/feb/lermont/texts/lerm06/vol02/le2-1362.htm?cmd=p"],[16,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/400.html","https://feb-web.ru/feb/lermont/texts/lerm06/vol02/le2-185-.htm?cmd=p"],[8,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"],[8,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"],[16,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"],[12,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"]].entries()) {
+            const card = page.locator('#poem-lermontov-' + (12 + offset));
+            await expect(card).toHaveCount(1);
+            expect((await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim())).toHaveLength(count);
+            await expect(card.getByRole('link', {name:'Источник текста'})).toHaveAttribute('href', source);
+            await expect(card.locator('[data-poem-textual-note] a')).toHaveAttribute('href', witness);
+          }
           for (const [number, count, critical] of [
             [1, 12, 'Теснится ль в сердце грусть:'],
             [2, 28, 'И правды чистыя ученья:'],
@@ -880,6 +887,13 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:%D0%A1%D0%BE%D1%87%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F_%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_%D0%A2%D0%BE%D0%BC_2_1818-1820_1905.pdf');
         }
         if (poetId === 'sergei-yesenin') {
+          for (const [offset, [count, source, witness]] of [[8,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/158.html","https://djvu.online/file/vz2dupX7YPiEG"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/156.html","https://djvu.online/file/vz2dupX7YPiEG"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/157.html","https://djvu.online/file/vz2dupX7YPiEG"],[16,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/072.html","https://djvu.online/file/vz2dupX7YPiEG"],[20,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/165.html","https://djvu.online/file/vz2dupX7YPiEG"],[16,"https://rvb.ru/20vek/esenin/pss7/vol4/poems/253.html","https://djvu.online/file/MimaUmviIKL2g"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/166.html","https://djvu.online/file/vz2dupX7YPiEG"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/097.html","https://djvu.online/file/vz2dupX7YPiEG"],[36,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/091.html","https://djvu.online/file/vz2dupX7YPiEG"]].entries()) {
+            const card = page.locator('#poem-yesenin-' + (11 + offset));
+            await expect(card).toHaveCount(1);
+            expect((await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim())).toHaveLength(count);
+            await expect(card.locator('a[href="'+source+'"]')).toHaveCount(1);
+            await expect(card.locator('[data-poem-textual-note] a')).toHaveAttribute('href', witness);
+          }
           for (const [number, expectedLines, critical, sourceUrl, noteUrl] of [[1,20,"Жизнь моя! иль ты приснилась мне?","https://rvb.ru/20vek/esenin/pss7/vol1/poems/096.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/096.html"],[2,36,"Не волнуй того, что не сбылось,—","https://rvb.ru/20vek/esenin/pss7/vol1/poems/104.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/104.html"],[3,20,"Звонно чахнут тополя.","https://rvb.ru/20vek/esenin/pss7/vol1/poems/028.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/028.html"]]) {
             const card = page.locator('#poem-yesenin-' + number);
             const canonical = card.locator('[data-poem-canonical]');

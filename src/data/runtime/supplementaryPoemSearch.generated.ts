@@ -225,6 +225,48 @@ export const supplementaryPoemSearchIndex: readonly SupplementaryPoemSearchEntry
     "year": 1837
   },
   {
+    "poetId": "mikhail-lermontov",
+    "poetName": "Михаил Лермонтов",
+    "id": "lermontov-12",
+    "title": "1-е января",
+    "year": 1840
+  },
+  {
+    "poetId": "mikhail-lermontov",
+    "poetName": "Михаил Лермонтов",
+    "id": "lermontov-13",
+    "title": "Из-под таинственной холодной полумаски…",
+    "year": 1840
+  },
+  {
+    "poetId": "mikhail-lermontov",
+    "poetName": "Михаил Лермонтов",
+    "id": "lermontov-14",
+    "title": "Трубецкому",
+    "year": 1831
+  },
+  {
+    "poetId": "mikhail-lermontov",
+    "poetName": "Михаил Лермонтов",
+    "id": "lermontov-15",
+    "title": "Нарышкиной",
+    "year": 1831
+  },
+  {
+    "poetId": "mikhail-lermontov",
+    "poetName": "Михаил Лермонтов",
+    "id": "lermontov-16",
+    "title": "Додо",
+    "year": 1831
+  },
+  {
+    "poetId": "mikhail-lermontov",
+    "poetName": "Михаил Лермонтов",
+    "id": "lermontov-17",
+    "title": "Башилову",
+    "year": 1831
+  },
+  {
     "poetId": "fyodor-tyutchev",
     "poetName": "Фёдор Тютчев",
     "id": "tyutchev-6",
@@ -314,5 +356,68 @@ export const supplementaryPoemSearchIndex: readonly SupplementaryPoemSearchEntry
     "id": "yesenin-10",
     "title": "Письмо к женщине",
     "year": 1924
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-11",
+    "title": "«Слышишь — мчатся сани, слышишь — сани мчатся…»",
+    "year": 1925
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-12",
+    "title": "«Эх вы, сани! А кони, кони!..»",
+    "year": 1925
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-13",
+    "title": "«Снежная замять дробится и колется…»",
+    "year": 1925
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-14",
+    "title": "«Я по первому снегу бреду…»",
+    "year": 1917
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-15",
+    "title": "«Свищет ветер, серебряный ветер…»",
+    "year": 1925
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-16",
+    "title": "Пороша",
+    "year": 1914
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-17",
+    "title": "«Мелколесье. Степь и дали…»",
+    "year": 1925
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-18",
+    "title": "«Я обманывать себя не стану…»",
+    "year": 1922
+  },
+  {
+    "poetId": "sergei-yesenin",
+    "poetName": "Сергей Есенин",
+    "id": "yesenin-19",
+    "title": "Хулиган",
+    "year": 1919
   }
 ];

@@ -21,6 +21,7 @@ import { musicTracks } from '../src/data/library/musicTracks';
 import { essays } from '../src/data/essays/index';
 import { poetConnections } from '../src/data/poetConnections';
 import { poetryCollections } from '../src/data/poetryCollections';
+import { collectionReleaseIssues, readerSourceIssues, runCollectionContractSelfTest } from './lib/validate-poetry-collections.mjs';
 import type { Poet } from '../src/types/poet';
 
 type Level = 'ERROR' | 'WARN';
@@ -266,12 +267,17 @@ const normalizedFragment = (text: string) => text.normalize('NFC')
   .toLocaleLowerCase('ru-RU').replace(/\u0301/gu, '').replace(/ё/gu, 'е')
   .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
+console.log(`Collection contract fixtures: ${runCollectionContractSelfTest()} passed`);
 const collectionIds = new Set<string>();
 for (const collection of poetryCollections) {
   const where = `collection:${collection.id}`;
   if (!/^[a-z0-9-]+$/.test(collection.id) || collectionIds.has(collection.id))
     err(where, 'invalid or duplicate collection anchor');
   collectionIds.add(collection.id);
+  for (const issue of collectionReleaseIssues(collection)) {
+    err(issue.entry ? where + '/' + issue.entry : where, issue.message);
+  }
+  if (!Array.isArray(collection.entries)) continue;
   const entryIds = new Set<string>();
   for (const entry of collection.entries) {
     const location = `${where}/${entry.id}`;
@@ -282,14 +288,14 @@ for (const collection of poetryCollections) {
     const essay = essays.find(e => e.slug === entry.essaySlug);
     if (!poet || poet.name !== entry.poetName) err(location, 'poet identity mismatch');
     if (!essay || essay.poetId !== entry.poetId) err(location, 'essay identity mismatch');
+    if (!Array.isArray(entry.sources)) continue;
     const sourceIds = new Set<string>();
     for (const source of entry.sources) {
       const at = `${location}/${source.id}`;
       if (!/^[a-z0-9-]+$/.test(source.id) || sourceIds.has(source.id))
         err(at, 'invalid or duplicate source id');
       sourceIds.add(source.id);
-      if (!essay?.blocks.some(b => b.type === 'section' && b.anchor === `literary-fragment-${source.id}`))
-        err(at, 'missing Reader anchor');
+      for (const message of readerSourceIssues(essay, source)) err(at, message);
       if (!essay?.sources?.some(s => s.id === source.id && s.url === source.url))
         err(at, 'source bibliography mismatch');
       if (source.prose && source.poemId) err(at, 'prose cannot be linked as a poem');
