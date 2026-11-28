@@ -237,7 +237,7 @@ test.describe('W5 premium reader certification', () => {
     assertDiagnostics(diagnostics);
   });
 
-  test('keyboard search keeps the active option inside its own short scrollport', async ({ page, testInfo }) => {
+  test('keyboard search keeps the active option inside its own short scrollport', async ({ page }, testInfo) => {
     const mobile = ['android-pixel7', 'iphone-safari'].includes(testInfo.project.name);
     await page.setViewportSize({ width: mobile ? 390 : 1024, height: 600 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
