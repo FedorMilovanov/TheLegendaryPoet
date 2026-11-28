@@ -10,8 +10,9 @@ const common = [
 
 const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', 'ratings'];
 
+const animatedLifetime = 'animated modal exit lifetime';
 const suites = [
-  // Get the new museum witness before unrelated long-running suites.
+  { id: 'animated-modal-exit-lifetime', file: 'qa/reader-journeys.spec.mjs', grep: animatedLifetime },
   { id: 'memory-places', file: 'qa/memory-places.spec.mjs' },
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'poets-status', file: 'qa/poets-status.spec.mjs' },
@@ -27,7 +28,7 @@ const suites = [
   { id: 'audio-completion', file: 'qa/audio-completion.spec.mjs' },
   { id: 'community-request-topology', file: 'qa/community-request-topology.spec.mjs' },
   { id: 'secondary-data-failure', file: 'qa/secondary-data-failure.spec.mjs' },
-  { id: 'reader-journeys', file: 'qa/reader-journeys.spec.mjs' },
+  { id: 'reader-journeys', file: 'qa/reader-journeys.spec.mjs', grep: `^(?!.*${animatedLifetime})` },
   { id: 'fragment-navigation', file: 'qa/fragment-navigation.spec.mjs' },
   { id: 'premium-reader-certification', file: 'qa/premium-reader-certification.spec.mjs' },
   { id: 'yesenin-part-one', file: 'qa/yesenin-part-one.spec.mjs' },

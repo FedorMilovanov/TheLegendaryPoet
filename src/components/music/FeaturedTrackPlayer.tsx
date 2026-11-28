@@ -391,7 +391,7 @@ export default function FeaturedTrackPlayer({ track, compact = false, initialTim
             </div>
 
             <button type="button" onClick={share} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold text-white/55 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><Share2 size={16} /> {shareLabel}</button>
-            <button type="button" onClick={() => openImmersive(track)} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold text-white/55 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><Maximize2 size={16} /> Погружение</button>
+            <button type="button" onClick={event => openImmersive(track, event.currentTarget)} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold text-white/55 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><Maximize2 size={16} /> Погружение</button>
             {compact && <Link to={`/music/${track.id}`} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/10 px-4 text-xs font-bold transition hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white" style={{ color: 'var(--track-accent)' }}>Страница релиза <ExternalLink size={15} /></Link>}
           </div>
 

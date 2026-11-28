@@ -520,6 +520,50 @@ test.describe('animated modal exit lifetime', () => {
         await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe(surface);
         await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
 
+        // Natural exit must begin from an already painted, settled entrance.
+        // Visibility/focus alone does not establish opacity: the separate
+        // interrupted-entrance regression below covers closing mid-entry.
+        // Browser-local rAF observation avoids Node/WebKit round-trip sleeps.
+        const entrance = await dialog.evaluate(node => new Promise((resolve, reject) => {
+          const started = performance.now();
+          let frame = 0;
+          let previous = started;
+          let samples = 0;
+          let maxGap = 0;
+          let stable = 0;
+          let last = null;
+          const finish = () => {
+            cancelAnimationFrame(frame);
+            clearTimeout(deadline);
+          };
+          const deadline = setTimeout(() => {
+            finish();
+            reject(new Error('Natural exit entrance never became paint-ready: ' + JSON.stringify({
+              samples, maxGap, elapsed: performance.now() - started, last,
+            })));
+          }, 5000);
+          const observe = () => {
+            const now = performance.now();
+            maxGap = Math.max(maxGap, now - previous);
+            previous = now;
+            samples++;
+            const opacity = Number(getComputedStyle(node).opacity);
+            const runningOpacity = node.getAnimations().filter(animation =>
+              (animation.pending || animation.playState === 'running') &&
+              animation.effect?.getKeyframes().some(keyframe => keyframe.opacity !== undefined));
+            last = { opacity, activeOpacityAnimations: runningOpacity.length,
+              visibility: document.visibilityState, connected: node.isConnected };
+            stable = node.isConnected && document.visibilityState === 'visible' &&
+              opacity >= 0.99 && runningOpacity.length === 0 ? stable + 1 : 0;
+            if (stable >= 3) {
+              finish();
+              resolve({ samples, maxGap, elapsed: now - started, last });
+            } else frame = requestAnimationFrame(observe);
+          };
+          frame = requestAnimationFrame(observe);
+        }));
+        console.log('NATURAL_ENTRANCE_READY', JSON.stringify({ surface, reduced, entrance }));
+
         await page.evaluate(() => {
           window.__tlpExitProof = [];
           window.__tlpExitDone = false;
@@ -535,6 +579,32 @@ test.describe('animated modal exit lifetime', () => {
           // The detector and the assertion share one DOM-unmount event. A
           // repeated Node->WebKit RPC poll can race WebKit's animation/event
           // delivery under CI load even when the modal is still correct.
+          const trace = window.__tlpExitTiming = {
+            installed: performance.now(), keydown: null, unmounted: null,
+            visibility: document.visibilityState, animations: [],
+          };
+          const onEscape = event => {
+            if (event.key === 'Escape' && trace.keydown === null) trace.keydown = performance.now();
+          };
+          window.addEventListener('keydown', onEscape, { capture: true });
+          // Observe the actual native animation without pausing, extending or
+          // replacing its completion channels. Keep the natural frame gate.
+          const animate = dialogNode.animate.bind(dialogNode);
+          dialogNode.animate = (...args) => {
+            const animation = animate(...args);
+            const entry = {
+              started: performance.now(), duration: animation.effect?.getComputedTiming().duration,
+              keyframes: animation.effect?.getKeyframes().map(frame => ({ opacity: frame.opacity, offset: frame.offset })),
+              finishEvent: null, finished: null, cancelled: null,
+            };
+            trace.animations.push(entry);
+            animation.addEventListener('finish', () => { entry.finishEvent = performance.now(); }, { once: true });
+            void animation.finished.then(
+              () => { entry.finished = performance.now(); },
+              () => { entry.cancelled = performance.now(); },
+            );
+            return animation;
+          };
           let resolveUnmount;
           window.__tlpExitCompletion = new Promise((resolve) => {
             resolveUnmount = resolve;
@@ -542,7 +612,9 @@ test.describe('animated modal exit lifetime', () => {
           const finishUnmount = () => {
             if (window.__tlpExitDone) return;
             window.__tlpExitDone = true;
+            trace.unmounted = performance.now();
             observer.disconnect();
+            window.removeEventListener('keydown', onEscape, { capture: true });
             resolveUnmount();
           };
           const observer = new MutationObserver(() => {
@@ -557,6 +629,9 @@ test.describe('animated modal exit lifetime', () => {
             }
             const root = document.getElementById('root');
             window.__tlpExitProof.push({
+              t: performance.now(),
+              opacity: getComputedStyle(dialogNode).opacity,
+              visibility: document.visibilityState,
               depth:window.__TLP_OVERLAY_DEBUG?.depth,
               inert:root?.inert,
               hidden:root?.getAttribute('aria-hidden'),
@@ -586,6 +661,7 @@ test.describe('animated modal exit lifetime', () => {
                     focusTag: document.activeElement?.tagName,
                     samples: window.__tlpExitProof?.length,
                     frames: window.__tlpExitProof?.slice(-2),
+                    timing: window.__tlpExitTiming,
                   })));
                 }, 5000);
               }),
@@ -596,7 +672,17 @@ test.describe('animated modal exit lifetime', () => {
         });
         const escapeCountAfter = await page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.escapeCount);
         expect(escapeCountAfter, 'Escape must be received by the topmost dialog').toBeGreaterThan(escapeCountBefore);
-        const frames = await page.evaluate(() => window.__tlpExitProof);
+        const evidence = await page.evaluate(() => ({
+          frames: window.__tlpExitProof,
+          timing: window.__tlpExitTiming,
+        }));
+        const { frames, timing } = evidence;
+        const gaps = frames.slice(1).map((frame, index) => frame.t - frames[index].t);
+        console.log('NATURAL_EXIT_TIMING', JSON.stringify({
+          surface, reduced, timing, sampleCount: frames.length,
+          maxSampleGap: Math.max(0, ...gaps),
+          first: frames.slice(0, 3), last: frames.slice(-3),
+        }));
         expect(frames.length, 'exit must have connected frames with a live lease').toBeGreaterThan(2);
         expect(frames.filter(f => f.depth !== 1 || f.inert !== true || f.hidden !== 'true' || f.position !== 'fixed' || !f.focusInside),
           'no frame may expose focus or unlock a still-painted modal').toEqual([]);
@@ -613,15 +699,16 @@ test.describe('animated modal exit lifetime', () => {
 });
 
 for (const interruption of ['cancel', 'hidden']) {
-  test(`immersive native exit interruption releases the actual dialog and overlay lease: ${interruption}`, async ({ page }, testInfo) => {
+  test(`immersive native exit interruption releases the actual dialog and overlay lease: ${interruption}`, async ({ page }) => {
     const runtime = attachRuntimeDiagnostics(page);
     await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
     await waitForRoute(page);
     const opener = page.getByRole('button', { name: 'Погружение' }).first();
     await opener.scrollIntoViewIfNeeded();
     await opener.focus();
-    const touch = testInfo.project.name === 'android-pixel7' || testInfo.project.name === 'iphone-safari';
-    if (touch) await opener.tap(); else await opener.click();
+    // This test certifies keyboard focus restoration; touch opening is covered separately.
+    await expect(opener).toBeFocused();
+    await opener.press('Enter');
     const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
     await expect(dialog).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
@@ -631,7 +718,7 @@ for (const interruption of ['cancel', 'hidden']) {
       node.animate = (...args) => {
         const animation = animate(...args);
         const frames = args[0];
-        if (Array.isArray(frames) && frames[0]?.opacity === 1 && frames[1]?.opacity === 0) {
+        if (Array.isArray(frames) && typeof frames[0]?.opacity === 'number' && frames[1]?.opacity === 0) {
           animation.pause();
           window.__qaInterruptedExit = animation;
         }
@@ -639,7 +726,7 @@ for (const interruption of ['cancel', 'hidden']) {
       };
     });
     const close = dialog.getByRole('button', { name: 'Выйти' });
-    if (touch) await close.tap(); else await close.click();
+    await close.press('Enter');
     await expect.poll(() => page.evaluate(() => Boolean(window.__qaInterruptedExit))).toBe(true);
     await expect(dialog).toBeAttached();
     await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
@@ -658,3 +745,227 @@ for (const interruption of ['cancel', 'hidden']) {
     expect(runtime.pageErrors).toEqual([]);
   });
 }
+
+for (const interruption of ['cancel', 'hidden']) {
+  test(`touch activation interrupted native exit releases the actual dialog and overlay lease: ${interruption}`, async ({ page, hasTouch }) => {
+    test.skip(!hasTouch, 'Touch activation requires a touch-enabled project');
+    const runtime = attachRuntimeDiagnostics(page);
+    await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+    await waitForRoute(page);
+    const opener = page.getByRole('button', { name: 'Погружение' }).first();
+    await opener.scrollIntoViewIfNeeded();
+    await opener.focus();
+    // Observe the browser focus state before the modal opens.
+    await expect(opener).toBeFocused();
+    await opener.evaluate(node => {
+      window.__qaTouchFocus = [];
+      for (const type of ['pointerdown', 'focusout', 'click']) {
+        node.addEventListener(type, () => window.__qaTouchFocus.push({
+          type, active: document.activeElement?.tagName, opener: document.activeElement === node
+        }), { capture: true });
+      }
+    });
+    await opener.tap();
+    const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+    await expect(dialog).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
+
+    await dialog.evaluate(node => {
+      const animate = node.animate.bind(node);
+      node.animate = (...args) => {
+        const animation = animate(...args);
+        const frames = args[0];
+        if (Array.isArray(frames) && typeof frames[0]?.opacity === 'number' && frames[1]?.opacity === 0) {
+          animation.pause();
+          window.__qaInterruptedExit = animation;
+        }
+        return animation;
+      };
+    });
+    const close = dialog.getByRole('button', { name: 'Выйти' });
+    await close.tap();
+    await expect.poll(() => page.evaluate(() => Boolean(window.__qaInterruptedExit))).toBe(true);
+    await expect(dialog).toBeAttached();
+    await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
+    await page.evaluate(kind => {
+      if (kind === 'cancel') window.__qaInterruptedExit.cancel();
+      else {
+        // Inject the visibility transition; the animation and portal are real.
+        Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+    }, interruption);
+    await expect(dialog).toHaveCount(0, { timeout: 5000 });
+    await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+    await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(false);
+    await expect(opener).toBeFocused();
+    expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[inert], [aria-hidden="true"]')))).toBe(false);
+    console.log('TOUCH_FOCUS', JSON.stringify(await page.evaluate(() => ({ events: window.__qaTouchFocus, final: document.activeElement?.tagName }))));
+    expect(runtime.pageErrors).toEqual([]);
+  });
+}
+
+test('mini player restores the explicit immersive invoker after native exit', async ({ page, hasTouch }) => {
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await waitForRoute(page);
+  const featured = page.getByRole('button', { name: 'Погружение' }).first();
+  await featured.click();
+  const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Выйти' }).click();
+  await expect(dialog).toHaveCount(0);
+  const mini = page.locator('.global-audio-mini').getByRole('button', { name: 'Открыть режим погружения' });
+  await expect(mini).toBeVisible();
+  if (hasTouch) await mini.tap(); else await mini.click();
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+  await expect(mini).toBeFocused();
+});
+test('new reader focus survives dialog cleanup', async ({ page }) => {
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await waitForRoute(page);
+  const opener = page.getByRole('button', { name: 'Погружение' }).first();
+  await opener.press('Enter');
+  const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(true);
+  await page.evaluate(() => {
+    const root = document.getElementById('root');
+    const destination = document.getElementById('main-content');
+    window.__qaNewFocus = new Promise(resolve => {
+      const observer = new MutationObserver(() => {
+        if (root.inert) return;
+        observer.disconnect();
+        destination.focus({ preventScroll: true });
+        const received = document.activeElement === destination;
+        requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() =>
+          resolve({ received, retained: document.activeElement === destination }))));
+      });
+      observer.observe(root, { attributes: true, attributeFilter: ['inert'] });
+    });
+  });
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  const proof = await page.evaluate(() => window.__qaNewFocus);
+  expect(proof).toEqual({ received: true, retained: true });
+  await expect(page.locator('#main-content')).toBeFocused();
+});
+test('stable overlay isolation does not flicker during player updates', async ({ page }) => {
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await waitForRoute(page);
+  await page.getByRole('button', { name: 'Погружение' }).first().click();
+  const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(true);
+  const mute = dialog.getByRole('button', { name: /Включить звук|Выключить звук/ });
+  await mute.focus();
+  await expect(mute).toBeFocused();
+  await page.evaluate(() => {
+    window.__qaIsolationChanges = [];
+    const root = document.getElementById('root');
+    const observer = new MutationObserver(records => {
+      window.__qaIsolationChanges.push(...records.map(record => ({ name: record.attributeName, old: record.oldValue })));
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['inert', 'aria-hidden'], attributeOldValue: true });
+  });
+  const initial = await mute.getAttribute('aria-label');
+  await mute.press('Enter');
+  await expect(mute).not.toHaveAttribute('aria-label', initial);
+  await mute.press('Enter');
+  await expect(mute).toHaveAttribute('aria-label', initial);
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(mute).toBeFocused();
+  expect(await page.evaluate(() => window.__qaIsolationChanges)).toEqual([]);
+  await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(false);
+});
+
+test('immersive exit survives lost native completion without early overlay release', async ({ page }) => {
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await waitForRoute(page);
+  const opener = page.getByRole('button', { name: 'Погружение' }).first();
+  await opener.press('Enter');
+  const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.topLabel)).toBe('immersive-player');
+  await dialog.evaluate(node => {
+    const nativeAnimate = node.animate.bind(node);
+    node.animate = (...args) => {
+      const animation = nativeAnimate(...args);
+      if (!Array.isArray(args[0]) || args[0][1]?.opacity !== 0) return animation;
+      animation.pause();
+      Object.defineProperty(animation, 'finished', { configurable: true, value: new Promise(() => {}) });
+      const finish = animation.finish.bind(animation);
+      window.__qaStalledNativeExit = { start: performance.now(), forced: null };
+      animation.finish = () => {
+        window.__qaStalledNativeExit.forced = {
+          elapsed: performance.now() - window.__qaStalledNativeExit.start,
+          connected: node.isConnected,
+          opacity: getComputedStyle(node).opacity,
+          depth: window.__TLP_OVERLAY_DEBUG?.depth,
+          inert: document.getElementById('root').inert,
+        };
+        finish();
+      };
+      return animation;
+    };
+  });
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0, { timeout: 5000 });
+  const proof = await page.evaluate(() => window.__qaStalledNativeExit?.forced);
+  expect(proof).toBeTruthy();
+  expect(proof.elapsed).toBeGreaterThanOrEqual(1750);
+  expect(proof).toMatchObject({ connected: true, opacity: '0', depth: 1, inert: true });
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+  await expect.poll(() => page.evaluate(() => document.getElementById('root').inert)).toBe(false);
+  await expect(opener).toBeFocused();
+});
+
+test('immersive root reverses one native entrance without competing opacity writers', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = Element.prototype.animate;
+    window.__qaRootFade = { entrance: null, exit: null };
+    Element.prototype.animate = function (...args) {
+      const animation = original.apply(this, args);
+      if (this.getAttribute('aria-labelledby') !== 'immersive-track-title' || !Array.isArray(args[0])) return animation;
+      const frames = args[0];
+      if (frames[0]?.opacity === 0 && frames[1]?.opacity === 1) {
+        animation.pause();
+        animation.currentTime = 180;
+        window.__qaRootFade.entrance = animation;
+      } else if (frames[1]?.opacity === 0) {
+        window.__qaRootFade.exit = {
+          from: frames[0]?.opacity,
+          oldState: window.__qaRootFade.entrance?.playState,
+          active: this.getAnimations().filter(item => item.playState !== 'idle').length,
+          duration: animation.effect?.getComputedTiming().duration,
+        };
+      }
+      return animation;
+    };
+  });
+  await page.goto(`${BASE_URL}/music`, { waitUntil: 'domcontentloaded' });
+  await waitForRoute(page);
+  const opener = page.getByRole('button', { name: 'Погружение' }).first();
+  await opener.press('Enter');
+  const dialog = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
+  await expect(dialog).toBeVisible();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__qaRootFade.entrance))).toBe(true);
+  await expect.poll(() => dialog.evaluate(node => node.contains(document.activeElement))).toBe(true);
+  const opacity = await dialog.evaluate(node => Number(getComputedStyle(node).opacity));
+  expect(opacity).toBeGreaterThan(0);
+  expect(opacity).toBeLessThan(1);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0, { timeout: 5000 });
+  const proof = await page.evaluate(() => window.__qaRootFade.exit);
+  expect(proof).toBeTruthy();
+  expect(proof.from).toBeCloseTo(opacity, 3);
+  expect(proof).toMatchObject({ oldState: 'idle', active: 1, duration: 450 });
+  await expect.poll(() => page.evaluate(() => window.__TLP_OVERLAY_DEBUG?.depth)).toBe(0);
+  await expect(opener).toBeFocused();
+});

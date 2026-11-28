@@ -54,11 +54,15 @@ let escapeCount = 0;
 let lastEscapeLabel: string | null = null;
 const accessibilitySnapshots = new Map<HTMLElement, AccessibilitySnapshot>();
 
+function restoreAccessibilityBranch(element: HTMLElement, snapshot: AccessibilitySnapshot) {
+  element.inert = snapshot.inert;
+  if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
+  else element.setAttribute('aria-hidden', snapshot.ariaHidden);
+}
+
 function restoreOverlayAccessibility() {
   for (const [element, snapshot] of accessibilitySnapshots) {
-    element.inert = snapshot.inert;
-    if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
-    else element.setAttribute('aria-hidden', snapshot.ariaHidden);
+    restoreAccessibilityBranch(element, snapshot);
   }
   accessibilitySnapshots.clear();
 }
@@ -70,15 +74,15 @@ function isolateAccessibilityBranch(element: HTMLElement) {
       ariaHidden: element.getAttribute('aria-hidden'),
     });
   }
-  element.inert = true;
-  element.setAttribute('aria-hidden', 'true');
+  if (!element.inert) element.inert = true;
+  if (element.getAttribute('aria-hidden') !== 'true') element.setAttribute('aria-hidden', 'true');
 }
 
 function syncOverlayAccessibility() {
-  restoreOverlayAccessibility();
+  const desired = new Set<HTMLElement>();
   const top = overlayStack[overlayStack.length - 1];
   const root = top?.root;
-  if (!root?.isConnected) return;
+  if (!root?.isConnected) { restoreOverlayAccessibility(); return; }
 
   let branch: HTMLElement | null = root;
   while (branch && branch !== document.body) {
@@ -89,10 +93,17 @@ function syncOverlayAccessibility() {
       const sibling = siblingNode as HTMLElement;
       if (typeof sibling.setAttribute !== 'function') continue;
       if (sibling.tagName === 'SCRIPT' || sibling.tagName === 'STYLE' || sibling.tagName === 'LINK') continue;
-      isolateAccessibilityBranch(sibling);
+      desired.add(sibling);
     }
     branch = parent;
   }
+  for (const [element, snapshot] of accessibilitySnapshots) {
+    if (!desired.has(element)) {
+      restoreAccessibilityBranch(element, snapshot);
+      accessibilitySnapshots.delete(element);
+    }
+  }
+  for (const element of desired) isolateAccessibilityBranch(element);
 }
 
 function setWindowValue(key: '__TLP_MODAL_OPEN' | '__TLP_OVERLAY_DEBUG', value: boolean | OverlayDebugState) {
@@ -240,10 +251,13 @@ function unlockDocument() {
   html.classList.remove('overlay-open');
   body.classList.remove('overlay-open');
   styleSnapshot = null;
-  resumeSmoothScroll?.(snapshot?.scrollY);
+  const resume = resumeSmoothScroll;
   resumeSmoothScroll = null;
   setLegacyModalFlag(false);
   publishOverlayDebug();
+  // The resume event is synchronous and may acquire a new overlay. Finish
+  // the old transaction before notifying listeners; never overwrite new state.
+  resume?.(snapshot?.scrollY);
 }
 
 /**
@@ -285,7 +299,10 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
       if (released) return;
       released = true;
       const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
-      if (index >= 0) overlayStack.splice(index, 1);
+      // A detached entry may already have been pruned. Its late cleanup
+      // cannot end another session or repeat the completed unlock.
+      if (index < 0) return;
+      overlayStack.splice(index, 1);
       syncOverlayAccessibility();
       publishOverlayDebug();
       if (overlayStack.length === 0) unlockDocument();
