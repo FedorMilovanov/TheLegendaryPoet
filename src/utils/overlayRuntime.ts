@@ -251,10 +251,13 @@ function unlockDocument() {
   html.classList.remove('overlay-open');
   body.classList.remove('overlay-open');
   styleSnapshot = null;
-  resumeSmoothScroll?.(snapshot?.scrollY);
+  const resume = resumeSmoothScroll;
   resumeSmoothScroll = null;
   setLegacyModalFlag(false);
   publishOverlayDebug();
+  // The resume event is synchronous and may acquire a new overlay. Finish
+  // the old transaction before notifying listeners; never overwrite new state.
+  resume?.(snapshot?.scrollY);
 }
 
 /**
@@ -296,7 +299,10 @@ export function acquireOverlayLock(label = 'overlay', root: HTMLElement | null =
       if (released) return;
       released = true;
       const index = overlayStack.findIndex((candidate) => candidate.token === entry.token);
-      if (index >= 0) overlayStack.splice(index, 1);
+      // A detached entry may already have been pruned. Its late cleanup
+      // cannot end another session or repeat the completed unlock.
+      if (index < 0) return;
+      overlayStack.splice(index, 1);
       syncOverlayAccessibility();
       publishOverlayDebug();
       if (overlayStack.length === 0) unlockDocument();

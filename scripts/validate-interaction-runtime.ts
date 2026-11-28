@@ -32,6 +32,7 @@ const scrollCalls: Array<[number, number]> = [];
 const resumeEvents: Array<{ type: string; position: string; scrollCount: number }> = [];
 const documentListeners = new Map<string, Set<(event: KeyboardEvent) => void>>();
 
+let onScrollResume: (() => void) | null = null;
 const fakeWindow = {
   scrollX: 7,
   scrollY: 321,
@@ -40,6 +41,7 @@ const fakeWindow = {
   scrollTo: (x: number, y: number) => scrollCalls.push([x, y]),
   dispatchEvent: (event: Event) => {
     resumeEvents.push({ type: event.type, position: bodyStyle.position, scrollCount: scrollCalls.length });
+    if (event.type === 'tlp-scroll-resumed') onScrollResume?.();
     return true;
   },
 };
@@ -186,6 +188,38 @@ stable.setRoot(dialogBranch as unknown as HTMLElement);
 expect(extra.inert && extra.getAttribute('aria-hidden') === 'true' && writes === 2, 'new siblings must be isolated without disturbing existing branches');
 stable.release();
 expect(!background.inert && !extra.inert && background.getAttribute('aria-hidden') === null && extra.getAttribute('aria-hidden') === null, 'final release must restore all original branch states');
+
+// The synchronous resume notification can open the next surface before
+// the previous unlock returns. The new lease, flag and pause must survive.
+const { isSmoothScrollPaused } = await import('../src/utils/smoothScroll');
+const beforeReentryScroll = scrollCalls.length;
+const beforeReentryResume = resumeEvents.length;
+const previous = overlay.acquireOverlayLock('previous-session', connectedRoot());
+const reentry = { handle: null as ReturnType<typeof overlay.acquireOverlayLock> | null };
+onScrollResume = () => {
+  onScrollResume = null;
+  reentry.handle = overlay.acquireOverlayLock('reentrant-session', connectedRoot());
+};
+previous.release();
+expect(reentry.handle?.isTopmost() && overlay.hasOpenOverlay(), 'resume listener may acquire the next modal synchronously');
+expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN === true, 'old unlock must not clear the new modal flag');
+expect(bodyStyle.position === 'fixed' && isSmoothScrollPaused(), 'reentrant modal must retain its body lock and scroll pause');
+reentry.handle?.release();
+expect(!isSmoothScrollPaused() && !overlay.hasOpenOverlay(), 'the new final release must not leak its pause token');
+expect(scrollCalls.length === beforeReentryScroll + 2 && resumeEvents.length === beforeReentryResume + 2, 'both reentrant sessions must restore and notify exactly once');
+
+// A portal can be pruned before its React cleanup. A delayed cleanup must
+// be inert even if the previous lock is gone.
+const stale = overlay.acquireOverlayLock('pruned-final', detachedRoot);
+expect(!overlay.hasOpenOverlay(), 'a detached final portal must be pruned');
+const beforeLateScroll = scrollCalls.length;
+const beforeLateResume = resumeEvents.length;
+const sentinel = { __TLP_MODAL_OPEN: true };
+Object.assign(fakeWindow, sentinel);
+stale.release();
+expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN === true, 'late pruned cleanup must not publish modal state again');
+expect(scrollCalls.length === beforeLateScroll && resumeEvents.length === beforeLateResume, 'late pruned cleanup must not restore or notify again');
+Object.assign(fakeWindow, { __TLP_MODAL_OPEN: false });
 
 const { startNativeDialogEntrance, startNativeDialogExit } = await import('../src/utils/nativeDialogExit');
 
