@@ -128,7 +128,10 @@ test.describe('every keyboard-focusable control shows the reader where focus is'
           const visited = [];
           let previousIndex = null;
 
-          for (let step = 0; step < MAX_TABS; step += 1) {
+          // The corpus can grow beyond the historical fixed cap. Leave enough
+          // room to traverse every laid-out Tab stop, then detect the natural cycle.
+          const tabBudget = Math.max(MAX_TABS, expected + 5);
+          for (let step = 0; step < tabBudget; step += 1) {
             await page.keyboard.press('Tab');
             // eslint-disable-next-line no-await-in-loop
             const row = await page.evaluate(() => {
