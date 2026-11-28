@@ -21,7 +21,7 @@ import { musicTracks } from '../src/data/library/musicTracks';
 import { essays } from '../src/data/essays/index';
 import { poetConnections } from '../src/data/poetConnections';
 import { poetryCollections } from '../src/data/poetryCollections';
-import { collectionReleaseIssues, readerSourceIssues, runCollectionContractSelfTest } from './lib/validate-poetry-collections.mjs';
+import { collectionReleaseIssues, collectionAnchorIssues, readerSourceIssues, runCollectionContractSelfTest } from './lib/validate-poetry-collections.mjs';
 import type { Poet } from '../src/types/poet';
 
 type Level = 'ERROR' | 'WARN';
@@ -268,6 +268,9 @@ const normalizedFragment = (text: string) => text.normalize('NFC')
   .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
 console.log(`Collection contract fixtures: ${runCollectionContractSelfTest()} passed`);
+for (const issue of collectionAnchorIssues(poetryCollections)) {
+  err('collection-anchor:' + issue.anchor, issue.owner + ' conflicts with ' + issue.existing);
+}
 const collectionIds = new Set<string>();
 for (const collection of poetryCollections) {
   const where = `collection:${collection.id}`;

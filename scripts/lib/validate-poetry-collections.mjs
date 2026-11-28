@@ -40,6 +40,33 @@ function collectionReleaseIssues(c){
   return issues;
 }
 
+// Mirror the actual Music page and collection component anchor namespace.
+function collectionAnchorIssues(collections){
+  const anchors=new Map([
+    ["poetry-collections","collection section"],
+    ["poetry-collections-title","collection section heading"],
+    ["featured-release-title","featured release heading"],
+    ["upcoming-releases-title","upcoming releases heading"],
+    ["release-archive-title","release archive heading"],
+  ]);
+  const issues=[];
+  const claim=(anchor,owner)=>{
+    const existing=anchors.get(anchor);
+    if(existing!==undefined)issues.push({anchor,owner,existing});
+    else anchors.set(anchor,owner);
+  };
+  for(const collection of collections){
+    const id=collection.id, owner="collection "+id;
+    claim(id,owner);
+    claim(id+"-title",owner+" heading");
+    claim(id+"-releases",owner+" releases");
+    if(Array.isArray(collection.entries)){
+      for(const entry of collection.entries)claim(id+"-"+entry.id,owner+" entry "+entry.id);
+    }
+  }
+  return issues;
+}
+
 function normalizedFragment(t){return t.normalize("NFC").toLocaleLowerCase("ru-RU").replace(/\u0301/gu,"").replace(/ё/gu,"е").replace(/[^\p{L}\p{N}]+/gu," ").trim();}
 
 function readerSourceIssues(essay,source){
@@ -81,6 +108,21 @@ function runCollectionContractSelfTest(){
     if((collectionReleaseIssues(c).length>0)!==invalid)throw new Error("Collection contract regression: "+name);
     passed++;
   }
+  const anchorCases=[
+    ["valid anchor namespace",()=>{},false],
+    ["reserved section",cs=>{cs[0].id="poetry-collections"},true],
+    ["reserved page heading",cs=>{cs[0].id="featured-release-title"},true],
+    ["entry collides with heading",cs=>{cs[0].entries[0].id="title"},true],
+    ["entry collides with releases",cs=>{cs[0].entries[0].id="releases"},true],
+    ["collection collides with another entry",cs=>{cs.push({...cs[0],id:"season-work"})},true],
+    ["compound entry collision",cs=>{cs[0].entries[0].id="winter-work";cs.push({...cs[0],id:"season-winter",entries:[{...cs[0].entries[0],id:"work"}]})},true],
+    ["independent collections",cs=>{cs.push({...cs[0],id:"winter"})},false],
+  ];
+  for(const [name,mutate,invalid] of anchorCases){
+    const cs=[JSON.parse(JSON.stringify(fixture))];mutate(cs);
+    if((collectionAnchorIssues(cs).length>0)!==invalid)throw new Error("Collection anchor contract regression: "+name);
+    passed++;
+  }
   const s=fixture.entries[0].sources[0];
   const essay={blocks:[{type:"section",anchor:"literary-fragment-verse"},{type:"paragraph",text:"«Новый год!»",sourceIds:["verse"]},{type:"section",anchor:"another"},{type:"paragraph",text:"Другой текст",sourceIds:["verse"]}]};
   const rCases=[
@@ -99,4 +141,4 @@ function runCollectionContractSelfTest(){
   return passed;
 }
 
-export { collectionReleaseIssues, readerSourceIssues, runCollectionContractSelfTest };
+export { collectionReleaseIssues, collectionAnchorIssues, readerSourceIssues, runCollectionContractSelfTest };
