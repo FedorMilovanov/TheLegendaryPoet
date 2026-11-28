@@ -730,7 +730,15 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   const miniSeek = page.getByRole('slider', { name: 'Позиция текущего релиза' });
   const miniIndicator = page.locator('[data-seek-focus-indicator="mini"]');
   await expect(miniSeek).toBeVisible();
-  await miniSeek.focus();
+  const miniFocus = await miniSeek.evaluate(input => {
+    input.focus({ preventScroll: true });
+    const indicator = input.nextElementSibling;
+    const ring = indicator.getBoundingClientRect();
+    const surface = indicator.closest('.audio-mini-surface').getBoundingClientRect();
+    return { focused: document.activeElement === input, opacity: Number(getComputedStyle(indicator).opacity),
+      inside: ring.top >= surface.top && ring.left >= surface.left && ring.bottom <= surface.bottom && ring.right <= surface.right };
+  });
+  expect(miniFocus, 'seek focus must be immediate and inside the clipped mini surface').toEqual({ focused: true, opacity: 1, inside: true });
   await expect(miniSeek).toBeFocused();
   await expect.poll(
     () => miniIndicator.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity)),
@@ -741,6 +749,8 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
   const openImmersive = miniPlayer.getByRole('button', { name: 'Открыть режим погружения' });
   await expectLocatorInsideViewport(miniPlayer, 'mini-player must remain fully inside the viewport while focused');
   await expectLocatorInsideViewport(openImmersive, 'mini-player immersive control must remain actionable inside the viewport');
+  await openImmersive.focus();
+  await expect.poll(() => miniIndicator.evaluate(element => Number(getComputedStyle(element).opacity))).toBe(0);
   await openImmersive.click();
   const immersive = page.locator('[role="dialog"][aria-labelledby="immersive-track-title"]');
   const main = page.locator('#main-content');
@@ -750,7 +760,11 @@ test('seek focus is visible and nested overlays isolate only the topmost accessi
 
   const immersiveSeek = immersive.getByRole('slider', { name: 'Позиция воспроизведения' });
   const immersiveIndicator = immersive.locator('[data-seek-focus-indicator="immersive"]');
-  await immersiveSeek.focus();
+  const immersiveFocus = await immersiveSeek.evaluate(input => {
+    input.focus({ preventScroll: true });
+    return { focused: document.activeElement === input, opacity: Number(getComputedStyle(input.nextElementSibling).opacity) };
+  });
+  expect(immersiveFocus, 'immersive seek focus must be immediate').toEqual({ focused: true, opacity: 1 });
   await expect(immersiveSeek).toBeFocused();
   // The dialog's queued initial-focus frame must not reclaim focus from seek.
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));

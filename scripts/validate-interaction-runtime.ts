@@ -32,6 +32,7 @@ const scrollCalls: Array<[number, number]> = [];
 const resumeEvents: Array<{ type: string; position: string; scrollCount: number }> = [];
 const documentListeners = new Map<string, Set<(event: KeyboardEvent) => void>>();
 
+let onScrollResume: (() => void) | null = null;
 const fakeWindow = {
   scrollX: 7,
   scrollY: 321,
@@ -40,6 +41,7 @@ const fakeWindow = {
   scrollTo: (x: number, y: number) => scrollCalls.push([x, y]),
   dispatchEvent: (event: Event) => {
     resumeEvents.push({ type: event.type, position: bodyStyle.position, scrollCount: scrollCalls.length });
+    if (event.type === 'tlp-scroll-resumed') onScrollResume?.();
     return true;
   },
 };
@@ -156,6 +158,180 @@ expect(escapeOrder.join(',') === 'upper,lower', 'the second Escape must close th
 expect(!overlay.hasOpenOverlay(), 'central Escape routing must leave no phantom overlay entries');
 expect(scrollCalls.length === 4, 'a complete centrally-routed overlay session must restore scroll once');
 
+let writes = 0;
+function branch() {
+  let inert = false;
+  const attributes = new Map<string, string>();
+  return {
+    isConnected: true, tagName: 'DIV',
+    get inert() { return inert; },
+    set inert(value: boolean) { writes++; inert = value; },
+    getAttribute: (name: string) => attributes.get(name) ?? null,
+    setAttribute: (name: string, value: string) => { writes++; attributes.set(name, value); },
+    removeAttribute: (name: string) => { writes++; attributes.delete(name); },
+    contains: () => false,
+    parentElement: fakeDocument.body,
+  };
+}
+const background = branch();
+const dialogBranch = branch();
+const extra = branch();
+Object.assign(fakeDocument.body, { children: [background, dialogBranch] });
+const stable = overlay.acquireOverlayLock('stable', dialogBranch as unknown as HTMLElement);
+expect(background.inert && background.getAttribute('aria-hidden') === 'true', 'initial branch isolation is required');
+writes = 0;
+stable.setRoot(dialogBranch as unknown as HTMLElement);
+expect(writes === 0, 'unchanged overlay branches must not toggle accessibility attributes');
+Object.assign(fakeDocument.body, { children: [background, dialogBranch, extra] });
+writes = 0;
+stable.setRoot(dialogBranch as unknown as HTMLElement);
+expect(extra.inert && extra.getAttribute('aria-hidden') === 'true' && writes === 2, 'new siblings must be isolated without disturbing existing branches');
+stable.release();
+expect(!background.inert && !extra.inert && background.getAttribute('aria-hidden') === null && extra.getAttribute('aria-hidden') === null, 'final release must restore all original branch states');
+
+// The synchronous resume notification can open the next surface before
+// the previous unlock returns. The new lease, flag and pause must survive.
+const { isSmoothScrollPaused } = await import('../src/utils/smoothScroll');
+const beforeReentryScroll = scrollCalls.length;
+const beforeReentryResume = resumeEvents.length;
+const previous = overlay.acquireOverlayLock('previous-session', connectedRoot());
+const reentry = { handle: null as ReturnType<typeof overlay.acquireOverlayLock> | null };
+onScrollResume = () => {
+  onScrollResume = null;
+  reentry.handle = overlay.acquireOverlayLock('reentrant-session', connectedRoot());
+};
+previous.release();
+expect(reentry.handle?.isTopmost() && overlay.hasOpenOverlay(), 'resume listener may acquire the next modal synchronously');
+expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN === true, 'old unlock must not clear the new modal flag');
+expect(bodyStyle.position === 'fixed' && isSmoothScrollPaused(), 'reentrant modal must retain its body lock and scroll pause');
+reentry.handle?.release();
+expect(!isSmoothScrollPaused() && !overlay.hasOpenOverlay(), 'the new final release must not leak its pause token');
+expect(scrollCalls.length === beforeReentryScroll + 2 && resumeEvents.length === beforeReentryResume + 2, 'both reentrant sessions must restore and notify exactly once');
+
+// A portal can be pruned before its React cleanup. A delayed cleanup must
+// be inert even if the previous lock is gone.
+const stale = overlay.acquireOverlayLock('pruned-final', detachedRoot);
+expect(!overlay.hasOpenOverlay(), 'a detached final portal must be pruned');
+const beforeLateScroll = scrollCalls.length;
+const beforeLateResume = resumeEvents.length;
+const sentinel = { __TLP_MODAL_OPEN: true };
+Object.assign(fakeWindow, sentinel);
+stale.release();
+expect((fakeWindow as typeof fakeWindow & { __TLP_MODAL_OPEN?: boolean }).__TLP_MODAL_OPEN === true, 'late pruned cleanup must not publish modal state again');
+expect(scrollCalls.length === beforeLateScroll && resumeEvents.length === beforeLateResume, 'late pruned cleanup must not restore or notify again');
+Object.assign(fakeWindow, { __TLP_MODAL_OPEN: false });
+
+const { startNativeDialogEntrance, startNativeDialogExit } = await import('../src/utils/nativeDialogExit');
+
+async function checkNativeExit(kind: string) {
+  let now = 0;
+  let nextId = 0;
+  let current = true;
+  let completions = 0;
+  let finishCalls = 0;
+  let opacity = '0.8';
+  let priority = '';
+  const tasks = new Map<number, { callback: () => void; at: number }>();
+  Object.assign(fakeWindow, {
+    setTimeout: (callback: () => void, delay: number) => {
+      tasks.set(++nextId, { callback, at: now + delay });
+      return nextId;
+    },
+    clearTimeout: (id: number) => tasks.delete(id),
+  });
+  Object.assign(fakeDocument, { visibilityState: 'visible' });
+  let resolve!: () => void;
+  let reject!: (reason: Error) => void;
+  const finished = new Promise<void>((yes, no) => { resolve = yes; reject = no; });
+  const animation = Object.assign(new EventTarget(), {
+    finished,
+    finish() {
+      finishCalls++;
+      if (kind === 'finishThrows') throw new Error('injected compositor failure');
+      this.dispatchEvent(new Event('finish'));
+    },
+    cancel() {},
+  });
+  const surface = {
+    style: {
+      getPropertyValue: () => opacity,
+      getPropertyPriority: () => priority,
+      setProperty: (_name: string, value: string, p: string) => { opacity = value; priority = p; },
+      removeProperty: () => { opacity = ''; priority = ''; },
+    },
+    animate: () => {
+      if (kind === 'animateThrows') throw new Error('injected animate failure');
+      return animation;
+    },
+  } as unknown as HTMLElement;
+  const cleanup = startNativeDialogExit(surface, () => current, () => { completions++; });
+  const advance = (ms: number) => {
+    now += ms;
+    for (const [id, task] of tasks) {
+      if (task.at <= now) { tasks.delete(id); task.callback(); }
+    }
+  };
+  if (kind === 'normal') {
+    resolve(); await Promise.resolve();
+    animation.dispatchEvent(new Event('finish'));
+    advance(2000);
+    expect(completions === 1 && opacity === '0.8' && tasks.size === 0, 'normal native exit must settle once and cancel the watchdog');
+  } else if (kind === 'eventOnly') {
+    animation.dispatchEvent(new Event('finish'));
+    expect(completions === 1 && opacity === '0.8' && tasks.size === 0, 'finish event must settle even when the finished promise never resolves');
+  } else if (kind === 'stalled' || kind === 'finishThrows') {
+    advance(1799);
+    expect(completions === 0 && opacity === '0.8', 'stalled exit must retain ownership until its liveness deadline');
+    advance(1);
+    expect(completions === 1 && opacity === '0' && priority === 'important' && finishCalls === 1, 'stalled exit must force terminal visual state before completing, even if finish throws');
+  } else if (kind === 'cancel') {
+    reject(new Error('cancel')); await Promise.resolve();
+    expect(completions === 1 && opacity === '0' && priority === 'important' && tasks.size === 0, 'cancelled native animation must conceal before completing and clear its watchdog');
+  } else if (kind === 'hidden') {
+    Object.assign(fakeDocument, { visibilityState: 'hidden' });
+    for (const listener of documentListeners.get('visibilitychange') ?? []) listener({} as KeyboardEvent);
+    expect(completions === 1 && tasks.size === 0, 'hidden document must settle and clear its watchdog');
+  } else if (kind === 'reopen') {
+    current = false; cleanup(); advance(5000); resolve(); await Promise.resolve();
+    expect(completions === 0 && opacity === '0.8', 'old native exit must not close a reopened dialog');
+  } else if (kind === 'reopenCancelled') {
+    current = false; cleanup(); reject(new Error('old cancellation')); await Promise.resolve();
+    expect(completions === 0 && opacity === '0.8', 'stale rejection must not conceal a reopened dialog');
+  } else if (kind === 'cancelAfterFinish') {
+    animation.dispatchEvent(new Event('finish')); reject(new Error('late cancellation')); await Promise.resolve();
+    expect(completions === 1 && opacity === '0.8', 'late rejection after a finish event must not settle or conceal again');
+  } else if (kind === 'animateThrows') {
+    expect(completions === 1 && opacity === '0' && priority === 'important', 'synchronous native animation failure must be nonvisual and complete');
+  }
+  cleanup();
+  expect(opacity === '0.8' && priority === '' && tasks.size === 0 && !(documentListeners.get('visibilitychange')?.size), 'exit cleanup must restore prior opacity and remove all callbacks');
+}
+for (const kind of ['normal', 'eventOnly', 'stalled', 'finishThrows', 'cancel', 'hidden', 'reopen', 'reopenCancelled', 'cancelAfterFinish', 'animateThrows']) {
+  await checkNativeExit(kind);
+}
+Object.assign(fakeDocument, { visibilityState: 'visible' });
+
+// The root's entrance must surrender the actual painted value before exit.
+{
+  let cancelled = false;
+  const animations: { opacity: number }[][] = [];
+  const previousStyle = globalThis.getComputedStyle;
+  Object.assign(globalThis, { getComputedStyle: () => ({ opacity: '0.37' }) });
+  const entranceSurface = {
+    animate: (frames: { opacity: number }[]) => {
+      animations.push(frames);
+      return { finished: Promise.resolve(), cancel: () => { cancelled = true; } };
+    },
+  } as unknown as HTMLElement;
+  try {
+    const stop = startNativeDialogEntrance(entranceSurface);
+    expect(animations.length === 1 && animations[0][0].opacity === 0 && animations[0][1].opacity === 1, 'native entrance must own the root fade');
+    expect(stop() === 0.37 && cancelled, 'entrance cleanup must capture painted opacity before cancellation');
+  } finally {
+    Object.assign(globalThis, { getComputedStyle: previousStyle });
+  }
+}
+
 const overlaySource = read('src/utils/overlayRuntime.ts');
 const dialogSource = read('src/hooks/useDialogSurface.ts');
 const commandSource = read('src/components/command/CommandPalette.tsx');
@@ -206,7 +382,12 @@ expect(dialogSource.includes('useDialogExitLifetime'), 'animated dialogs must sh
 expect(dialogSource.includes('if (!deferReleaseUntilUnmount) handle.release()'), 'Escape must retain animated dialog ownership until exit completion');
 expect(immersiveSource.includes('useNativeDialogExitLifetime(immersiveOpen && Boolean(currentTrack), dialogRef)'), 'immersive playback must attach its native exit to the painted dialog');
 expect(immersiveSource.includes('open: lifetime.lockOpen') && immersiveSource.includes('deferReleaseUntilUnmount: true'), 'immersive overlay lock must follow painted presence, not logical open');
-expect(dialogSource.includes('exit.finished.then') && dialogSource.includes("typeof surface.animate !== 'function'"), 'immersive overlay must release after compositor exit completion, without relying on Framer presence');
+const nativeExitSource = read('src/utils/nativeDialogExit.ts');
+expect(dialogSource.includes('startNativeDialogEntrance(surface)') &&
+  immersiveSource.includes('<div\n            ref={dialogRef}') &&
+  !immersiveSource.includes('<motion.div\n            ref={dialogRef}'),
+  'the immersive root must have one native opacity owner and stay mounted across track changes');
+expect(dialogSource.includes('startNativeDialogExit(surface') && dialogSource.includes("typeof surface.animate !== 'function'") && nativeExitSource.includes('exit.finished.then') && nativeExitSource.includes("exit.addEventListener('finish', complete)"), 'immersive overlay must observe both native completion channels through one visual owner');
 expect(immersiveSource.includes('{lifetime.lockOpen && currentTrack'), 'immersive dialog DOM must remain mounted throughout native exit');
 expect(immersiveSource.includes('isTopmost()'), 'background media shortcuts must pause beneath another dialog');
 expect(!immersiveSource.includes("document.body.style.overflow = 'hidden'"), 'immersive playback must not duplicate body locking');
@@ -240,7 +421,8 @@ expect(miniPlayerSource.includes('seek-focus-shell') && miniPlayerSource.include
 expect(audioPlayerStyleSource.includes('max-width: 760px'), 'mini-player must retain a bounded responsive width without motion-owned transform centering');
 expect(!audioPlayerStyleSource.includes('transform: translateX(-50%)'), 'mini-player centering must not compete with Framer Motion transform ownership');
 expect(immersiveSource.includes('seek-focus-shell') && immersiveSource.includes('seek-focus-indicator'), 'immersive seek must expose the shared visible focus owner');
-expect(audioPlayerStyleSource.includes('.seek-focus-shell:focus-within .seek-focus-indicator'), 'seek focus visibility must be owned by the cross-browser focus-within contract');
+expect(audioPlayerStyleSource.includes('.seek-focus-shell:focus-within .seek-focus-indicator') && audioPlayerStyleSource.includes('.seek-focus-shell input:focus + .seek-focus-indicator'), 'seek focus visibility must support both focus-within and direct focused input');
+expect(!/\.seek-focus-indicator\s*\{[^}]*transition\s*:/u.test(audioPlayerStyleSource), 'seek focus visibility must not wait for an animation frame');
 expect(analyticsConsentSource.includes('analytics-consent-banner theme-dark-island'), 'analytics consent must be an explicit dark fixed-chrome surface');
 expect(analyticsConsentSource.includes('z-[105]'), 'analytics consent must remain below true modal surfaces');
 expect(audioPlayerStyleSource.includes('html.global-audio-active .analytics-consent-banner'), 'analytics consent must move clear of persistent audio chrome');
