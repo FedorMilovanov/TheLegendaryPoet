@@ -167,3 +167,46 @@ test('share selection rejects private or stale ranges and preserves later reader
   expect(await page.evaluate(() => document.getSelection().toString())).toBe(selected);
   await expect(chip).toHaveText('Ссылка на строку');
 });
+
+test('shared poem link retains its published anchor and reports clipboard rejection', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__shareWrites = [];
+    window.__rejectShare = false;
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+      writeText: value => {
+        if (window.__rejectShare) return Promise.reject(new Error('Clipboard denied'));
+        window.__shareWrites.push(value);
+        return Promise.resolve();
+      },
+    } });
+  });
+  await page.goto(BASE_URL + '/poets/alexander-blok', { waitUntil: 'domcontentloaded' });
+  const verse = page.locator('[data-poem-canonical]').first();
+  const word = verse.locator('[data-poem-canonical-word]').first();
+  await word.scrollIntoViewIfNeeded();
+  const id = await verse.evaluate(node => node.closest('[id^="poem-"]').id);
+  await word.evaluate(node => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event('selectionchange'));
+  });
+  const chip = page.locator('.share-line-chip');
+  await expect(chip).toBeVisible();
+  await chip.evaluate(node => node.click());
+  await expect(chip).toHaveText('Скопировано');
+  const shared = await page.evaluate(() => window.__shareWrites[0]);
+  expect(new URL(shared).hash).toContain('#' + id + ':~:text=');
+  await page.evaluate(() => { window.__rejectShare = true; });
+  await chip.evaluate(node => node.click());
+  await expect(chip).toHaveText('Не удалось скопировать');
+  // Simulate a recipient without text-fragment highlighting, using the
+  // ordinary anchor retained in the same copied URL.
+  await page.goto(shared.split(':~:')[0], { waitUntil: 'domcontentloaded' });
+  const target = page.locator('[id="' + id + '"]');
+  await expect(target).toBeVisible();
+  await expect.poll(() => target.evaluate(node => node.getBoundingClientRect().top)).toBeGreaterThan(70);
+  await expect.poll(() => target.evaluate(node => node.getBoundingClientRect().top)).toBeLessThan(180);
+});

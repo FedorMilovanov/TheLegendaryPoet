@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
  * from the accessibility tree.
  */
 export default function InteractivePoemText({ text }: { text: string }) {
-  const lines = text.split('\n');
+  const lines = text.split('\n').map((line) => line.split(/(\s+)/u));
   const [focusedWord, setFocusedWord] = useState<string | null>(null);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   const [returningWord, setReturningWord] = useState<string | null>(null);
@@ -58,18 +58,16 @@ export default function InteractivePoemText({ text }: { text: string }) {
       className="theme-dark-island poem-reader-surface relative mb-12 overflow-hidden rounded-[2rem] border border-luxury-gold/5 px-4 py-8 text-2xl leading-[2] tracking-wide shadow-inner sm:px-8 md:px-12"
       onPointerLeave={stopDwell}
     >
-      {/* Both layers share one grid track: the longest wrapped visual line
-          participates in intrinsic height instead of escaping an absolute
-          overlay whose height was sized only by transparent canonical ink. */}
-      <div className="grid">
+      {/* Both planes share identical tokens, whitespace, word boxes and wrapping.
+          Only the presentation ink moves; selection and hit testing do not. */}
+      <div className="grid whitespace-pre-wrap">
         <span
         data-poem-canonical
         className="pointer-events-auto relative z-0 col-start-1 row-start-1 block min-w-0 whitespace-pre-wrap text-transparent selection:bg-luxury-gold/35 selection:text-transparent"
         style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
       >
-        {lines.map((line, lineIdx) => {
+        {lines.map((tokens, lineIdx) => {
           let wordIdx = 0;
-          const tokens = line.split(/(\s+)/u);
           return (
             <span key={lineIdx}>
               {lineIdx > 0 ? '\n' : ''}
@@ -82,7 +80,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
                     data-poem-canonical-word
                     onPointerEnter={() => startDwell(key)}
                     onPointerLeave={stopDwell}
-                    className="cursor-default text-transparent"
+                    className="inline-block max-w-full break-words cursor-text text-transparent"
                   >
                     {token}
                   </span>
@@ -96,13 +94,17 @@ export default function InteractivePoemText({ text }: { text: string }) {
       <div
         data-poem-visual
         aria-hidden="true"
+        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
         className="pointer-events-none relative z-10 col-start-1 row-start-1 min-w-0"
       >
-        {lines.map((line, lineIdx) => (
-          <div key={lineIdx} className="relative z-10 flex min-h-[1.5rem] flex-wrap gap-x-[0.34em]">
-            {line.trim() === ''
-              ? <div className="h-6 w-full" />
-              : (line.match(/\S+/gu) ?? []).map((word, wordIdx) => {
+        {lines.map((tokens, lineIdx) => {
+          let nextWordIdx = 0;
+          return (
+          <div key={lineIdx} className="inline">
+            {lineIdx > 0 ? '\n' : ''}
+            {tokens.map((word) => {
+                  if (word === '' || /^\s+$/u.test(word)) return word;
+                  const wordIdx = nextWordIdx++;
                   const key = `${lineIdx}-${wordIdx}`;
                   const isFocused = focusedWord === key;
                   const isHovered = hoveredWord === key;
@@ -118,8 +120,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
                   return (
                     <motion.span
                       key={key}
-                      layout
-                      className="relative inline-block cursor-default sm:mr-[0.3em]"
+                      className="relative inline-block max-w-full break-words"
                       animate={
                         isFocused
                           ? { scale: 1.42, y: -7, color: '#f5e6a3', filter: 'blur(0px)', opacity: 1, textShadow: '0 0 16px rgba(245,230,163,0.62), 0 0 42px rgba(212,175,55,0.22)', transition: { duration: 0.82, ease: [0.16, 1, 0.3, 1] } }
@@ -145,7 +146,8 @@ export default function InteractivePoemText({ text }: { text: string }) {
                   );
                 })}
           </div>
-        ))}
+          );
+        })}
       </div>
       </div>
 

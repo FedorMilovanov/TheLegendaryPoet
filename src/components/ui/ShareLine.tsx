@@ -17,18 +17,19 @@ function encodeFragmentPart(s: string): string {
   return encodeURIComponent(s).replace(/-/g, '%2D');
 }
 
-/** Build `#:~:text=` URL for the current page pointing at `text`. */
-function buildFragmentUrl(text: string): string {
+/** Add a published poem/source anchor when the selection lies inside one.
+ * It remains useful even if the browser cannot highlight a text directive. */
+function buildFragmentUrl(text: string, anchor = ''): string {
   const clean = text.replace(/\s+/g, ' ').trim();
-  const base = `${window.location.origin}${window.location.pathname}`;
+  const base = `${window.location.origin}${window.location.pathname}#${encodeURIComponent(anchor)}`;
   const words = clean.split(' ');
   if (clean.length <= 120 || words.length <= 10) {
-    return `${base}#:~:text=${encodeFragmentPart(clean)}`;
+    return `${base}:~:text=${encodeFragmentPart(clean)}`;
   }
   // Long selections: range syntax (textStart,textEnd) keeps the URL short.
   const start = words.slice(0, 5).join(' ');
   const end = words.slice(-5).join(' ');
-  return `${base}#:~:text=${encodeFragmentPart(start)},${encodeFragmentPart(end)}`;
+  return `${base}:~:text=${encodeFragmentPart(start)},${encodeFragmentPart(end)}`;
 }
 
 
@@ -58,7 +59,7 @@ interface ShareLineProps {
 
 export default function ShareLine({ scopeRef }: ShareLineProps) {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<'copied' | 'failed' | null>(null);
   const chipRef = useRef<HTMLButtonElement>(null);
   const visibleRange = useRef<Range | null>(null);
   const copiedRange = useRef<Range | null>(null);
@@ -73,7 +74,7 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
       if (copiedRange.current && !sameSelection(copiedRange.current, range)) {
         copiedRange.current = null;
         window.clearTimeout(copiedTimer.current);
-        setCopied(false);
+        setFeedback(null);
       }
       if (!range) {
         setPos(null);
@@ -120,20 +121,24 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
     const snapshot = range.cloneRange();
     copiedRange.current = snapshot;
     window.clearTimeout(copiedTimer.current);
-    setCopied(false);
+    setFeedback(null);
+    const common = range.commonAncestorContainer;
+    const host = common instanceof Element ? common : common.parentElement;
+    const target = host?.closest<HTMLElement>('[id^="poem-"], li[id^="source-"], h2[id^="sec-"]');
+    const anchor = target && scopeRef.current?.contains(target) ? target.id : '';
+    let result: 'copied' | 'failed' = 'copied';
     try {
-      await navigator.clipboard.writeText(buildFragmentUrl(text));
-      if (copiedRange.current !== snapshot || !sameSelection(snapshot, readPublicSelection(scopeRef.current))) return;
-      setCopied(true);
-      copiedTimer.current = window.setTimeout(() => {
-        if (copiedRange.current !== snapshot) return;
-        copiedRange.current = null;
-        setCopied(false);
-      }, 1400);
+      await navigator.clipboard.writeText(buildFragmentUrl(text, anchor));
     } catch {
-      // Clipboard unavailable (permissions/insecure context) — fail quietly.
-      if (copiedRange.current === snapshot) copiedRange.current = null;
+      result = 'failed';
     }
+    if (copiedRange.current !== snapshot || !sameSelection(snapshot, readPublicSelection(scopeRef.current))) return;
+    setFeedback(result);
+    copiedTimer.current = window.setTimeout(() => {
+      if (copiedRange.current !== snapshot) return;
+      copiedRange.current = null;
+      setFeedback(null);
+    }, 1400);
   };
 
   if (!pos) return null;
@@ -149,13 +154,13 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
       onClick={copy}
       aria-live="polite"
     >
-      {copied ? (
+      {feedback === 'copied' ? (
         <>
           <Check size={13} aria-hidden="true" /> Скопировано
         </>
       ) : (
         <>
-          <Link2 size={13} aria-hidden="true" /> Ссылка на строку
+          <Link2 size={13} aria-hidden="true" /> {feedback === 'failed' ? 'Не удалось скопировать' : 'Ссылка на строку'}
         </>
       )}
     </button>

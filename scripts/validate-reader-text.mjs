@@ -16,7 +16,8 @@ expect(source.includes('line.split(/(\\s+)/u)'), 'canonical layer must preserve 
 expect(source.includes("data-poem-canonical-word"), 'canonical word spans must remain available for pointer interaction');
 expect(source.includes('onPointerEnter={() => startDwell(key)}'), 'canonical words must drive the existing dwell interaction');
 expect(source.includes('onPointerLeave={stopDwell}'), 'canonical words must release dwell state consistently');
-expect(!source.includes('select-none'), 'reader text must not disable native text selection');
+expect(!source.includes('select-none'), 'reader text must not disable native text selection through a global utility');
+expect(/data-poem-visual\s+aria-hidden="true"\s+style=\{\{ userSelect: 'none', WebkitUserSelect: 'none' \}\}/.test(source), 'presentation-only ink must not be copied as a second poem');
 
 if (failures.length) {
   console.error('Reader text validation failed:');
