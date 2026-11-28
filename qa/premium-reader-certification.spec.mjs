@@ -237,6 +237,50 @@ test.describe('W5 premium reader certification', () => {
     assertDiagnostics(diagnostics);
   });
 
+  test('keyboard search keeps the active option inside its own short scrollport', async ({ page }, testInfo) => {
+    const mobile = ['android-pixel7', 'iphone-safari'].includes(testInfo.project.name);
+    await page.setViewportSize({ width: mobile ? 390 : 1024, height: 600 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await waitForMain(page);
+    await page.keyboard.press('Control+K');
+    const query = page.getByRole('combobox', { name: 'Поисковый запрос' });
+    const list = page.getByRole('listbox', { name: 'Результаты поиска' });
+    const options = list.getByRole('option');
+    await expect(query).toBeFocused();
+    await expect(options).toHaveCount(8);
+    await expect.poll(() => list.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
+    const readerY = await page.evaluate(() => scrollY);
+    const assertActive = async (index) => {
+      const row = options.nth(index);
+      await expect(row).toHaveAttribute('aria-selected', 'true');
+      await expect(query).toHaveAttribute('aria-activedescendant', await row.getAttribute('id'));
+      await expect(query).toBeFocused();
+      await expect.poll(() => row.evaluate(node => {
+        const port = node.closest('[role="listbox"]');
+        const rect = node.getBoundingClientRect();
+        const top = port.getBoundingClientRect().top + port.clientTop;
+        return rect.top >= top - 1 && rect.bottom <= top + port.clientHeight + 1;
+      })).toBe(true);
+      expect(await page.evaluate(() => scrollY)).toBe(readerY);
+    };
+    await assertActive(0);
+    for (let index = 1; index < 8; index++) {
+      await query.press('ArrowDown');
+      await assertActive(index);
+    }
+    expect(await list.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+    for (let index = 6; index >= 0; index--) {
+      await query.press('ArrowUp');
+      await assertActive(index);
+    }
+    await query.fill('музыка');
+    await expect(options.first()).toHaveAttribute('aria-selected', 'true');
+    await expect(query).toBeFocused();
+    await query.press('Escape');
+    await expect(list).toHaveCount(0);
+  });
+
   test('blocked browser storage leaves the shell honest and usable', async ({ page }) => {
     const diagnostics = attachDiagnostics(page);
     await page.addInitScript(() => {

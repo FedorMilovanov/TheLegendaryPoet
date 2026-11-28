@@ -115,14 +115,17 @@ test('share selection rejects private or stale ranges and preserves later reader
   await expect(intro).toBeVisible();
   await expect(community).toBeAttached();
   await expect(verse).toBeAttached();
-  const select = locator => locator.evaluate(node => {
-    const range = document.createRange();
+  const select = async locator => {
+    await locator.scrollIntoViewIfNeeded();
+    await locator.evaluate(node => {
+      const range = document.createRange();
     range.selectNodeContents(node);
     const selection = document.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
-    document.dispatchEvent(new Event('selectionchange'));
-  });
+      document.dispatchEvent(new Event('selectionchange'));
+    });
+  };
 
   await select(intro);
   await expect(chip).toBeVisible();
@@ -166,4 +169,75 @@ test('share selection rejects private or stale ranges and preserves later reader
   await page.waitForTimeout(1500);
   expect(await page.evaluate(() => document.getSelection().toString())).toBe(selected);
   await expect(chip).toHaveText('Ссылка на строку');
+});
+
+test('share selection reports clipboard rejection and supports retry', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__shareWrites = [];
+    window.__rejectShare = false;
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+      writeText: value => {
+        if (window.__rejectShare) return Promise.reject(new Error('Clipboard denied'));
+        window.__shareWrites.push(value);
+        return Promise.resolve();
+      },
+    } });
+  });
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto(BASE_URL + '/poets/alexander-blok', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
+  const verse = page.locator('[data-poem-canonical]').first();
+  const word = verse.locator('[data-poem-canonical-word]').first();
+  await word.scrollIntoViewIfNeeded();
+  await word.evaluate(node => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event('selectionchange'));
+  });
+  const chip = page.locator('.share-line-chip');
+  await expect(chip).toBeVisible();
+  await chip.evaluate(node => node.click());
+  await expect(chip).toHaveText('Скопировано');
+  const shared = await page.evaluate(() => window.__shareWrites[0]);
+  expect(new URL(shared).hash).toContain('#:~:text=');
+  await page.evaluate(() => { window.__rejectShare = true; });
+  await chip.evaluate(node => node.click());
+  await expect(chip).toHaveText('Не удалось скопировать');
+  await expect.poll(() => chip.evaluate(node => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 7 && rect.right <= innerWidth - 7 && node.scrollWidth <= node.clientWidth;
+  })).toBe(true);
+  await page.evaluate(() => { window.__rejectShare = false; });
+  await chip.evaluate(node => node.click());
+  await expect(chip).toHaveText('Скопировано');
+  expect(await page.evaluate(() => window.__shareWrites)).toEqual([shared, shared]);
+
+  // A passage taller than the viewport must still offer a reachable chip.
+  await page.setViewportSize({ width: 320, height: 480 });
+  const poems = page.locator('[data-poem-canonical]');
+  const longestIndex = await poems.evaluateAll(nodes => nodes.reduce((best, node, index) =>
+    node.getBoundingClientRect().height > nodes[best].getBoundingClientRect().height ? index : best, 0));
+  const longPoem = poems.nth(longestIndex);
+  await longPoem.scrollIntoViewIfNeeded();
+  await longPoem.evaluate(node => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = document.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    document.dispatchEvent(new Event('selectionchange'));
+  });
+  await expect.poll(() => page.evaluate(() => {
+    const rect = document.getSelection().getRangeAt(0).getBoundingClientRect();
+    return rect.height > innerHeight && rect.bottom > 0 && rect.top < innerHeight;
+  })).toBe(true);
+  await expect.poll(() => chip.evaluate(node => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 7 && rect.right <= innerWidth - 7 && rect.top >= 7 && rect.bottom <= innerHeight - 7;
+  })).toBe(true);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await expect(chip).toHaveCount(0);
 });

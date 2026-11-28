@@ -1,5 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+
+// Reuse fixed motion targets instead of rebuilding identical objects per word.
+const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
+const sharp = { filter: 'blur(0px)', opacity: 1 };
+const still = { ...sharp, scale: 1, x: 0, y: 0 };
+const reading = { ...still, transition: { duration: 0.55, ease } };
+const resting = { ...reading, color: 'rgba(255,255,255,0.90)', textShadow: 'none' };
+const read = { ...reading, color: '#d4af37', textShadow: '0 0 8px rgba(212,175,55,0.22)' };
+const returning = { ...still, scale: 1.06, y: -1, color: '#d4af37', textShadow: '0 0 10px rgba(212,175,55,0.34)', transition: { duration: 0.7, ease } };
+const focused = { ...sharp, scale: 1.42, y: -7, color: '#f5e6a3', textShadow: '0 0 16px rgba(245,230,163,0.62), 0 0 42px rgba(212,175,55,0.22)', transition: { duration: 0.82, ease } };
+const blurred = { scale: 0.98, y: 0, filter: 'blur(3.2px)', opacity: 0.42, color: 'rgba(255,255,255,0.68)', textShadow: 'none', transition: { duration: 0.62, ease } };
+const hovered = { ...sharp, scale: 1.1, y: -3, color: '#d4af37', textShadow: '0 0 12px rgba(212,175,55,0.45), 0 0 24px rgba(212,175,55,0.12)', transition: { type: 'spring' as const, stiffness: 420, damping: 16 } };
+const neighbor = { scale: 1.035, y: -1, filter: sharp.filter, opacity: 0.9, color: 'rgba(255,255,255,0.86)', textShadow: 'none', transition: { type: 'spring' as const, stiffness: 360, damping: 12, mass: 0.55 } };
 
 /**
  * Word-by-word reading effect with a separate semantic/canonical text layer.
@@ -9,7 +22,7 @@ import { motion } from 'framer-motion';
  * from the accessibility tree.
  */
 export default function InteractivePoemText({ text }: { text: string }) {
-  const lines = text.split('\n');
+  const lines = useMemo(() => text.split('\n').map((line) => line.split(/(\s+)/u)), [text]);
   const [focusedWord, setFocusedWord] = useState<string | null>(null);
   const [hoveredWord, setHoveredWord] = useState<string | null>(null);
   const [returningWord, setReturningWord] = useState<string | null>(null);
@@ -51,6 +64,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
   }, []);
 
   const focusActive = focusedWord !== null;
+  const [hoveredLine, hoveredIdx] = hoveredWord?.split('-').map(Number) || [];
 
   return (
     <div
@@ -58,18 +72,16 @@ export default function InteractivePoemText({ text }: { text: string }) {
       className="theme-dark-island poem-reader-surface relative mb-12 overflow-hidden rounded-[2rem] border border-luxury-gold/5 px-4 py-8 text-2xl leading-[2] tracking-wide shadow-inner sm:px-8 md:px-12"
       onPointerLeave={stopDwell}
     >
-      {/* Both layers share one grid track: the longest wrapped visual line
-          participates in intrinsic height instead of escaping an absolute
-          overlay whose height was sized only by transparent canonical ink. */}
-      <div className="grid">
+      {/* Both planes share identical tokens, whitespace, word boxes and wrapping.
+          Only the presentation ink moves; selection and hit testing do not. */}
+      <div className="grid whitespace-pre-wrap">
         <span
         data-poem-canonical
         className="pointer-events-auto relative z-0 col-start-1 row-start-1 block min-w-0 whitespace-pre-wrap text-transparent selection:bg-luxury-gold/35 selection:text-transparent"
         style={{ userSelect: 'text', WebkitUserSelect: 'text' }}
       >
-        {lines.map((line, lineIdx) => {
+        {lines.map((tokens, lineIdx) => {
           let wordIdx = 0;
-          const tokens = line.split(/(\s+)/u);
           return (
             <span key={lineIdx}>
               {lineIdx > 0 ? '\n' : ''}
@@ -82,7 +94,7 @@ export default function InteractivePoemText({ text }: { text: string }) {
                     data-poem-canonical-word
                     onPointerEnter={() => startDwell(key)}
                     onPointerLeave={stopDwell}
-                    className="cursor-default text-transparent"
+                    className="inline-block max-w-full break-words cursor-text text-transparent"
                   >
                     {token}
                   </span>
@@ -96,44 +108,31 @@ export default function InteractivePoemText({ text }: { text: string }) {
       <div
         data-poem-visual
         aria-hidden="true"
+        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
         className="pointer-events-none relative z-10 col-start-1 row-start-1 min-w-0"
       >
-        {lines.map((line, lineIdx) => (
-          <div key={lineIdx} className="relative z-10 flex min-h-[1.5rem] flex-wrap gap-x-[0.34em]">
-            {line.trim() === ''
-              ? <div className="h-6 w-full" />
-              : (line.match(/\S+/gu) ?? []).map((word, wordIdx) => {
+        {lines.map((tokens, lineIdx) => {
+          let nextWordIdx = 0;
+          return (
+          <div key={lineIdx} className="inline">
+            {lineIdx > 0 ? '\n' : ''}
+            {tokens.map((word) => {
+                  if (word === '' || /^\s+$/u.test(word)) return word;
+                  const wordIdx = nextWordIdx++;
                   const key = `${lineIdx}-${wordIdx}`;
                   const isFocused = focusedWord === key;
                   const isHovered = hoveredWord === key;
                   const isReturning = returningWord === key;
                   const hasBeenRead = readWords.has(key);
                   const isSiblingBlurred = focusActive && !isFocused;
-                  const hoveredParts = hoveredWord?.split('-').map(Number) || [];
-                  const hoveredLine = hoveredParts[0];
-                  const hoveredIdx = hoveredParts[1];
                   const isNeighbor = !focusActive && hoveredLine === lineIdx && Math.abs(hoveredIdx - wordIdx) === 1;
                   const neighborDirection = hoveredIdx < wordIdx ? 1 : -1;
 
                   return (
                     <motion.span
                       key={key}
-                      layout
-                      className="relative inline-block cursor-default sm:mr-[0.3em]"
-                      animate={
-                        isFocused
-                          ? { scale: 1.42, y: -7, color: '#f5e6a3', filter: 'blur(0px)', opacity: 1, textShadow: '0 0 16px rgba(245,230,163,0.62), 0 0 42px rgba(212,175,55,0.22)', transition: { duration: 0.82, ease: [0.16, 1, 0.3, 1] } }
-                          : isSiblingBlurred
-                            ? { scale: 0.98, y: 0, filter: 'blur(3.2px)', opacity: 0.42, color: 'rgba(255,255,255,0.68)', textShadow: 'none', transition: { duration: 0.62, ease: [0.16, 1, 0.3, 1] } }
-                            : isHovered
-                              ? { scale: 1.1, y: -3, filter: 'blur(0px)', opacity: 1, color: '#d4af37', textShadow: '0 0 12px rgba(212,175,55,0.45), 0 0 24px rgba(212,175,55,0.12)', transition: { type: 'spring' as const, stiffness: 420, damping: 16 } }
-                              : isNeighbor
-                                ? { scale: 1.035, x: neighborDirection * 7, y: -1, filter: 'blur(0px)', opacity: 0.9, color: 'rgba(255,255,255,0.86)', textShadow: 'none', transition: { type: 'spring' as const, stiffness: 360, damping: 12, mass: 0.55 } }
-                                : isReturning
-                                  ? { scale: 1.06, x: 0, y: -1, filter: 'blur(0px)', opacity: 1, color: '#d4af37', textShadow: '0 0 10px rgba(212,175,55,0.34)', transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
-                                  : hasBeenRead
-                                    ? { scale: 1, x: 0, y: 0, filter: 'blur(0px)', opacity: 1, color: '#d4af37', textShadow: '0 0 8px rgba(212,175,55,0.22)', transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
-                                    : { scale: 1, x: 0, y: 0, filter: 'blur(0px)', opacity: 1, color: 'rgba(255,255,255,0.90)', textShadow: 'none', transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
+                      className="relative inline-block max-w-full break-words"
+                      animate={isFocused ? focused : isSiblingBlurred ? blurred : isHovered ? hovered : isNeighbor ? { ...neighbor, x: neighborDirection * 7 } : isReturning ? returning : hasBeenRead ? read : resting
                       }
                       whileHover={!focusActive ? { scale: 1.14, y: -3, color: '#d4af37', textShadow: '0 0 12px rgba(212,175,55,0.5), 0 0 24px rgba(212,175,55,0.15)' } : undefined}
                       transition={{ type: 'spring', stiffness: 350, damping: 14 }}
@@ -145,7 +144,8 @@ export default function InteractivePoemText({ text }: { text: string }) {
                   );
                 })}
           </div>
-        ))}
+          );
+        })}
       </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { Check, Link2 } from 'lucide-react';
 
 /**
@@ -58,7 +58,7 @@ interface ShareLineProps {
 
 export default function ShareLine({ scopeRef }: ShareLineProps) {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<'copied' | 'failed' | null>(null);
   const chipRef = useRef<HTMLButtonElement>(null);
   const visibleRange = useRef<Range | null>(null);
   const copiedRange = useRef<Range | null>(null);
@@ -73,14 +73,14 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
       if (copiedRange.current && !sameSelection(copiedRange.current, range)) {
         copiedRange.current = null;
         window.clearTimeout(copiedTimer.current);
-        setCopied(false);
+        setFeedback(null);
       }
       if (!range) {
         setPos(null);
         return;
       }
       const rect = range.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) {
+      if ((rect.width === 0 && rect.height === 0) || rect.bottom <= 0 || rect.top >= window.innerHeight) {
         visibleRange.current = null;
         setPos(null);
         return;
@@ -120,20 +120,20 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
     const snapshot = range.cloneRange();
     copiedRange.current = snapshot;
     window.clearTimeout(copiedTimer.current);
-    setCopied(false);
+    setFeedback(null);
+    let result: 'copied' | 'failed' = 'copied';
     try {
       await navigator.clipboard.writeText(buildFragmentUrl(text));
-      if (copiedRange.current !== snapshot || !sameSelection(snapshot, readPublicSelection(scopeRef.current))) return;
-      setCopied(true);
-      copiedTimer.current = window.setTimeout(() => {
-        if (copiedRange.current !== snapshot) return;
-        copiedRange.current = null;
-        setCopied(false);
-      }, 1400);
     } catch {
-      // Clipboard unavailable (permissions/insecure context) — fail quietly.
-      if (copiedRange.current === snapshot) copiedRange.current = null;
+      result = 'failed';
     }
+    if (copiedRange.current !== snapshot || !sameSelection(snapshot, readPublicSelection(scopeRef.current))) return;
+    setFeedback(result);
+    copiedTimer.current = window.setTimeout(() => {
+      if (copiedRange.current !== snapshot) return;
+      copiedRange.current = null;
+      setFeedback(null);
+    }, 1400);
   };
 
   if (!pos) return null;
@@ -143,19 +143,19 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
       ref={chipRef}
       type="button"
       className="share-line-chip"
-      style={{ top: pos.top, left: pos.left }}
+      style={{ top: pos.top, left: pos.left, '--share-x': `${pos.left}px`, '--share-y': `${pos.top}px` } as CSSProperties}
       // Keep the selection alive: the button must not steal it on tap.
       onPointerDown={(e) => e.preventDefault()}
       onClick={copy}
       aria-live="polite"
     >
-      {copied ? (
+      {feedback === 'copied' ? (
         <>
           <Check size={13} aria-hidden="true" /> Скопировано
         </>
       ) : (
         <>
-          <Link2 size={13} aria-hidden="true" /> Ссылка на строку
+          <Link2 size={13} aria-hidden="true" /> {feedback === 'failed' ? 'Не удалось скопировать' : 'Ссылка на строку'}
         </>
       )}
     </button>

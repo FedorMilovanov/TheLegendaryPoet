@@ -48,6 +48,32 @@ test('poem text has an exact selectable canonical layer separate from animated v
 
   expect(selected).toBe(snapshot.text);
   expect(selected).toContain('\n');
+  // A range spanning the entire poem must not copy the second visual plane.
+  const wholePoem = await poem.evaluate(node => {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return selection.toString();
+  });
+  // Selecting the complete grid may include one terminal block-boundary newline.
+  // Allow exactly that separator; duplicate content or any other difference still fails.
+  expect(wholePoem === snapshot.text || wholePoem === `${snapshot.text}\n`).toBe(true);
+  expect(await visual.evaluate(node => getComputedStyle(node).userSelect)).toBe('none');
+  await page.evaluate(() => window.getSelection()?.removeAllRanges());
+  // The ink and the selectable text must coincide at rest, not just occupy
+  // the same outer grid. Otherwise a visible word selects a different word.
+  expect(await visual.textContent()).toBe(snapshot.text);
+  await expect.poll(() => poem.evaluate(node => {
+    const semantic = [...node.querySelectorAll('[data-poem-canonical-word]')];
+    const ink = [...node.querySelectorAll('[data-poem-visual] > div > span')];
+    if (!semantic.length || semantic.length !== ink.length) return Infinity;
+    return Math.max(...semantic.map((word, index) => {
+      const a = word.getBoundingClientRect(), b = ink[index].getBoundingClientRect();
+      return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+    }));
+  })).toBeLessThanOrEqual(1);
 });
 
 test('kinetic headings expose one readable text layer without naming generic spans', async ({ page }, testInfo) => {
@@ -197,6 +223,12 @@ test('shared poem cards retain usable mobile reading width', async ({ page }, te
               const canonical = node.querySelector('[data-poem-canonical]').getBoundingClientRect();
               const visual = node.querySelector('[data-poem-visual]').getBoundingClientRect();
               const words = [...node.querySelectorAll('[data-poem-visual] > div > span')];
+              const semanticWords = [...node.querySelectorAll('[data-poem-canonical-word]')];
+              const paired = semanticWords.length === words.length && words.length > 0;
+              const wordDelta = paired ? Math.max(...semanticWords.map((word, i) => {
+                const a = word.getBoundingClientRect(), b = words[i].getBoundingClientRect();
+                return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+              })) : Number.POSITIVE_INFINITY;
               const visualBottom = words.length
                 ? Math.max(...words.map((word) => word.getBoundingClientRect().bottom))
                 : Number.POSITIVE_INFINITY;
@@ -204,6 +236,8 @@ test('shared poem cards retain usable mobile reading width', async ({ page }, te
                 canonicalWidth: canonical.width,
                 visualWidth: visual.width,
                 delta: Math.abs(canonical.left - visual.left),
+                wordDelta,
+                textMatches: node.querySelector('[data-poem-canonical]').textContent === node.querySelector('[data-poem-visual]').textContent,
                 clippedBottom: visualBottom - node.getBoundingClientRect().bottom,
               };
             });
@@ -217,6 +251,8 @@ test('shared poem cards retain usable mobile reading width', async ({ page }, te
             expect(column.canonicalWidth).toBeGreaterThanOrEqual(width - 104);
             expect(column.visualWidth).toBeGreaterThanOrEqual(width - 104);
             expect(column.delta).toBeLessThanOrEqual(1);
+            expect(column.wordDelta).toBeLessThanOrEqual(1);
+            expect(column.textMatches).toBe(true);
             expect(column.clippedBottom).toBeLessThanOrEqual(0);
           }
           expect(overflow).toBeLessThanOrEqual(1);

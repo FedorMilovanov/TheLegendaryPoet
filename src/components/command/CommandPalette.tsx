@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useDialogSurface } from '../../hooks/useDialogSurface';
+import { revealInScrollport } from '../../utils/focusRuntime';
 import { matchesRussianSearch } from '../../utils/searchText';
 import { useAppNavigate } from '../ui/Link';
 import { getCommandItems } from './commandItems';
@@ -20,6 +21,7 @@ export default function CommandPalette() {
   const previousPathRef = useRef(location.pathname);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
   const restoreFocusRef = useRef(true);
   const listId = 'command-palette-results';
   const optionId = (itemId: string) => 'command-option-' + itemId;
@@ -112,7 +114,14 @@ export default function CommandPalette() {
     };
   }, [openPalette]);
 
-  useEffect(() => setActiveIndex(0), [query]);
+  // aria-activedescendant does not move DOM focus or scroll the selected row.
+  // Keep the keyboard result visible inside its own list, never the reader.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!open || !list) return;
+    const active = list.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (active) revealInScrollport(active, list);
+  }, [open, results, activeIndex]);
   useEffect(() => {
     setActiveIndex((index) => results.length > 0 ? Math.min(index, results.length - 1) : 0);
   }, [results.length]);
@@ -166,7 +175,7 @@ export default function CommandPalette() {
           <input
             ref={inputRef}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => { setQuery(event.target.value); setActiveIndex(0); }}
             onKeyDown={onInputKeyDown}
             placeholder="Найти поэта, стихотворение, статью, трек или раздел..."
             aria-label="Поисковый запрос"
@@ -183,7 +192,7 @@ export default function CommandPalette() {
             <X size={20} />
           </button>
         </div>
-        <div id={listId} role="listbox" aria-label="Результаты поиска" className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
+        <div ref={listRef} id={listId} role="listbox" aria-label="Результаты поиска" className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
           {results.map((item, index) => (
             <CommandResult key={item.id} item={item} optionId={optionId(item.id)} active={index === activeIndex} onSelect={() => select(item.path)} />
           ))}

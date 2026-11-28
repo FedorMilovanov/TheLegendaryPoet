@@ -8,6 +8,19 @@ const NATURAL_FOCUS_SELECTOR = [
   '[contenteditable="true"]',
 ].join(',');
 
+/** Reveal a keyboard target inside its own list, without moving the page or
+ * another scrollport. If a row is taller than the list, expose its start. */
+export function revealInScrollport(target: HTMLElement, port: HTMLElement) {
+  const row = target.getBoundingClientRect();
+  const top = port.getBoundingClientRect().top + port.clientTop;
+  const margin = 4; // clearance for the focus ring
+  if (row.top < top + margin || row.height > port.clientHeight - 2 * margin) {
+    port.scrollTop += row.top - top - margin;
+  } else if (row.bottom > top + port.clientHeight - margin) {
+    port.scrollTop += row.bottom - top - port.clientHeight + margin;
+  }
+}
+
 function prepareProgrammaticTarget(target: HTMLElement) {
   if (target.matches(NATURAL_FOCUS_SELECTOR) || target.hasAttribute('tabindex')) {
     return () => undefined;
