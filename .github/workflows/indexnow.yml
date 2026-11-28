@@ -42,9 +42,9 @@ jobs:
             const { resolveNotificationCheckpoint } = await import(pathToFileURL(path.join(process.env.GITHUB_WORKSPACE, 'scripts/indexnow-delta.mjs')).href);
             const repo = context.repo;
             const seed = {
-              runNumber: 376,
-              runId: 46140275495,
-              sourceSha: 'd1952d56b7116547b12c60c6275509895a97f4e9',
+              runNumber: 377,
+              runId: 46148910419,
+              sourceSha: '056daf7e6fbe661edc39d82685cbac2f50a8e6fe',
               blobSha: 'c215e3d57f576920a39810332fc4fc03a5a5daea',
             };
             const selected = await resolveNotificationCheckpoint({
