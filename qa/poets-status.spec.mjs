@@ -911,7 +911,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
           await expect(page.getByRole('heading', { name: 'Источники и редакции текстов' })).toBeVisible();
           await expect(page.getByRole('link', { name: /Летопись жизни и творчества\. Том 5, книга 1/ })).toBeVisible();
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(10);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(19);
           await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('Песня о собаке');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('вернусь!');
@@ -936,7 +936,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('без запятой');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('С. Кошечкин');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://sytin-and-esenin.ru/images/blocks/2.23.24.jpg');
-          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(10);
+          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(19);
         }
         if (poetId === 'fyodor-tyutchev') {
           await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
