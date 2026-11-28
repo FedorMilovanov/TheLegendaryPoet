@@ -3,6 +3,7 @@ import { materializeMemoryPlaces } from './memory-place-artifacts';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { readIntrinsicSize } from './lib/image-metrics.mjs';
 import { poets } from '../src/data/poets';
 import { memoryPlaces, getMemoryPlaces } from '../src/data/memory-places';
 
@@ -46,6 +47,7 @@ for (const place of memoryPlaces) {
     assert(Number.isInteger(photo.height) && photo.height > 0 && photo.height <= 1600);
     const bytes = readFileSync(resolve('public', photo.src.slice(1)));
     assert.equal(bytes.length, photo.bytes, photo.src);
+    assert.deepEqual(readIntrinsicSize(bytes, '.webp'), { width: photo.width, height: photo.height }, 'Declared dimensions do not match raster: ' + photo.src);
     assert.equal(createHash('sha256').update(bytes).digest('hex'), photo.sha256, photo.src);
     assert(bytes.length <= 350_000, 'Image budget: ' + photo.src);
     size += bytes.length;
