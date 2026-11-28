@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import {
   acquireOverlayLock,
   canRestoreOverlayFocus,
   type OverlayLockHandle,
 } from '../utils/overlayRuntime';
+import { startNativeDialogEntrance, startNativeDialogExit } from '../utils/nativeDialogExit';
+import { scheduleProgrammaticFocus } from '../utils/focusRuntime';
 
 const FOCUSABLE_SELECTOR = [
   'a[href]',
@@ -34,6 +36,7 @@ interface DialogSurfaceOptions {
   closeOnEscape?: boolean;
   restoreFocus?: boolean;
   restoreFocusRef?: RefObject<boolean | null>;
+  returnFocusRef?: RefObject<HTMLElement | null>;
   /** Animated dialogs retain their overlay lease until AnimatePresence exit completion. */
   deferReleaseUntilUnmount?: boolean;
 }
@@ -52,6 +55,7 @@ export function useDialogSurface({
   closeOnEscape = true,
   restoreFocus = true,
   restoreFocusRef,
+  returnFocusRef,
   deferReleaseUntilUnmount = false,
 }: DialogSurfaceOptions) {
   const handleRef = useRef<OverlayLockHandle | null>(null);
@@ -65,9 +69,9 @@ export function useDialogSurface({
   useEffect(() => {
     if (!open) return;
 
-    const previouslyFocused = document.activeElement instanceof HTMLElement
+    const previouslyFocused = returnFocusRef?.current ?? (document.activeElement instanceof HTMLElement
       ? document.activeElement
-      : null;
+      : null);
     const handle = acquireOverlayLock(label, dialogRef.current);
     handleRef.current = handle;
     handle.setEscapeHandler(closeOnEscape ? () => {
@@ -126,14 +130,14 @@ export function useDialogSurface({
 
       const shouldRestoreFocus = restoreFocusRef?.current ?? restoreFocus;
       if (shouldRestoreFocus && previouslyFocused) {
-        window.requestAnimationFrame(() => {
-          if (previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)) {
-            previouslyFocused.focus({ preventScroll: true });
-          }
-        });
+        scheduleProgrammaticFocus(() =>
+          previouslyFocused.isConnected && canRestoreOverlayFocus(previouslyFocused)
+            ? previouslyFocused
+            : null,
+        );
       }
     };
-  }, [closeOnEscape, deferReleaseUntilUnmount, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef]);
+  }, [closeOnEscape, deferReleaseUntilUnmount, dialogRef, initialFocusRef, label, onClose, open, restoreFocus, restoreFocusRef, returnFocusRef]);
 
   return {
     isTopmost: useCallback(() => handleRef.current?.isTopmost() ?? false, []),
@@ -168,8 +172,8 @@ export function useDialogExitLifetime(logicalOpen: boolean) {
  * Use a compositor-owned Web Animations exit for the immersive player.
  * Framer's presence completion may be starved in WebKit even after Escape was
  * received. The painted dialog and its shared overlay lease remain together:
- * only native animation completion (or immediate non-visual removal) releases
- * the root. No timeout, extra scroll lock or focus-owner is introduced.
+ * native completion or explicit terminal visual removal ends the exit.
+ * The bounded liveness guard never releases the overlay lock independently.
  */
 export function useNativeDialogExitLifetime(
   logicalOpen: boolean,
@@ -178,43 +182,33 @@ export function useNativeDialogExitLifetime(
   const [retained, setRetained] = useState(logicalOpen);
   const latestOpen = useRef(logicalOpen);
   latestOpen.current = logicalOpen;
+  const exitFrom = useRef(1);
 
-  useEffect(() => {
+  // All layout cleanups precede the next layout setups. Cancel the old
+  // entrance before the exit starts, retaining its last painted opacity.
+  // The root is stable across track changes, including focused controls.
+  useLayoutEffect(() => {
+    if (!logicalOpen) return;
+    exitFrom.current = 1;
+    const surface = dialogRef.current;
+    if (!surface?.isConnected || typeof surface.animate !== 'function') return;
+    const stopEntrance = startNativeDialogEntrance(surface);
+    return () => { exitFrom.current = stopEntrance(); };
+  }, [logicalOpen, dialogRef]);
+
+  useLayoutEffect(() => {
     if (logicalOpen) {
       setRetained(true);
       return;
     }
     if (!retained) return;
-
     const surface = dialogRef.current;
-    // An already-detached or backgrounded dialog has no painted exit to
-    // preserve. Opacity-only fading also remains accessible in reduced motion.
     if (!surface?.isConnected || document.visibilityState === 'hidden' ||
         typeof surface.animate !== 'function') {
       setRetained(false);
       return;
     }
-
-    const exit = surface.animate(
-      [{ opacity: 1 }, { opacity: 0 }],
-      { duration: 450, easing: 'ease-in-out', fill: 'forwards' },
-    );
-    let active = true;
-    const complete = () => {
-      if (active && !latestOpen.current) setRetained(false);
-    };
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') complete();
-    };
-    // Completion and interruption both end this exit. Cleanup invalidates
-    // the old operation before cancelling it on reopen or unmount.
-    void exit.finished.then(complete, complete);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => {
-      active = false;
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      exit.cancel();
-    };
+    return startNativeDialogExit(surface, () => !latestOpen.current, () => setRetained(false), exitFrom.current);
   }, [logicalOpen, retained, dialogRef]);
 
   return { lockOpen: logicalOpen || retained };

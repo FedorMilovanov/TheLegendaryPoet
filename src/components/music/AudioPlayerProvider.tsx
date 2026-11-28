@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import type { MusicTrack } from '../../types/poet';
 import { asset } from '../../utils/asset';
@@ -57,6 +58,7 @@ interface AudioPlayerContextValue {
   muted: boolean;
   resumeAt: number | null;
   immersiveOpen: boolean;
+  immersiveInvokerRef: RefObject<HTMLElement | null>;
   completedTrackIds: ReadonlySet<string>;
   loadTrack: (track: MusicTrack, options?: LoadTrackOptions) => void;
   playTrack: (track: MusicTrack, options?: Omit<LoadTrackOptions, 'autoplay'>) => Promise<void>;
@@ -71,7 +73,7 @@ interface AudioPlayerContextValue {
   playNext: () => Promise<void>;
   playPrevious: () => Promise<void>;
   closePlayer: () => void;
-  openImmersive: (track?: MusicTrack) => void;
+  openImmersive: (track?: MusicTrack, invoker?: HTMLElement) => void;
   closeImmersive: () => void;
   getSavedPosition: (trackId: string) => number;
 }
@@ -162,6 +164,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
   const [muted, setMuted] = useState(initialSessionRef.current.muted);
   const [resumeAt, setResumeAt] = useState<number | null>(null);
   const [immersiveOpen, setImmersiveOpen] = useState(false);
+  const immersiveInvokerRef = useRef<HTMLElement | null>(null);
   const [completedTrackIds, setCompletedTrackIds] = useState<ReadonlySet<string>>(() => new Set(completedRef.current));
 
   useEffect(() => subscribeAudioSession((session) => {
@@ -443,9 +446,12 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     }, 0);
   }, [persistCurrentPosition]);
 
-  const openImmersive = useCallback((track?: MusicTrack) => {
+  const openImmersive = useCallback((track?: MusicTrack, invoker?: HTMLElement) => {
     if (track && currentTrackRef.current?.id !== track.id) loadTrack(track);
-    if (track || currentTrackRef.current) setImmersiveOpen(true);
+    if (track || currentTrackRef.current) {
+      immersiveInvokerRef.current = invoker ?? null;
+      setImmersiveOpen(true);
+    }
   }, [loadTrack]);
   const closeImmersive = useCallback(() => setImmersiveOpen(false), []);
 
@@ -711,6 +717,7 @@ export function AudioPlayerProvider({ tracks, children }: { tracks: readonly Mus
     muted,
     resumeAt,
     immersiveOpen,
+    immersiveInvokerRef,
     completedTrackIds,
     loadTrack,
     playTrack,

@@ -89,7 +89,7 @@ export default function GlobalMiniPlayer() {
               <span
                 aria-hidden="true"
                 data-seek-focus-indicator="mini"
-                className="seek-focus-indicator pointer-events-none absolute inset-x-1 -top-1 h-4 rounded-full border"
+                className="seek-focus-indicator pointer-events-none absolute inset-x-5 top-0.5 h-3 rounded-full border-2"
               />
             </div>
 
@@ -142,7 +142,7 @@ export default function GlobalMiniPlayer() {
                         : <Play size={20} fill="currentColor" className="ml-0.5" />}
                 </button>
                 <button type="button" onClick={() => { void playNext(); }} aria-label="Следующий релиз" className="audio-control hidden h-10 w-10 items-center justify-center rounded-full transition sm:inline-flex"><ChevronRight size={18} /></button>
-                <button type="button" onClick={() => openImmersive()} aria-label="Открыть режим погружения" className="audio-control inline-flex h-10 w-10 items-center justify-center rounded-full transition"><Maximize2 size={17} /></button>
+                <button type="button" onClick={event => openImmersive(undefined, event.currentTarget)} aria-label="Открыть режим погружения" className="audio-control inline-flex h-10 w-10 items-center justify-center rounded-full transition"><Maximize2 size={17} /></button>
                 <button type="button" onClick={closePlayer} aria-label="Закрыть плеер" className="audio-control-close inline-flex h-10 w-10 items-center justify-center rounded-full transition"><X size={17} /></button>
               </div>
             </div>
