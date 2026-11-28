@@ -15,8 +15,16 @@ function httpsUrl(value: unknown): boolean {
   try { return new URL(value).protocol === 'https:'; } catch { return false; }
 }
 
-function positiveDimension(value: unknown): boolean {
+function positiveDimension(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function mediaPath(value: unknown): value is string {
+  return typeof value === 'string' && /^\/images\/memory-places\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/.test(value);
+}
+
+function list(value: unknown, check: (item: unknown) => boolean, minimum = 0): boolean {
+  return Array.isArray(value) && value.length >= minimum && value.every(check);
 }
 
 // Validate the fields consumed by the renderer at the network boundary.
@@ -24,25 +32,25 @@ function positiveDimension(value: unknown): boolean {
 function renderablePlace(value: unknown, poetId: string): boolean {
   if (!textFields(value, ['id', 'title', 'location', 'date', 'intro']) || value.poetId !== poetId) return false;
   const { photos, facts, timeline, sources, detailNote, literaryConnection } = value;
-  return Array.isArray(photos) && photos.length > 0 && photos.every(photo =>
+  return list(photos, photo =>
     textFields(photo, ['src', 'alt', 'caption', 'credit', 'sourceLabel', 'license', 'changes']) &&
-    typeof photo.src === 'string' && /^\/images\/memory-places\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/.test(photo.src) &&
+    mediaPath(photo.src) &&
     positiveDimension(photo.width) && positiveDimension(photo.height) &&
     httpsUrl(photo.source) && httpsUrl(photo.licenseUrl) &&
     (photo.preview === undefined || (
       textFields(photo.preview, ['src', 'sha256', 'changes']) &&
-      typeof photo.preview.src === 'string' && /^\/images\/memory-places\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/.test(photo.preview.src) &&
+      mediaPath(photo.preview.src) &&
       photo.preview.src !== photo.src && positiveDimension(photo.preview.bytes) &&
-      (photo.preview.frame === undefined || isMemoryPreviewFrame(photo.preview.frame, Number(photo.width), Number(photo.height)))
-    ))
+      (photo.preview.frame === undefined || isMemoryPreviewFrame(photo.preview.frame, photo.width, photo.height))
+    )), 1
   ) &&
-    Array.isArray(facts) && facts.every(fact => textFields(fact, ['label', 'value'])) &&
-    Array.isArray(timeline) && timeline.every(event => textFields(event, ['date', 'text'])) &&
-    Array.isArray(sources) && sources.every(source => textFields(source, ['label']) && httpsUrl(source.url)) &&
+    list(facts, fact => textFields(fact, ['label', 'value'])) &&
+    list(timeline, event => textFields(event, ['date', 'text'])) &&
+    list(sources, source => textFields(source, ['label']) && httpsUrl(source.url)) &&
     (detailNote === undefined || textFields(detailNote, ['title', 'text'])) &&
     (literaryConnection === undefined || (
       textFields(literaryConnection, ['attribution']) && httpsUrl(literaryConnection.url) &&
-      Array.isArray(literaryConnection.lines) && literaryConnection.lines.every(line => typeof line === 'string')
+      list(literaryConnection.lines, line => typeof line === 'string')
     ));
 }
 
@@ -51,7 +59,7 @@ export async function loadMemoryPlaces(id: string, revision: string, signal: Abo
   const response = await fetch(asset('/data/memory-places/' + id + '.json') + '?v=' + revision, { signal, credentials: 'same-origin' });
   if (!response.ok) throw new Error('Memory places unavailable: ' + response.status);
   const value: unknown = await response.json();
-  if (!Array.isArray(value) || value.length === 0 || !value.every(place => renderablePlace(place, id))) {
+  if (!list(value, place => renderablePlace(place, id), 1)) {
     throw new Error('Invalid memory places payload');
   }
   return value as MemoryPlace[];
