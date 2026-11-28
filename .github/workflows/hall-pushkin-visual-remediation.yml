@@ -82,7 +82,7 @@ jobs:
           ffmpeg -version | head -1
 
       - name: Verify fail-closed exact-source downloader
-        run: node --test scripts/hall-pushkin/download-exact-source.test.mjs
+        run: node --test scripts/hall-pushkin/download-exact-source.test.mjs scripts/hall-lookdev/documentary-inventory.test.mjs
 
       # Shared key with offline-exhibit: hashes and owner approval must match.
       # Never load rights-pending documentary bytes into public/site assets.
