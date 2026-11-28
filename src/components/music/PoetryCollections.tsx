@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowRight, BookOpen, ExternalLink, Music2 } from 'lucide-react';
-import { poetryCollections, collectionPath, type PoetryCollection } from '../../data/poetryCollections';
+import { poetryCollections, type PoetryCollection } from '../../data/poetryCollections';
 import { Link } from '../ui/Link';
 import ResilientImage from '../media/ResilientImage';
 import './PoetryCollections.css';
@@ -42,7 +42,7 @@ function CollectionCard({ collection }: { collection: PoetryCollection }) {
           <span>{collection.entries.length === 1 ? '1 композиция' : `Композиций: ${collection.entries.length}`}</span>
         </div>
         {collection.entries.map((entry, index) => (
-          <div key={entry.id} className="poetry-collection-entry grid gap-3 sm:grid-cols-[3rem_minmax(0,1fr)] rounded-2xl border p-4 sm:p-6">
+          <div key={entry.id} id={`${collection.id}-${entry.id}`} className="poetry-collection-entry grid gap-3 sm:grid-cols-[3rem_minmax(0,1fr)] rounded-2xl border p-4 sm:p-6">
             <div className="poetry-collection-entry-number font-serif text-xl sm:text-2xl tabular-nums" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
             <div className="poetry-collection-entry-content min-w-0">
               <Link to={`/poets/${entry.poetId}`} className="poetry-collection-poet inline-flex items-center gap-1 text-sm font-semibold">{entry.poetName} <ArrowRight size={14} aria-hidden="true" /></Link>
@@ -102,19 +102,5 @@ export default function PoetryCollections() {
       </div>
       <div className="grid gap-8">{poetryCollections.map(collection => <CollectionCard key={collection.id} collection={collection} />)}</div>
     </section>
-  );
-}
-
-export function CollectionReferences({ collections }: { collections: readonly PoetryCollection[] }) {
-  if (!collections.length) return null;
-  return (
-    <aside className="collection-reference theme-elevated-surface rounded-2xl border px-5 py-4 my-5" aria-label="Связанные поэтические коллекции">
-      <div className="collection-reference-label flex items-center gap-2 text-xs font-semibold mb-2"><Music2 size={17} aria-hidden="true" /> Поэтические Коллекции</div>
-      {collections.map(collection => (
-        <Link key={collection.id} to={collectionPath(collection.id)} className="collection-reference-link flex items-center justify-between gap-3 font-semibold leading-snug rounded-md">
-          <span>{collection.title}</span><ArrowRight size={19} aria-hidden="true" />
-        </Link>
-      ))}
-    </aside>
   );
 }

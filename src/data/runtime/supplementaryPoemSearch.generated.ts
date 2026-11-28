@@ -6,243 +6,333 @@ export interface SupplementaryPoemSearchEntry {
   title: string;
   year?: number;
 }
-export const supplementaryPoemSearchIndex: readonly SupplementaryPoemSearchEntry[] = [
-  {
-    "poetId": "alexander-blok",
-    "poetName": "Александр Блок",
-    "id": "blok-5",
-    "title": "Россия",
-    "year": 1908
-  },
-  {
-    "poetId": "alexander-blok",
-    "poetName": "Александр Блок",
-    "id": "blok-6",
-    "title": "На поле Куликовом — часть 1 («Река раскинулась…»)",
-    "year": 1908
-  },
-  {
-    "poetId": "alexander-blok",
-    "poetName": "Александр Блок",
-    "id": "blok-7",
-    "title": "На поле Куликовом — часть 2 («Мы, сам-друг…»)",
-    "year": 1908
-  },
-  {
-    "poetId": "alexander-blok",
-    "poetName": "Александр Блок",
-    "id": "blok-9",
-    "title": "На поле Куликовом — III («В ночь, когда Мамай залег с ордою…»)",
-    "year": 1908
-  },
-  {
-    "poetId": "alexander-blok",
-    "poetName": "Александр Блок",
-    "id": "blok-10",
-    "title": "На поле Куликовом — IV («Опять с вековою тоскою…»)",
-    "year": 1908
-  },
-  {
-    "poetId": "alexander-blok",
-    "poetName": "Александр Блок",
-    "id": "blok-11",
-    "title": "На поле Куликовом — V («Опять над полем Куликовым…»)",
-    "year": 1908
-  },
-  {
-    "poetId": "alexander-blok",
-    "poetName": "Александр Блок",
-    "id": "blok-8",
-    "title": "Скифы",
-    "year": 1918
-  },
-  {
-    "poetId": "alexander-pushkin",
-    "poetName": "Александр Пушкин",
-    "id": "pushkin-4",
-    "title": "Зимнее утро",
-    "year": 1829
-  },
-  {
-    "poetId": "alexander-pushkin",
-    "poetName": "Александр Пушкин",
-    "id": "pushkin-5",
-    "title": "Анчар",
-    "year": 1828
-  },
-  {
-    "poetId": "alexander-pushkin",
-    "poetName": "Александр Пушкин",
-    "id": "pushkin-6",
-    "title": "К *** («Я помню чудное мгновенье…»)",
-    "year": 1825
-  },
-  {
-    "poetId": "alexander-pushkin",
-    "poetName": "Александр Пушкин",
-    "id": "pushkin-7",
-    "title": "К Чаадаеву",
-    "year": 1818
-  },
-  {
-    "poetId": "alexander-pushkin",
-    "poetName": "Александр Пушкин",
-    "id": "pushkin-8",
-    "title": "Зимний вечер",
-    "year": 1825
-  },
-  {
-    "poetId": "alexander-pushkin",
-    "poetName": "Александр Пушкин",
-    "id": "pushkin-9",
-    "title": "«Если жизнь тебя обманет…»",
-    "year": 1825
-  },
-  {
-    "poetId": "alexander-pushkin",
-    "poetName": "Александр Пушкин",
-    "id": "pushkin-10",
-    "title": "«Во глубине сибирских руд…»",
-    "year": 1827
-  },
-  {
-    "poetId": "mikhail-lermontov",
-    "poetName": "Михаил Лермонтов",
-    "id": "lermontov-5",
-    "title": "Бородино",
-    "year": 1837
-  },
-  {
-    "poetId": "mikhail-lermontov",
-    "poetName": "Михаил Лермонтов",
-    "id": "lermontov-6",
-    "title": "Родина",
-    "year": 1841
-  },
-  {
-    "poetId": "mikhail-lermontov",
-    "poetName": "Михаил Лермонтов",
-    "id": "lermontov-7",
-    "title": "Дума",
-    "year": 1838
-  },
-  {
-    "poetId": "mikhail-lermontov",
-    "poetName": "Михаил Лермонтов",
-    "id": "lermontov-8",
-    "title": "Тучи",
-    "year": 1840
-  },
-  {
-    "poetId": "mikhail-lermontov",
-    "poetName": "Михаил Лермонтов",
-    "id": "lermontov-9",
-    "title": "Утёс",
-    "year": 1841
-  },
-  {
-    "poetId": "mikhail-lermontov",
-    "poetName": "Михаил Лермонтов",
-    "id": "lermontov-10",
-    "title": "«Когда волнуется желтеющая нива…»",
-    "year": 1837
-  },
-  {
-    "poetId": "mikhail-lermontov",
-    "poetName": "Михаил Лермонтов",
-    "id": "lermontov-11",
-    "title": "Смерть поэта",
-    "year": 1837
-  },
-  {
-    "poetId": "fyodor-tyutchev",
-    "poetName": "Фёдор Тютчев",
-    "id": "tyutchev-6",
-    "title": "Весенняя гроза",
-    "year": 1828
-  },
-  {
-    "poetId": "fyodor-tyutchev",
-    "poetName": "Фёдор Тютчев",
-    "id": "tyutchev-7",
-    "title": "«Есть в осени первоначальной…»",
-    "year": 1857
-  },
-  {
-    "poetId": "fyodor-tyutchev",
-    "poetName": "Фёдор Тютчев",
-    "id": "tyutchev-8",
-    "title": "«Нам не дано предугадать…»",
-    "year": 1869
-  },
-  {
-    "poetId": "fyodor-tyutchev",
-    "poetName": "Фёдор Тютчев",
-    "id": "tyutchev-9",
-    "title": "День и ночь",
-    "year": 1839
-  },
-  {
-    "poetId": "fyodor-tyutchev",
-    "poetName": "Фёдор Тютчев",
-    "id": "tyutchev-10",
-    "title": "«Эти бедные селенья…»",
-    "year": 1855
-  },
-  {
-    "poetId": "fyodor-tyutchev",
-    "poetName": "Фёдор Тютчев",
-    "id": "tyutchev-11",
-    "title": "«Зима недаром злится…»",
-    "year": 1836
-  },
-  {
-    "poetId": "sergei-yesenin",
-    "poetName": "Сергей Есенин",
-    "id": "yesenin-4",
-    "title": "«Отговорила роща золотая…»",
-    "year": 1924
-  },
-  {
-    "poetId": "sergei-yesenin",
-    "poetName": "Сергей Есенин",
-    "id": "yesenin-5",
-    "title": "«Шаганэ ты моя, Шаганэ!..»",
-    "year": 1924
-  },
-  {
-    "poetId": "sergei-yesenin",
-    "poetName": "Сергей Есенин",
-    "id": "yesenin-6",
-    "title": "«Я покинул родимый дом…»",
-    "year": 1918
-  },
-  {
-    "poetId": "sergei-yesenin",
-    "poetName": "Сергей Есенин",
-    "id": "yesenin-7",
-    "title": "«Клён ты мой опавший, клён заледенелый…»",
-    "year": 1925
-  },
-  {
-    "poetId": "sergei-yesenin",
-    "poetName": "Сергей Есенин",
-    "id": "yesenin-8",
-    "title": "Песнь о собаке",
-    "year": 1915
-  },
-  {
-    "poetId": "sergei-yesenin",
-    "poetName": "Сергей Есенин",
-    "id": "yesenin-9",
-    "title": "Берёза",
-    "year": 1913
-  },
-  {
-    "poetId": "sergei-yesenin",
-    "poetName": "Сергей Есенин",
-    "id": "yesenin-10",
-    "title": "Письмо к женщине",
-    "year": 1924
-  }
+type SearchGroup = readonly [poetId: string, poetName: string, poems: readonly (readonly [id: string, title: string, year: number | null])[]];
+const groups: readonly SearchGroup[] = [
+  [
+    "alexander-blok",
+    "Александр Блок",
+    [
+      [
+        "blok-5",
+        "Россия",
+        1908
+      ],
+      [
+        "blok-6",
+        "На поле Куликовом — часть 1 («Река раскинулась…»)",
+        1908
+      ],
+      [
+        "blok-7",
+        "На поле Куликовом — часть 2 («Мы, сам-друг…»)",
+        1908
+      ],
+      [
+        "blok-9",
+        "На поле Куликовом — III («В ночь, когда Мамай залег с ордою…»)",
+        1908
+      ],
+      [
+        "blok-10",
+        "На поле Куликовом — IV («Опять с вековою тоскою…»)",
+        1908
+      ],
+      [
+        "blok-11",
+        "На поле Куликовом — V («Опять над полем Куликовым…»)",
+        1908
+      ],
+      [
+        "blok-8",
+        "Скифы",
+        1918
+      ],
+      [
+        "blok-12",
+        "Рождество",
+        1906
+      ],
+      [
+        "blok-13",
+        "Сочельник в лесу",
+        1912
+      ],
+      [
+        "blok-14",
+        "Ночь на Новый год",
+        1901
+      ],
+      [
+        "blok-15",
+        "Старый год уносит сны…",
+        1901
+      ],
+      [
+        "blok-16",
+        "Снежная вязь",
+        1907
+      ],
+      [
+        "blok-17",
+        "Настигнутый метелью",
+        1907
+      ],
+      [
+        "blok-18",
+        "На зов метелей",
+        1907
+      ],
+      [
+        "blok-19",
+        "Голоса",
+        1907
+      ],
+      [
+        "blok-20",
+        "Сквозь винный хрусталь",
+        1907
+      ],
+      [
+        "blok-21",
+        "Вот явилась. Заслонила…",
+        1906
+      ]
+    ]
+  ],
+  [
+    "alexander-pushkin",
+    "Александр Пушкин",
+    [
+      [
+        "pushkin-4",
+        "Зимнее утро",
+        1829
+      ],
+      [
+        "pushkin-5",
+        "Анчар",
+        1828
+      ],
+      [
+        "pushkin-6",
+        "К *** («Я помню чудное мгновенье…»)",
+        1825
+      ],
+      [
+        "pushkin-7",
+        "К Чаадаеву",
+        1818
+      ],
+      [
+        "pushkin-8",
+        "Зимний вечер",
+        1825
+      ],
+      [
+        "pushkin-9",
+        "«Если жизнь тебя обманет…»",
+        1825
+      ],
+      [
+        "pushkin-10",
+        "«Во глубине сибирских руд…»",
+        1827
+      ]
+    ]
+  ],
+  [
+    "mikhail-lermontov",
+    "Михаил Лермонтов",
+    [
+      [
+        "lermontov-5",
+        "Бородино",
+        1837
+      ],
+      [
+        "lermontov-6",
+        "Родина",
+        1841
+      ],
+      [
+        "lermontov-7",
+        "Дума",
+        1838
+      ],
+      [
+        "lermontov-8",
+        "Тучи",
+        1840
+      ],
+      [
+        "lermontov-9",
+        "Утёс",
+        1841
+      ],
+      [
+        "lermontov-10",
+        "«Когда волнуется желтеющая нива…»",
+        1837
+      ],
+      [
+        "lermontov-11",
+        "Смерть поэта",
+        1837
+      ],
+      [
+        "lermontov-12",
+        "1-е января",
+        1840
+      ],
+      [
+        "lermontov-13",
+        "Из-под таинственной холодной полумаски…",
+        1840
+      ],
+      [
+        "lermontov-14",
+        "Трубецкому",
+        1831
+      ],
+      [
+        "lermontov-15",
+        "Нарышкиной",
+        1831
+      ],
+      [
+        "lermontov-16",
+        "Додо",
+        1831
+      ],
+      [
+        "lermontov-17",
+        "Башилову",
+        1831
+      ]
+    ]
+  ],
+  [
+    "fyodor-tyutchev",
+    "Фёдор Тютчев",
+    [
+      [
+        "tyutchev-6",
+        "Весенняя гроза",
+        1828
+      ],
+      [
+        "tyutchev-7",
+        "«Есть в осени первоначальной…»",
+        1857
+      ],
+      [
+        "tyutchev-8",
+        "«Нам не дано предугадать…»",
+        1869
+      ],
+      [
+        "tyutchev-9",
+        "День и ночь",
+        1839
+      ],
+      [
+        "tyutchev-10",
+        "«Эти бедные селенья…»",
+        1855
+      ],
+      [
+        "tyutchev-11",
+        "«Зима недаром злится…»",
+        1836
+      ]
+    ]
+  ],
+  [
+    "sergei-yesenin",
+    "Сергей Есенин",
+    [
+      [
+        "yesenin-4",
+        "«Отговорила роща золотая…»",
+        1924
+      ],
+      [
+        "yesenin-5",
+        "«Шаганэ ты моя, Шаганэ!..»",
+        1924
+      ],
+      [
+        "yesenin-6",
+        "«Я покинул родимый дом…»",
+        1918
+      ],
+      [
+        "yesenin-7",
+        "«Клён ты мой опавший, клён заледенелый…»",
+        1925
+      ],
+      [
+        "yesenin-8",
+        "Песнь о собаке",
+        1915
+      ],
+      [
+        "yesenin-9",
+        "Берёза",
+        1913
+      ],
+      [
+        "yesenin-10",
+        "Письмо к женщине",
+        1924
+      ],
+      [
+        "yesenin-11",
+        "«Слышишь — мчатся сани, слышишь — сани мчатся…»",
+        1925
+      ],
+      [
+        "yesenin-12",
+        "«Эх вы, сани! А кони, кони!..»",
+        1925
+      ],
+      [
+        "yesenin-13",
+        "«Снежная замять дробится и колется…»",
+        1925
+      ],
+      [
+        "yesenin-14",
+        "«Я по первому снегу бреду…»",
+        1917
+      ],
+      [
+        "yesenin-15",
+        "«Свищет ветер, серебряный ветер…»",
+        1925
+      ],
+      [
+        "yesenin-16",
+        "Пороша",
+        1914
+      ],
+      [
+        "yesenin-17",
+        "«Мелколесье. Степь и дали…»",
+        1925
+      ],
+      [
+        "yesenin-18",
+        "«Я обманывать себя не стану…»",
+        1922
+      ],
+      [
+        "yesenin-19",
+        "Хулиган",
+        1919
+      ]
+    ]
+  ]
 ];
+export const supplementaryPoemSearchIndex: readonly SupplementaryPoemSearchEntry[] = groups.flatMap(([poetId, poetName, poems]) =>
+  poems.map(([id, title, year]) => ({ poetId, poetName, id, title, year: year ?? undefined })));

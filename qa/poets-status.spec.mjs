@@ -37,10 +37,13 @@ async function assertReachableBeyondDock(entry) {
   }, { message: 'Contents entry must be visible and unobscured by the mobile dock' }).toBe(true);
 }
 
+const BLOK_POEM_IDS = ['blok-1', 'blok-2', 'blok-3', 'blok-4', 'blok-5', 'blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11', 'blok-8', 'blok-12', 'blok-13', 'blok-14', 'blok-15', 'blok-16', 'blok-17', 'blok-18', 'blok-19', 'blok-20', 'blok-21'];
+const BLOK_LAST_ANCHOR = '#poem-' + BLOK_POEM_IDS.at(-1);
+
 test.describe('poets result status accessibility', () => {
   // Permanent selection must be reachable before the 8–16k px biography
   // and throughout long poem cards, without rewriting canonical fragments.
-  for (const [poetId, total] of [['alexander-pushkin', 10], ['alexander-blok', 11]]) {
+  for (const [poetId, total] of [['alexander-pushkin', 10], ['alexander-blok', BLOK_POEM_IDS.length]]) {
     for (const width of [390, 1440]) {
       test('persistent poem picker ' + poetId + ' at ' + width + 'px', async ({ page }, testInfo) => {
         test.skip(width === 1440 && testInfo.project.name !== 'chromium-core', 'Desktop belongs to Chromium QA');
@@ -478,9 +481,9 @@ test.describe('poets result status accessibility', () => {
           expect(geometry.dockGap, 'Resized menu must clear the measured mobile dock').toBeGreaterThanOrEqual(8);
           expect(geometry.overflow).toBe(false);
           const choices = nav.locator('a[href^="#poem-"]');
-          await expect(choices).toHaveCount(11);
+          await expect(choices).toHaveCount(BLOK_POEM_IDS.length);
           const last = choices.last();
-          await expect(last).toHaveAttribute('href', '#poem-blok-8');
+          await expect(last).toHaveAttribute('href', BLOK_LAST_ANCHOR);
           await page.evaluate(() => document.fonts.ready);
           // Scroll the actual menu before testing the final entry. WebKit's
           // automatic click-scroll waits for stability before issuing a scroll.
@@ -505,9 +508,9 @@ test.describe('poets result status accessibility', () => {
               message: 'Final canonical choice must be visible and hit-testable inside the resized menu',
             }).toBe(true);
             await last.click({ timeout: 10000 });
-            await expect.poll(() => page.evaluate(() => window.location.hash)).toBe('#poem-blok-8');
+            await expect.poll(() => page.evaluate(() => window.location.hash)).toBe(BLOK_LAST_ANCHOR);
             await expect(picker).not.toHaveAttribute('open', '');
-            await expect(page.locator('#poem-blok-8')).toBeVisible();
+            await expect(page.locator(BLOK_LAST_ANCHOR)).toBeVisible();
           } catch (error) {
             const evidence = await readEntry().catch(() => null);
             const path = testInfo.outputPath('resized-picker-' + phase + '.json');
@@ -560,7 +563,7 @@ test.describe('poets result status accessibility', () => {
     await expect(pulse).toBeVisible();
     await expect(pulse.locator('xpath=..')).toContainText(/\d+(?:[.,]\d+)?/);
   });
-  test('Blok contents preserve eleven works and five Kulikovo parts and responsive two-column navigation', async ({ page }, testInfo) => {
+  test('Blok contents preserve the complete corpus and five Kulikovo parts and responsive two-column navigation', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
     for (const width of widths) {
       await page.setViewportSize({ width, height: 900 });
@@ -568,10 +571,11 @@ test.describe('poets result status accessibility', () => {
 
       const guide = page.getByRole('navigation', { name: 'Навигация по лирике' });
       const cards = page.locator('[id^="poem-blok-"]');
-      await expect(cards).toHaveCount(11);
+      await expect(cards).toHaveCount(BLOK_POEM_IDS.length);
+      expect(await cards.evaluateAll(elements => elements.map(el => el.id))).toEqual(BLOK_POEM_IDS.map(id => 'poem-' + id));
       // Both layers must agree on word indices, including NBSP before the
       // dash in «Скифы»; otherwise hover/focus affects the wrong visual word.
-      for (let i = 0; i < 11; i += 1) {
+      for (let i = 0; i < BLOK_POEM_IDS.length; i += 1) {
         const card = cards.nth(i);
         const canonicalWords = await card.locator('[data-poem-canonical-word]').count();
         expect(canonicalWords, `canonical words in Blok poem ${i + 1}`).toBeGreaterThan(0);
@@ -596,18 +600,30 @@ test.describe('poets result status accessibility', () => {
       await expect(page).toHaveURL(/#blok-contents$/);
 
       const anchors = guide.locator('a[href^="#poem-blok-"]');
-      await expect(anchors).toHaveCount(11);
+      await expect(anchors).toHaveCount(BLOK_POEM_IDS.length);
+      expect(await anchors.evaluateAll(elements => elements.map(el => el.getAttribute('href')))).toEqual(BLOK_POEM_IDS.map(id => '#poem-' + id));
       await expect(guide).toHaveClass(/poet-reading-index/);
-      await expect(guide.locator('ol > li')).toHaveCount(11);
-      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(10);
+      await expect(guide.locator('ol > li')).toHaveCount(BLOK_POEM_IDS.length);
+      await expect(guide.locator('[data-poem-cycle]')).toHaveCount(18);
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveText('Пляски смерти · II');
       await expect(guide.locator('[data-poem-cycle]').first()).toHaveCSS('font-size', '12px');
       if (width === 390) await expect(guide.locator('[data-poem-cycle]').first()).toBeVisible();
       await expect(anchors.first()).toHaveCSS('display', 'grid');
       await expect(anchors.first()).not.toHaveClass(/theme-elevated-surface/);
       await expect(anchors.first()).toHaveCSS('border-color', 'rgba(212, 175, 55, 0.22)');
-      await expect(anchors.last()).toHaveAttribute('href', '#poem-blok-8');
-      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(11);
+      await expect(anchors.last()).toHaveAttribute('href', BLOK_LAST_ANCHOR);
+      await expect(cards.locator('a', { hasText: 'Источник текста' })).toHaveCount(BLOK_POEM_IDS.length);
+      for (const [id, lines, url] of [['blok-12', 44, 'https://ilibrary.ru/text/5113/p.1/index.html'], ['blok-13', 24, 'https://djvu.online/jpg1/d/o/Z/doZyyXDXLRrt9/220.webp'], ['blok-14', 28, 'https://ilibrary.ru/text/1995/p.1/index.html'], ['blok-15', 16, 'https://www.culture.ru/poems/2875/staryi-god-unosit-sny'], ['blok-16', 32, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0460.html'], ['blok-17', 46, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0464.html'], ['blok-18', 27, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0465.html'], ['blok-19', 46, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0473.html'], ['blok-20', 15, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0477.html'], ['blok-21', 28, 'https://rvb.ru/20vek/blok/pss20/vol2/text/0489.html']]) {
+        const card = page.locator('#poem-' + id);
+        const canonicalText = (await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim());
+        if (id === 'blok-19') {
+          expect(canonicalText.filter(line => /^(Он|Она)$/.test(line.trim()))).toHaveLength(11);
+          expect(canonicalText.filter(line => /^\(.*\)$/.test(line.trim()))).toHaveLength(2);
+          expect(canonicalText.filter(line => !/^(Он|Она|\(.*\))$/.test(line.trim()))).toHaveLength(lines);
+          await expect(card.locator('[data-poem-canonical]')).toContainText('ветер встречный!');
+        } else expect(canonicalText).toHaveLength(lines);
+        await expect(card.getByRole('link', {name: 'Источник текста'})).toHaveAttribute('href', url);
+      }
       await expect(cards.locator('a[href^="/music/blok-"]')).toHaveCount(8);
       // Literary cycle I–V remains consecutive while only two parts have linked music.
       const kulikovoIds = ['blok-6', 'blok-7', 'blok-9', 'blok-10', 'blok-11'];
@@ -693,8 +709,8 @@ test.describe('poets result status accessibility', () => {
 
   const expandedPoets = [
       ['alexander-pushkin', 10],
-      ['mikhail-lermontov', 11],
-      ['sergei-yesenin', 10],
+      ['mikhail-lermontov', 17],
+      ['sergei-yesenin', 19],
       ['fyodor-tyutchev', 11],
     ];
   // Keep every author, viewport, and editorial assertion, but give each
@@ -797,7 +813,14 @@ test.describe('poets result status accessibility', () => {
           expect(actualColumns, 'single analysis panel must fill the poem card').toBe(1);
         }
         if (poetId === 'mikhail-lermontov') {
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(17);
+          for (const [offset, [count, source, witness]] of [[42,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/380.html","https://feb-web.ru/feb/lermont/texts/lerm06/vol02/le2-1362.htm?cmd=p"],[16,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/400.html","https://feb-web.ru/feb/lermont/texts/lerm06/vol02/le2-185-.htm?cmd=p"],[8,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"],[8,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"],[16,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"],[12,"https://rvb.ru/19vek/lermontov/ss4/vol1/poems/244-260.html","https://djvu.online/file/3wV8JAwd38jdw"]].entries()) {
+            const card = page.locator('#poem-lermontov-' + (12 + offset));
+            await expect(card).toHaveCount(1);
+            expect((await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim())).toHaveLength(count);
+            await expect(card.getByRole('link', {name:'Источник текста'})).toHaveAttribute('href', source);
+            await expect(card.locator('[data-poem-textual-note] a')).toHaveAttribute('href', witness);
+          }
           for (const [number, count, critical] of [
             [1, 12, 'Теснится ль в сердце грусть:'],
             [2, 28, 'И правды чистыя ученья:'],
@@ -864,6 +887,13 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-pushkin-7 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:%D0%A1%D0%BE%D1%87%D0%B8%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F_%D0%9F%D1%83%D1%88%D0%BA%D0%B8%D0%BD%D0%B0_%D0%A2%D0%BE%D0%BC_2_1818-1820_1905.pdf');
         }
         if (poetId === 'sergei-yesenin') {
+          for (const [offset, [count, source, witness]] of [[8,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/158.html","https://djvu.online/file/vz2dupX7YPiEG"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/156.html","https://djvu.online/file/vz2dupX7YPiEG"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/157.html","https://djvu.online/file/vz2dupX7YPiEG"],[16,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/072.html","https://djvu.online/file/vz2dupX7YPiEG"],[20,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/165.html","https://djvu.online/file/vz2dupX7YPiEG"],[16,"https://rvb.ru/20vek/esenin/pss7/vol4/poems/253.html","https://djvu.online/file/MimaUmviIKL2g"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/166.html","https://djvu.online/file/vz2dupX7YPiEG"],[28,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/097.html","https://djvu.online/file/vz2dupX7YPiEG"],[36,"https://rvb.ru/20vek/esenin/pss7/vol1/poems/091.html","https://djvu.online/file/vz2dupX7YPiEG"]].entries()) {
+            const card = page.locator('#poem-yesenin-' + (11 + offset));
+            await expect(card).toHaveCount(1);
+            expect((await card.locator('[data-poem-canonical]').textContent()).split('\n').filter(line => line.trim())).toHaveLength(count);
+            await expect(card.locator('a[href="'+source+'"]')).toHaveCount(1);
+            await expect(card.locator('[data-poem-textual-note] a')).toHaveAttribute('href', witness);
+          }
           for (const [number, expectedLines, critical, sourceUrl, noteUrl] of [[1,20,"Жизнь моя! иль ты приснилась мне?","https://rvb.ru/20vek/esenin/pss7/vol1/poems/096.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/096.html"],[2,36,"Не волнуй того, что не сбылось,—","https://rvb.ru/20vek/esenin/pss7/vol1/poems/104.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/104.html"],[3,20,"Звонно чахнут тополя.","https://rvb.ru/20vek/esenin/pss7/vol1/poems/028.html","https://rvb.ru/20vek/esenin/pss7/vol1/notes/028.html"]]) {
             const card = page.locator('#poem-yesenin-' + number);
             const canonical = card.locator('[data-poem-canonical]');
@@ -881,7 +911,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-8 [data-poem-year-note]')).toContainText('авторская датировка');
           await expect(page.getByRole('heading', { name: 'Источники и редакции текстов' })).toBeVisible();
           await expect(page.getByRole('link', { name: /Летопись жизни и творчества\. Том 5, книга 1/ })).toBeVisible();
-          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(10);
+          await expect(page.locator('[data-poem-textual-note]')).toHaveCount(19);
           await expect(page.locator('#poem-yesenin-8 [data-poem-textual-note]')).toContainText('Песня о собаке');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('16/16');
           await expect(page.locator('#poem-yesenin-6 [data-poem-textual-note]')).toContainText('вернусь!');
@@ -906,7 +936,7 @@ test.describe('poets result status accessibility', () => {
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('без запятой');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note]')).toContainText('С. Кошечкин');
           await expect(page.locator('#poem-yesenin-9 [data-poem-textual-note] a')).toHaveAttribute('href', 'https://sytin-and-esenin.ru/images/blocks/2.23.24.jpg');
-          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(10);
+          await expect(page.locator('[data-poem-textual-note] a')).toHaveCount(19);
         }
         if (poetId === 'fyodor-tyutchev') {
           await expect(page.locator('[data-poem-textual-note]')).toHaveCount(11);
@@ -1246,7 +1276,7 @@ test.describe('poets result status accessibility', () => {
     }
   });
 
-  test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
+  async function openPoemSearch(page) {
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     // Exercise the real control: a synthetic window event on DOMContentLoaded
     // can precede CommandPalette's effect subscription in mobile WebKit.
@@ -1265,6 +1295,11 @@ test.describe('poets result status accessibility', () => {
     }
     const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
     await expect(input).toBeVisible();
+    return input;
+  }
+
+  test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
+    const input = await openPoemSearch(page);
     for (const [query, title] of [
       ['В ночь, когда Мамай', 'На поле Куликовом — III'],
       ['Опять с вековою тоскою', 'На поле Куликовом — IV'],
@@ -1278,6 +1313,29 @@ test.describe('poets result status accessibility', () => {
     await expect(page).toHaveURL(/\/poets\/alexander-blok#poem-blok-11$/);
     await expect(page.locator('#poem-blok-11')).toBeVisible();
   });
+
+  // New winter texts must be discoverable before their full author JSON has loaded.
+  // Use the canonical command option ID, not an ambiguous title match.
+  for (const [poetId, poemId, query, firstLine, source] of [
+    ["alexander-blok","blok-21","Вот явилась. Заслонила","Вот явилась. Заслонила","https://rvb.ru/20vek/blok/pss20/vol2/text/0489.html"],
+    ["mikhail-lermontov","lermontov-13","Из-под таинственной холодной полумаски","Из-под таинственной холодной полумаски","https://rvb.ru/19vek/lermontov/ss4/vol1/poems/400.html"],
+    ["sergei-yesenin","yesenin-15","Свищет ветер, серебряный ветер","Свищет ветер, серебряный ветер,","https://rvb.ru/20vek/esenin/pss7/vol1/poems/165.html"],
+  ]) {
+    test(`Winter collection search resolves ${poemId} to the canonical card`, async ({ page }) => {
+      const input = await openPoemSearch(page);
+      await input.fill(query);
+      const option = page.locator('#command-option-poem-' + poetId + '-' + poemId);
+      await expect(option).toHaveAttribute('role', 'option');
+      await expect(option).toBeVisible();
+      await option.click();
+      await expect(page).toHaveURL(new RegExp('/poets/' + poetId + '/?#poem-' + poemId + '$'));
+      const card = page.locator('#poem-' + poemId);
+      await expect(card).toHaveCount(1);
+      await expect(card).toBeVisible();
+      await expect(card.locator('[data-poem-canonical]')).toContainText(firstLine);
+      await expect(card.getByRole('link', { name: 'Источник текста' })).toHaveAttribute('href', source);
+    });
+  }
 
   test('Bryusov 1906/1913 full-text editions preserve 12, 20 and 28 lines without clipping', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];

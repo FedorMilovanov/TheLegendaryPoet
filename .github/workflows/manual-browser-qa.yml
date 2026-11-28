@@ -78,7 +78,7 @@ jobs:
           qa/ak-tolstoy-fulltexts.spec.mjs
           qa/mandelstam-fulltext-rights.spec.mjs
           qa/simonov-excerpts-rights.spec.mjs
-          --grep "Blok contents preserve eleven|Expanded classics preserve full canonical contents"
+          --grep "Blok contents preserve the complete corpus|Expanded classics preserve full canonical contents"
           --config=playwright.config.mjs
           --project=chromium-core
           --workers=1
@@ -97,7 +97,16 @@ jobs:
               done
             done
           done
-          echo "All 16 canonical poet navigation screenshots exist (four authors × 390/1440 × dark/light)."
+          for width in 390 1440; do
+            for theme in dark light; do
+              file="qa-artifacts/blok-reading-index-${width}-${theme}.png"
+              if [ ! -s "$file" ]; then
+                echo "::error file=$file::Missing Blok index screenshot: $file"
+                exit 1
+              fi
+            done
+          done
+          echo "All 20 canonical poet navigation screenshots exist (five authors × 390/1440 × dark/light)."
       - name: Upload early universal index screenshots
         if: ${{ always() && steps.production_build.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

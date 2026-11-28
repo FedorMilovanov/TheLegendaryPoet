@@ -8,7 +8,7 @@ test('W88: hash target remains readable after late layout growth and shrinkage',
   await page.goto(BASE + '/poets/sergei-yesenin#poem-yesenin-3', { waitUntil: 'domcontentloaded' });
   const target = page.locator('#poem-yesenin-3');
   await expect(target).toBeVisible();
-  await expect(page.locator('div[id^="poem-yesenin-"]')).toHaveCount(10);
+  await expect(page.locator('div[id^="poem-yesenin-"]')).toHaveCount(19);
 
   const anchored = async () => {
     await expect.poll(() => topOf(page), { timeout: 15_000 }).toBeGreaterThanOrEqual(80);
