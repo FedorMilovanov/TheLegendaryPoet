@@ -2,6 +2,7 @@ import { useEffect, useState, type RefObject } from 'react';
 
 type ReadingProgressProps = {
   articleRef: RefObject<HTMLElement | null>;
+  label?: string;
 };
 
 /**
@@ -10,7 +11,7 @@ type ReadingProgressProps = {
  * same RAF-coalesced calculation, so late media/layout changes never create a
  * second progress authority. Post-article community/footer content is excluded.
  */
-export default function ReadingProgress({ articleRef }: ReadingProgressProps) {
+export default function ReadingProgress({ articleRef, label = 'Прогресс чтения статьи' }: ReadingProgressProps) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function ReadingProgress({ articleRef }: ReadingProgressProps) {
     <div
       className="reading-progress fixed left-0 z-[70] h-[2px] w-full bg-cyan-950/60"
       role="progressbar"
-      aria-label="Прогресс чтения статьи"
+      aria-label={label}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={semanticProgress}

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { computeIndexNowDelta } from './indexnow-delta.mjs';
+import { assertLiveDiscoverySnapshot, computeIndexNowDelta, resolveNotificationCheckpoint } from './indexnow-delta.mjs';
 
 const root = process.cwd();
 const artifacts = [
@@ -57,7 +57,22 @@ function fakeManifest(records) {
 }
 
 try {
+  const poemFixtures = spawnSync(process.execPath, ['--test', 'scripts/tests/poem-discovery.test.mjs', 'scripts/tests/poem-output.test.mjs'], {
+    cwd: root, encoding: 'utf8',
+  });
+  if (poemFixtures.status !== 0) {
+    throw new Error('Poem discovery contract fixtures failed:\n' + [poemFixtures.stdout, poemFixtures.stderr].filter(Boolean).join('\n'));
+  }
+  console.log(poemFixtures.stdout.trim());
+  const readingFixtures = spawnSync(process.execPath, ['--import', 'tsx', '--test', 'scripts/tests/poem-reading-page.test.tsx'], {
+    cwd: root, encoding: 'utf8', env: { ...process.env, TSX_TSCONFIG_PATH: path.join(root, 'tsconfig.json') },
+  });
+  if (readingFixtures.status !== 0) {
+    throw new Error('Poem reading body fixtures failed:\n' + [readingFixtures.stdout, readingFixtures.stderr].filter(Boolean).join('\n'));
+  }
+  console.log(readingFixtures.stdout.trim());
   for (const generator of [...new Set(artifacts.map((artifact) => artifact.generator))]) runGenerator(generator);
+  runGenerator('validate:poem-browser-data');
 
   for (const artifact of artifacts) {
     const absolutePath = path.join(root, artifact.path);
@@ -189,6 +204,57 @@ try {
   const forced = computeIndexNowDelta(current, previous, { forceFull: true });
   expect(forced.mode === 'forced-full' && forced.urls.length === current.canonicalUrls.length, 'full-site IndexNow submission must require explicit force');
 
+  // No network: the exact live-snapshot gate must reject stale or unrelated
+  // deployments before either an IndexNow POST or a successful no-op.
+  const snapshotResponse = (body, status = 200) => async () => ({
+    ok: status === 200, status, json: async () => body,
+  });
+  await assertLiveDiscoverySnapshot(current, current.site, { fetchImpl: snapshotResponse(structuredClone(current)) });
+  const rejectedSnapshot = async (label, body, status = 200) => {
+    let rejected = false;
+    try {
+      await assertLiveDiscoverySnapshot(current, current.site, { fetchImpl: snapshotResponse(body, status) });
+    } catch {
+      rejected = true;
+    }
+    expect(rejected, label);
+  };
+  await rejectedSnapshot('stale live discovery snapshot must block notification', previous);
+  await rejectedSnapshot('missing live discovery snapshot must block notification', current, 404);
+  await rejectedSnapshot('invalid live manifest must block notification', {});
+  await rejectedSnapshot('foreign live manifest must block notification', { ...current, site: 'https://example.invalid' });
+  await rejectedSnapshot('changed live fingerprint must block notification', {
+    ...current,
+    canonicalUrls: current.canonicalUrls.map((record, index) => index === 0 ? { ...record, fingerprint: 'f'.repeat(64) } : record),
+  });
+
+  const seed = { runNumber: 10, runId: 10, sourceSha: 'a', blobSha: 'b' };
+  const run = (number, conclusion = 'success') => ({ id: number, run_number: number,
+    run_attempt: 1, event: 'workflow_run', head_branch: 'main', head_sha: 'a', conclusion });
+  const checkpoint = async (runs, jobs, artifacts, number = 13) => resolveNotificationCheckpoint({
+    currentRunNumber: number, seed, listRuns: async () => runs,
+    listJobs: async candidate => jobs[candidate.id] ?? [],
+    listArtifacts: async candidate => artifacts[candidate.id] ?? [],
+  });
+  const goodJobs = { 11: [{ name: 'submit', conclusion: 'success' }] };
+  const goodArtifacts = { 11: [{ name: 'indexnow-discovery-1', id: 101, expired: false }] };
+  expect((await checkpoint([run(12, 'failure'), run(11), run(10)], goodJobs, goodArtifacts)).artifactId === 101,
+    'failed intervening run must not advance notification baseline');
+  expect((await checkpoint([run(12), run(11)], goodJobs, goodArtifacts)).artifactId === 101,
+    'skipped intervening submit job must not advance notification baseline');
+  expect((await checkpoint([run(10)], {}, {})).kind === 'seed', 'cutover uses audited seed');
+  for (const [label, rows, jobs, artifacts] of [
+    ['missing checkpoint', [run(11)], goodJobs, {}],
+    ['expired checkpoint', [run(11)], goodJobs, { 11: [{ ...goodArtifacts[11][0], expired: true }] }],
+    ['stale rerun', [run(14), run(11)], goodJobs, goodArtifacts],
+    ['empty history', [], {}, {}],
+    ['missing cutover run', [run(9)], {}, {}],
+  ]) {
+    let rejected = false;
+    try { await checkpoint(rows, jobs, artifacts); } catch { rejected = true; }
+    expect(rejected, `IndexNow must reject ${label}`);
+  }
+
   const useSeo = readText('src/hooks/useSeo.ts');
   const publicUrl = readText('src/routes/publicUrl.ts');
   const discoveryHead = readText('src/routes/discoveryHead.ts');
@@ -208,6 +274,23 @@ try {
   expect(discoveryHead.includes('canonicalRouteUrl(siteConfig.url, options.path)'), 'runtime self canonical must use terminal public route authority');
   expect(seoSchema.includes('absoluteRouteUrl') && seoSchema.includes('canonicalRouteUrl'), 'JSON-LD route URLs must use terminal public route authority');
   expect(genSitemap.includes('canonicalRoutePath(item.loc)') && genSitemap.includes('canonicalRouteUrl(BASE, item.loc)'), 'sitemap/manifest must use terminal public route authority');
+  expect(genSitemap.includes("import { poets as canonicalPoets } from '../src/data/library/index.ts';")
+    && genSitemap.includes('...canonicalPoets.map((poet) => {')
+    && genSitemap.includes('return [authorPath, {')
+    && genSitemap.includes('      poet,')
+    && genSitemap.includes('memoryPlaces: places,')
+    && genSitemap.includes('const collections = collectionsForPoet(poet.id);')
+    && genSitemap.includes("memoryPlacesView: fileHash('src/components/poet-detail/MemoryPlaces.tsx')")
+    && genSitemap.includes("memoryPlacesStyle: fileHash('src/components/poet-detail/memory-places.css')"),
+  'author-detail discovery fingerprints must use the full canonical library, not the abbreviated shell index');
+  expect(genSitemap.includes('poemPages.filter(page => page.authorHref === authorPath)')
+    && genSitemap.includes('.map(page => ({ path: page.path, poemId: page.poemId }))')
+    && genSitemap.includes('...(standalonePoems.length ? {')
+    && genSitemap.includes('        standalonePoems,')
+    && genSitemap.includes("authorEntryBody: fileHash('scripts/lib/poem-static-document.tsx')")
+    && genSitemap.includes("authorLink: fileHash('src/components/poet-detail/PoemCard.tsx')")
+    && genSitemap.includes("authorAdmission: fileHash('src/data/runtime/poemPagePayload.ts')"),
+  'author-detail fingerprints must incorporate approved standalone links and their rendering/admission authority');
   expect(feed.includes('canonicalRouteUrl(BASE, entry.path)'), 'Atom entries must use terminal public route authority');
   expect(discoveryHead.includes("document.getElementById('route-jsonld')?.remove()"), 'non-schema states must remove stale route JSON-LD');
   expect(discoveryHead.includes("removeLink('canonical')"), 'non-canonical states must remove stale canonical');
@@ -223,8 +306,19 @@ try {
   expect(vite.includes('canonicalRoutePath(to)') && vite.includes('canonicalRouteUrl(PRODUCTION_ORIGIN, to)'), 'legacy aliases must target terminal public routes');
   expect(!submitIndexNow.includes('<loc>'), 'IndexNow submitter must not treat the sitemap inventory as its change set');
   expect(submitIndexNow.includes('computeIndexNowDelta'), 'IndexNow submitter must use deterministic manifest delta');
-  expect(indexNowWorkflow.includes('fetch-depth: 2'), 'IndexNow workflow must fetch the previous main snapshot');
+  expect(indexNowWorkflow.includes('resolveNotificationCheckpoint') && !indexNowWorkflow.includes('HEAD^'),
+    'IndexNow workflow must use successful notification history, not immediate Git parent');
+  expect(indexNowWorkflow.includes('group: indexnow-main') && indexNowWorkflow.includes('cancel-in-progress: false'),
+    'IndexNow checkpoint writers must share a serial execution group');
+  expect(indexNowWorkflow.indexOf('name: Retain the exact successfully notified discovery checkpoint') >
+    indexNowWorkflow.indexOf('name: Notify IndexNow about added, changed or deleted canonical URLs'),
+    'checkpoint must be retained after successful notification or verified no-op');
   expect(indexNowWorkflow.includes('INDEXNOW_BASE_MANIFEST_PATH'), 'IndexNow workflow must pass the previous discovery manifest');
+  expect(indexNowWorkflow.includes("INDEXNOW_VERIFY_LIVE: '1'"), 'deployed IndexNow must prove the live discovery snapshot');
+  expect(submitIndexNow.indexOf('await assertLiveDiscoverySnapshot(') < submitIndexNow.indexOf('const delta = computeIndexNowDelta(')
+    && submitIndexNow.includes('await assertLiveDiscoverySnapshot('), 'live snapshot gate must precede delta and no-op');
+  expect(submitIndexNow.includes('if (BASE_MANIFEST_PATH) {') && !submitIndexNow.includes('BASE_MANIFEST_PATH && fs.existsSync'),
+    'an explicitly selected missing baseline must fail, not silently bootstrap');
 } finally {
   for (const artifact of artifacts) {
     const absolutePath = path.join(root, artifact.path);

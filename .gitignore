@@ -30,6 +30,9 @@ qa-artifacts/
 # The payloads are parity-validated before use and must not become a second committed source of truth.
 /public/data/essays/
 
+# Standalone poem payloads are regenerated from canonical approved works before build.
+/public/data/poem-pages/
+
 # Logs
 logs/
 *.log

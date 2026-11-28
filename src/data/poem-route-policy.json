@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "authors": {
+    "marina-tsvetaeva": {
+      "tsvetaeva-moim-stiham-fragment": "moim-stiham-napisannym-tak-rano",
+      "tsvetaeva-mne-nravitsya-fragment": "mne-nravitsya-chto-vy-bolny-ne-mnoy"
+    },
+    "osip-mandelstam": {
+      "mandelstam-dano-mne-telo-fragment": "dano-mne-telo",
+      "mandelstam-my-zhivem-fragment": "my-zhivem-pod-soboyu-ne-chuya-strany"
+    },
+    "valery-bryusov": {
+      "bryusov-yunomu-poetu-fragment": "yunomu-poetu",
+      "bryusov-tvorchestvo-fragment": "tvorchestvo",
+      "bryusov-gryadushchie-gunny": "gryadushchie-gunny"
+    },
+    "nikolay-nekrasov": {
+      "nekrasov-vcherashniy-den-fragment": "vcherashniy-den-chasu-v-shestom",
+      "nekrasov-vnimaya-uzhasam-fragment": "vnimaya-uzhasam-voyny"
+    },
+    "konstantin-simonov": {
+      "simonov-zhdi-menya-short-excerpt": "zhdi-menya",
+      "simonov-ty-pomnish-alesha-short-excerpt": "ty-pomnish-alesha-dorogi-smolenshchiny"
+    },
+    "aleksey-konstantinovich-tolstoy": {
+      "ak-tolstoy-sred-shumnogo-bala-fragment": "sred-shumnogo-bala",
+      "ak-tolstoy-kolokolchiki-fragment": "kolokolchiki-moi"
+    },
+    "alexander-blok": {
+      "blok-1": "noch-ulitsa-fonar-apteka",
+      "blok-2": "neznakomka",
+      "blok-3": "o-doblestyakh-o-podvigakh-o-slave",
+      "blok-4": "o-ya-khochu-bezumno-zhit",
+      "blok-5": "rossiya",
+      "blok-6": "na-pole-kulikovom-1",
+      "blok-7": "na-pole-kulikovom-2",
+      "blok-8": "skify",
+      "blok-9": "na-pole-kulikovom-3",
+      "blok-10": "na-pole-kulikovom-4",
+      "blok-11": "na-pole-kulikovom-5"
+    },
+    "alexander-pushkin": {
+      "pushkin-1": "prorok",
+      "pushkin-2": "ya-vas-lyubil",
+      "pushkin-3": "ya-pamyatnik-sebe-vozdvig-nerukotvornyy",
+      "pushkin-4": "zimnee-utro",
+      "pushkin-5": "anchar",
+      "pushkin-6": "ya-pomnyu-chudnoe-mgnovenie",
+      "pushkin-7": "k-chaadaevu",
+      "pushkin-8": "zimniy-vecher",
+      "pushkin-9": "esli-zhizn-tebya-obmanet",
+      "pushkin-10": "vo-glubine-sibirskikh-rud"
+    },
+    "mikhail-lermontov": {
+      "lermontov-1": "molitva-v-minutu-zhizni-trudnuyu",
+      "lermontov-2": "prorok",
+      "lermontov-3": "parus",
+      "lermontov-4": "vykhozhu-odin-ya-na-dorogu",
+      "lermontov-5": "borodino",
+      "lermontov-6": "rodina",
+      "lermontov-7": "duma",
+      "lermontov-8": "tuchi",
+      "lermontov-9": "utes",
+      "lermontov-10": "kogda-volnuetsya-zhelteyushchaya-niva",
+      "lermontov-11": "smert-poeta"
+    },
+    "fyodor-tyutchev": {
+      "tyutchev-1": "silentium",
+      "tyutchev-2": "nash-vek",
+      "tyutchev-3": "umom-rossiyu-ne-ponyat",
+      "tyutchev-4": "ya-vstretil-vas",
+      "tyutchev-5": "o-kak-ubiystvenno-my-lyubim",
+      "tyutchev-6": "vesennyaya-groza",
+      "tyutchev-7": "est-v-oseni-pervonachalnoy",
+      "tyutchev-8": "nam-ne-dano-predugadat",
+      "tyutchev-9": "den-i-noch",
+      "tyutchev-10": "eti-bednye-selenya",
+      "tyutchev-11": "zima-nedarom-zlitsya"
+    },
+    "sergei-yesenin": {
+      "yesenin-1": "ne-zhaleyu-ne-zovu-ne-plachu",
+      "yesenin-2": "pismo-materi",
+      "yesenin-3": "goy-ty-rus-moya-rodnaya",
+      "yesenin-4": "otgovorila-roshcha-zolotaya",
+      "yesenin-5": "shagane-ty-moya-shagane",
+      "yesenin-6": "ya-pokinul-rodimyy-dom",
+      "yesenin-7": "klen-ty-moy-opavshiy",
+      "yesenin-8": "pesn-o-sobake",
+      "yesenin-9": "bereza",
+      "yesenin-10": "pismo-k-zhenshchine"
+    },
+    "vladimir-mayakovsky": {
+      "mayak-1": "oblako-v-shtanakh",
+      "mayak-2": "poslushayte",
+      "mayak-3": "lilichka"
+    },
+    "boris-pasternak": {
+      "pasternak-2": "fevral-dostat-chernil-i-plakat",
+      "pasternak-3": "gamlet",
+      "pasternak-4": "zimnyaya-noch"
+    },
+    "afanasy-fet": {
+      "fet-1": "shepot-robkoe-dykhane",
+      "fet-2": "ya-prishel-k-tebe-s-privetom",
+      "fet-3": "siyala-noch"
+    },
+    "nikolay-gumilev": {
+      "gumilev-1": "zhiraf",
+      "gumilev-2": "kapitany-1",
+      "gumilev-3": "slovo",
+      "gumilev-4": "shestoe-chuvstvo"
+    },
+    "anna-akhmatova": {
+      "akhmatova-1": "rekviem",
+      "akhmatova-2": "szhala-ruki-pod-temnoy-vualyu",
+      "akhmatova-3": "muzhestvo"
+    }
+  },
+  "reviews": {
+    "mandelstam-my-zhivem-fragment": {
+      "decision": "hold",
+      "scope": "excerpt",
+      "reason": "Existing card explicitly limits the text to two lines pending rights and textual review.",
+      "evidence": [
+        "src/data/library/osipMandelstam.ts"
+      ]
+    },
+    "simonov-zhdi-menya-short-excerpt": {
+      "decision": "hold",
+      "scope": "excerpt",
+      "reason": "Existing card explicitly limits the protected work to four lines.",
+      "evidence": [
+        "src/data/library/konstantinSimonov.ts"
+      ]
+    },
+    "simonov-ty-pomnish-alesha-short-excerpt": {
+      "decision": "hold",
+      "scope": "excerpt",
+      "reason": "Existing card explicitly limits the protected work to four lines.",
+      "evidence": [
+        "src/data/library/konstantinSimonov.ts"
+      ]
+    },
+    "mayak-1": {
+      "decision": "hold",
+      "scope": "excerpt",
+      "reason": "Existing title explicitly identifies an excerpt; no standalone full-text claim.",
+      "evidence": [
+        "src/data/library/vladimirMayakovsky.ts"
+      ]
+    },
+    "akhmatova-1": {
+      "decision": "hold",
+      "scope": "excerpt",
+      "reason": "Existing title identifies selected parts of Requiem, not the whole work.",
+      "evidence": [
+        "src/data/library/annaAkhmatova.ts"
+      ]
+    }
+  }
+}

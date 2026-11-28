@@ -53,7 +53,7 @@ const smoothAst = inspectSource(smooth, 'SmoothScroll.tsx');
 const expectedPages = routeContract.routes.map((route) => route.page);
 const routeIds = routeContract.routes.map((route) => route.id);
 const routePaths = routeContract.routes.map((route) => route.path);
-expect(routeContract.routes.length === 14, `route contract must retain 14 lazy pages, found ${routeContract.routes.length}`);
+expect(routeContract.routes.length === 15, `route contract must retain 15 lazy pages, found ${routeContract.routes.length}`);
 expect(new Set(routeIds).size === routeIds.length, 'route contract ids must be unique');
 expect(new Set(routePaths).size === routePaths.length, 'route contract paths must be unique');
 expect(routeContract.routes.filter((route) => route.audit === 'not-found').length === 1, 'route contract must own one not-found route');

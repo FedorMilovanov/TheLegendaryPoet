@@ -1,0 +1,41 @@
+# Poem route identity and publication policy — TLP-SEO-001
+
+This is the standalone-page admission contract, not a second literary corpus. Authored text, author, title, analysis, sources, music links and dates still live in `src/data/library/index.ts` and its author modules. `src/data/poem-route-policy.json` owns only permanent URL slugs and item-specific review decisions; it never copies prose.
+
+- Existing work IDs and `#poem-{id}` anchors remain unchanged. A slug is assigned once, not recomputed from a revised title. Future renames require explicit redirect/alias review.
+- Current baseline: 82 assigned slugs, 16 authors. Five existing partial-text records have explicit excerpt HOLD; all other works await individual scope, edition and rights review. The absence of a review never implies permission. A new poem without a slug is explicitly held, without breaking its existing author page.
+- A standalone approval must name full/excerpt scope, evidence, rights basis, review date, and SHA-256 of exact text + epigraph. This is a machine gate, not proof that a legal or scholarly review actually occurred. Review evidence must be examined before approval. No approval is granted by this change.
+- Candidate paths are internal planning values only; no routing, sitemap, IndexNow, prerender, or user-facing links are activated yet. When route implementation arrives, consume only eligible records and preserve excerpt labels and legacy links. The existing public author cards are unchanged.
+- The winter Yesenin poem remains in #628 until independently accepted; do not preallocate a public URL for an unmerged work. Later assign its stable slug in this same lane.
+
+The build-time generator validates the policy against the full canonical catalog. Unit fixtures cover identity, collision, orphan/unsafe slug, explicit excerpt semantics, stale text/epigraph approval and new-work HOLD. Exact-head hosted checks still required.
+
+## Reading body foundation
+
+`src/lib/poemPageModel.ts` projects an eligible catalog row into the same typed model for eventual static and hydrated rendering. `src/components/poet-detail/PoemReadingBody.tsx` renders one semantic H1 and one visible canonical verse block, actual source, editorial analysis, optional edition and Christian perspective, published explicit music links, and adjacent works with legacy-anchor fallback. No duplicate hand-written HTML renderer, global corpus import, synthetic dates, ratings or generic SEO prose. Held rows produce no standalone model. Fixture-only React static-render tests run in the existing discovery gate. This is not an active route or an integrated interactive Reader; do not advertise URLs until source/rights review, route registration, actual static output, hydration parity and visual/browser certification are complete.
+
+## Static document pipeline
+
+The existing `scripts/prerender-og.mjs` now calls the shared React body renderer for approved poem pages. It uses the same canonical head renderer and writes one visible semantic document into the existing application root before JavaScript. It rejects any nonempty or ambiguous root marker. An approval alone cannot emit a URL: the runtime contract and exact ready discovery inventory must also agree with the approved set. Empty approved set emits no new routes. This is static HTML, not yet an implemented React hydration strategy; direct-entry/SPA parity and no flicker require the subsequent runtime slice. Existing global prerender fingerprint authority stays intact; regenerate discovery artifacts against the exact candidate before merge.
+
+## Browser route transport
+
+The lazy `poem-detail` route uses a generated allowlist derived only from individually approved rows and a single per-page JSON projection of the same view model used by the static renderer. Unknown and held paths render the existing NotFound component without fetching payloads. An approved URL with an unavailable or mismatched payload is a deployment error, not a silent 404. The prebuild/predev generator validates exact discovery admission before writing. The sitemap includes only approved pages and fingerprints their model, body, static renderer and payload validator. Zero approved rows currently means zero public poem URLs, zero payloads and an empty allowlist. Runtime route and initial static body are connected to the shared component; preserving the direct-entry body during client startup, interactive controls and real pilot browser/visual acceptance remain separate gates.
+
+## Direct-entry startup
+
+A direct poem document retains its single visible root while the existing lazy route importer and exact per-work payload prepare. Before replacing the root, the browser checks path, work ID, heading, verse and analysis against the delivered HTML. The prepared module and payload are reused synchronously by the first React render; the first-session wipe is skipped only for this direct entry. Failure or a 12-second deadline retains the readable static document and offers an explicit reload link. This is a prepared client handoff, not full-shell React hydration; no second hidden copy is introduced. Other routes mount normally. Real browser verification with an approved work and slow/failed network remains mandatory; no public approval is made here.
+
+## Reader integration
+
+The standalone route uses the existing ShareLine and ReadingProgress components with explicit refs to the single visible verse and semantic article. The archive button uses the existing poem-ID store and subscription, reporting actual mutation results; ratings and comments use the existing deferred CommunityPanel with exactly the same poem ID and dimensions as the author card. No second archive, community target, or invisible verse layer. Static rendering omits interactive controls. The old PoemCard and InteractivePoemText remain untouched while #595 and #628 own overlapping changes. The cross-route archive, selection, network failure and feedback behavior still require real pilot browser tests. The machine contract now explicitly verifies the fifteenth lazy route, individual discovery admission and unknown-poem probe.
+
+## Persistent navigation
+
+Static poem markup uses native crawlable anchors. The client injects the existing site-standard Link adapter for all internal navigation (breadcrumbs, author, music, previous/next, and legacy anchors). External sources remain normal anchors. The Reader does not reload the document and abandon the persistent audio session merely because a visitor follows an internal poem link. Reading progress has its poem-specific accessible label; progress and selected-line UI are keyed by work ID to avoid stale state across works. The regression fixture requires identical static/client anchor markup with the test adapter, including held-work legacy fallback. Runtime music continuity and hash restoration remain pilot-browser acceptance gates.
+
+The prepared payload is owned by the actual BrowserRouter history entry key, including full reloads of a non-default entry. Preparation captures the entry URL and key and rejects a changed entry before handoff. It shares the same bounded request-cache identity as the first render; a fresh entry cannot consume another visit's prepared model. The fixture covers default/non-default, legacy trailing-slash normalization, path mismatch and fresh entries. Full browser reload/POP remains a pilot gate.
+
+## Final output acceptance
+
+The existing `validate:seo-output` deployment gate verifies the approved standalone route set across the generated index, sitemap, discovery manifest, actual HTML files and generated/copied payloads. It requires the first-response author link and legacy anchor, one readable H1, the exact approved verse digest, static verse/analysis parity, native source/return links, and approved facsimile links where present. Held routes may not leave stray standalone files. Generated per-work JSON is an untracked build projection, like essay payloads; the committed allowlist is checked before prebuild, then actual emitted payload bytes are compared with the freshly generated source. Native Node fixtures cover positive, zero-approval, and deliberately corrupted output. This gate does not replace real browser and editorial acceptance.

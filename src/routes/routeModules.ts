@@ -5,7 +5,9 @@ import { applyTransientDiscoveryHead, type DiscoveryStateName } from './discover
 import { canonicalRouteUrl } from './publicUrl';
 import { siteConfig } from '../config/site';
 
-type PageModule = { default: ComponentType };
+import type { DirectPoemSnapshot } from '../data/runtime/poemPagePayload';
+
+type PageModule = { default: ComponentType; prepareDirectEntry?: (snapshot: DirectPoemSnapshot, signal: AbortSignal) => Promise<void> };
 type PageImporter = () => Promise<PageModule>;
 type RouteAuditKind = 'canonical' | 'utility' | 'dynamic' | 'not-found';
 
@@ -25,7 +27,7 @@ type RedirectContractRecord = { from: string; to: string };
 
 type RouteModuleRecord = RouteContractRecord & {
   load: PageImporter;
-  Component: LazyExoticComponent<ComponentType>;
+  Component: LazyExoticComponent<ComponentType> | ComponentType;
 };
 
 const CHUNK_RECOVERY_PREFIX = 'tlp-route-chunk-recovery:';
@@ -37,6 +39,7 @@ const pageImporters = {
   HallPage: () => import('../pages/HallPage'),
   PoetsPage: () => import('../pages/PoetsPage'),
   PoetDetailPage: () => import('../pages/PoetDetailPage'),
+  PoemDetailPage: () => import('../pages/PoemDetailPage'),
   RatingsPage: () => import('../pages/RatingsPage'),
   ArticlesPage: () => import('../pages/ArticlesPage'),
   EssayPage: () => import('../pages/EssayPage'),
@@ -160,6 +163,19 @@ if (!notFoundRecord || notFoundRecord.path !== '*') throw new Error('Route contr
 export const applicationRoutes = routeRecords.filter((route) => route !== notFoundRecord);
 export const NotFoundPage = notFoundRecord.Component;
 export const legacyRedirects = routeContractData.redirects as RedirectContractRecord[];
+
+// Direct entry keeps the server DOM untouched until the existing lazy importer
+// and exact payload are both ready. Promote only this already-loaded module;
+// all other routes retain their normal lazy behavior.
+export async function prepareInitialPoemRoute(snapshot: DirectPoemSnapshot, signal: AbortSignal): Promise<void> {
+  const route = applicationRoutes.find(candidate => candidate.id === 'poem-detail');
+  if (!route || !matchPath({ path: route.path, end: true }, snapshot.path)) throw new Error('Invalid initial poem route');
+  const module = await route.load();
+  if (!module.prepareDirectEntry || signal.aborted) throw new Error('Initial poem module unavailable');
+  await module.prepareDirectEntry(snapshot, signal);
+  if (signal.aborted) throw new Error('Initial poem preparation cancelled');
+  route.Component = module.default;
+}
 
 const prefetchableRoutes = applicationRoutes.filter((route) => route.prefetch);
 

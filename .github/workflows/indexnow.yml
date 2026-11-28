@@ -7,10 +7,11 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: indexnow-${{ github.event.workflow_run.head_sha }}
-  cancel-in-progress: true
+  group: indexnow-main
+  cancel-in-progress: false
 
 jobs:
   submit:
@@ -21,7 +22,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 2
+          fetch-depth: 1
           persist-credentials: false
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -31,21 +32,75 @@ jobs:
 
       - run: npm ci
 
-      - name: Resolve previous deployed discovery snapshot
+      - name: Resolve last successfully notified discovery checkpoint
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const { pathToFileURL } = require('node:url');
+            const { resolveNotificationCheckpoint } = await import(pathToFileURL(path.join(process.env.GITHUB_WORKSPACE, 'scripts/indexnow-delta.mjs')).href);
+            const repo = context.repo;
+            const seed = {
+              runNumber: 376,
+              runId: 46140275495,
+              sourceSha: 'd1952d56b7116547b12c60c6275509895a97f4e9',
+              blobSha: 'c215e3d57f576920a39810332fc4fc03a5a5daea',
+            };
+            const selected = await resolveNotificationCheckpoint({
+              currentRunNumber: Number(process.env.GITHUB_RUN_NUMBER),
+              seed,
+              listRuns: async page => (await github.rest.actions.listWorkflowRuns({
+                ...repo, workflow_id: 'indexnow.yml', branch: 'main', event: 'workflow_run',
+                status: 'success', per_page: 100, page,
+              })).data.workflow_runs,
+              listJobs: async run => (await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs', {
+                ...repo, run_id: run.id, attempt_number: run.run_attempt, per_page: 100,
+              })).data.jobs,
+              listArtifacts: async run => (await github.rest.actions.listWorkflowRunArtifacts({
+                ...repo, run_id: run.id, per_page: 100,
+              })).data.artifacts,
+            });
+            const base = path.join(process.env.RUNNER_TEMP, 'indexnow-base-discovery-manifest.json');
+            if (selected.kind === 'seed') {
+              const { data } = await github.rest.repos.getContent({
+                ...repo, path: 'public/discovery-manifest.json', ref: selected.sourceSha,
+              });
+              if (data.sha !== selected.blobSha || data.encoding !== 'base64' || typeof data.content !== 'string') {
+                throw new Error('IndexNow: cutover seed does not match audited source blob');
+              }
+              fs.writeFileSync(base, Buffer.from(data.content, 'base64'));
+              core.info(`Using audited cutover seed ${selected.sourceSha}`);
+            } else {
+              const { data } = await github.rest.actions.downloadArtifact({
+                ...repo, artifact_id: selected.artifactId, archive_format: 'zip',
+              });
+              const zip = Buffer.from(data);
+              if (!zip.length || zip.length > 1000000) throw new Error('IndexNow: invalid checkpoint archive size');
+              fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'indexnow-checkpoint.zip'), zip);
+              core.info(`Using successfully notified checkpoint from run ${selected.runId}`);
+            }
+            core.exportVariable('INDEXNOW_BASE_MANIFEST_PATH', base);
+
+      - name: Materialize checkpoint without extracting arbitrary paths
         run: |
           set -euo pipefail
-          base_sha="$(git rev-parse HEAD^)"
-          base_manifest="$RUNNER_TEMP/indexnow-base-discovery-manifest.json"
-          if git cat-file -e "$base_sha:public/discovery-manifest.json" 2>/dev/null; then
-            git show "$base_sha:public/discovery-manifest.json" > "$base_manifest"
-            echo "INDEXNOW_BASE_MANIFEST_PATH=$base_manifest" >> "$GITHUB_ENV"
-            echo "Using previous discovery snapshot from $base_sha"
-          else
-            echo "No previous discovery manifest; this deployment will use the explicit bootstrap path"
+          if [[ -f "$RUNNER_TEMP/indexnow-checkpoint.zip" ]]; then
+            unzip -p "$RUNNER_TEMP/indexnow-checkpoint.zip" discovery-manifest.json > "$INDEXNOW_BASE_MANIFEST_PATH"
           fi
+          test -s "$INDEXNOW_BASE_MANIFEST_PATH"
 
       - name: Generate the exact canonical discovery snapshot
         run: npm run sitemap
 
       - name: Notify IndexNow about added, changed or deleted canonical URLs
         run: npm run indexnow
+        env:
+          INDEXNOW_VERIFY_LIVE: '1'
+
+      - name: Retain the exact successfully notified discovery checkpoint
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: indexnow-discovery-${{ github.run_attempt }}
+          path: public/discovery-manifest.json
+          if-no-files-found: error
