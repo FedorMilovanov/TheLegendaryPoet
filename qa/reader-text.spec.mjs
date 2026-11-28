@@ -57,7 +57,9 @@ test('poem text has an exact selectable canonical layer separate from animated v
     selection.addRange(range);
     return selection.toString();
   });
-  expect(wholePoem).toBe(snapshot.text);
+  // Selecting the complete grid may include one terminal block-boundary newline.
+  // Allow exactly that separator; duplicate content or any other difference still fails.
+  expect(wholePoem === snapshot.text || wholePoem === `${snapshot.text}\n`).toBe(true);
   expect(await visual.evaluate(node => getComputedStyle(node).userSelect)).toBe('none');
   await page.evaluate(() => window.getSelection()?.removeAllRanges());
   // The ink and the selectable text must coincide at rest, not just occupy
