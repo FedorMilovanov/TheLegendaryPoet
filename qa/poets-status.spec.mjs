@@ -1276,7 +1276,7 @@ test.describe('poets result status accessibility', () => {
     }
   });
 
-  test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
+  async function openPoemSearch(page) {
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     // Exercise the real control: a synthetic window event on DOMContentLoaded
     // can precede CommandPalette's effect subscription in mobile WebKit.
@@ -1295,6 +1295,11 @@ test.describe('poets result status accessibility', () => {
     }
     const input = page.getByRole('combobox', { name: 'Поисковый запрос' });
     await expect(input).toBeVisible();
+    return input;
+  }
+
+  test('Blok supplementary poem titles remain globally searchable with exact deep links', async ({ page }) => {
+    const input = await openPoemSearch(page);
     for (const [query, title] of [
       ['В ночь, когда Мамай', 'На поле Куликовом — III'],
       ['Опять с вековою тоскою', 'На поле Куликовом — IV'],
@@ -1308,6 +1313,29 @@ test.describe('poets result status accessibility', () => {
     await expect(page).toHaveURL(/\/poets\/alexander-blok#poem-blok-11$/);
     await expect(page.locator('#poem-blok-11')).toBeVisible();
   });
+
+  // New winter texts must be discoverable before their full author JSON has loaded.
+  // Use the canonical command option ID, not an ambiguous title match.
+  for (const [poetId, poemId, query, firstLine, source] of [
+    ["alexander-blok","blok-21","Вот явилась. Заслонила","Вот явилась. Заслонила","https://rvb.ru/20vek/blok/pss20/vol2/text/0489.html"],
+    ["mikhail-lermontov","lermontov-13","Из-под таинственной холодной полумаски","Из-под таинственной холодной полумаски","https://rvb.ru/19vek/lermontov/ss4/vol1/poems/400.html"],
+    ["sergei-yesenin","yesenin-15","Свищет ветер, серебряный ветер","Свищет ветер, серебряный ветер,","https://rvb.ru/20vek/esenin/pss7/vol1/poems/165.html"],
+  ]) {
+    test(`Winter collection search resolves ${poemId} to the canonical card`, async ({ page }) => {
+      const input = await openPoemSearch(page);
+      await input.fill(query);
+      const option = page.locator('#command-option-poem-' + poetId + '-' + poemId);
+      await expect(option).toHaveAttribute('role', 'option');
+      await expect(option).toBeVisible();
+      await option.click();
+      await expect(page).toHaveURL(new RegExp('/poets/' + poetId + '/?#poem-' + poemId + '$'));
+      const card = page.locator('#poem-' + poemId);
+      await expect(card).toHaveCount(1);
+      await expect(card).toBeVisible();
+      await expect(card.locator('[data-poem-canonical]')).toContainText(firstLine);
+      await expect(card.getByRole('link', { name: 'Источник текста' })).toHaveAttribute('href', source);
+    });
+  }
 
   test('Bryusov 1906/1913 full-text editions preserve 12, 20 and 28 lines without clipping', async ({ page }, testInfo) => {
     const widths = testInfo.project.name === 'chromium-core' ? [390, 1440] : [390];
