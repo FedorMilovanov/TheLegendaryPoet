@@ -7,6 +7,7 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import { canonicalRoutePath, canonicalRouteUrl } from './src/routes/publicUrl';
 import { materializeSupplementaryPoets } from './scripts/supplementary-poet-artifacts';
 import { materializeMemoryPlaces } from './scripts/memory-place-artifacts';
+import { hasApprovedPoemPages } from './scripts/lib/poem-build-admission.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -190,6 +191,13 @@ function facsimileMediaGate(): Plugin {
 // route chunks, deep links and long-term asset caching remain reliable.
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
+  // The committed index is regenerated and checked against canonical policy before build.
+  // No environment override: zero approvals must not ship the interactive route.
+  define: {
+    __TLP_HAS_APPROVED_POEM_PAGES__: JSON.stringify(hasApprovedPoemPages(JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'src/data/runtime/poemPages.generated.json'), 'utf8'),
+    ))),
+  },
   plugins: [poetArtifactIntegrityPlugin(), legacyAliasDocumentsPlugin(), facsimileMediaGate(), searchVerificationPlugin(), react(), tailwindcss()],
   resolve: {
     alias: [

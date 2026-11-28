@@ -1,7 +1,7 @@
 import { lazy, Suspense, use, useRef } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { getBrowserPoem, getPreparedPoem, prepareDirectPoem } from '../data/runtime/browserPoemData';
-export { prepareDirectPoem as prepareDirectEntry };
+export const prepareDirectEntry = __TLP_HAS_APPROVED_POEM_PAGES__ ? prepareDirectPoem : undefined;
 import type { PoemPageModel } from '../lib/poemPageModel';
 import PoemReadingBody, { type PoemInternalLinkProps } from '../components/poet-detail/PoemReadingBody';
 import { Link } from '../components/ui/Link';
@@ -12,8 +12,8 @@ import ReadingProgress from '../components/articles/ReadingProgress';
 import ShareLine from '../components/ui/ShareLine';
 import { poemRatingDimensions } from '../data/ratingDimensions';
 
-const CommunityPanel = lazy(() => import('../components/community/CommunityPanel'));
-const PoemFacsimile = lazy(() => import('../components/poet-detail/PoemFacsimile'));
+const CommunityPanel = /* @__PURE__ */ lazy(() => import('../components/community/CommunityPanel'));
+const PoemFacsimile = /* @__PURE__ */ lazy(() => import('../components/poet-detail/PoemFacsimile'));
 
 function AppPoemLink({ href, ...props }: PoemInternalLinkProps) {
   return <Link to={href} {...props} />;
@@ -40,7 +40,12 @@ function PublishedPoem({ page }: { page: PoemPageModel }) {
     </div>
   );
 }
+// Keep a distinct lazy route chunk for honest 404 handling even with no approvals.
 export default function PoemDetailPage() {
+  return __TLP_HAS_APPROVED_POEM_PAGES__ ? <AdmittedPoemRoute /> : <NotFoundPage />;
+}
+
+function AdmittedPoemRoute() {
   const { id = '', slug = '' } = useParams<{ id: string; slug: string }>();
   const location = useLocation();
   const prepared = getPreparedPoem(id, slug, location.pathname, location.key);

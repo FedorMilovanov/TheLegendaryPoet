@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { poemTextDigest } from '../lib/poem-discovery.mjs';
 import { poemOutputErrors } from '../lib/poem-output-contract.mjs';
+import { hasApprovedPoemPages } from '../lib/poem-build-admission.mjs';
 
 const route = '/poets/author-a/fixed-slug/';
 const authorPath = '/poets/author-a/';
@@ -67,4 +68,14 @@ test('approved facsimile links must be visible in the static reading body', () =
   assert.ok(poemOutputErrors(f.input).some(error => error.includes('facsimile links')));
   f.files[poemFile] = f.files[poemFile].replace('</article>', `<a href="${leaf.src}">Leaf</a><a href="${leaf.originalUrl}">Archive</a></article>`);
   assert.deepEqual(poemOutputErrors(f.input), []);
+});
+
+test('standalone reader build admission is driven by the exact generated index', () => {
+  assert.equal(hasApprovedPoemPages({ schemaVersion: 1, pages: {} }), false);
+  assert.equal(hasApprovedPoemPages(outputFixture().input.index), true);
+  for (const index of [
+    null, { schemaVersion: 2, pages: {} }, { schemaVersion: 1, pages: [] },
+    { schemaVersion: 1, pages: { '/poets/a/b': 'work' } },
+    { schemaVersion: 1, pages: { '/poets/a/b/': '' } },
+  ]) assert.throws(() => hasApprovedPoemPages(index), /Invalid standalone poem build admission/);
 });

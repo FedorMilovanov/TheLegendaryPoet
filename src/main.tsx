@@ -17,19 +17,20 @@ function mount() {
 async function start() {
   const staticPage = root.querySelector<HTMLElement>(':scope > main[data-poem-static-path]');
   if (!staticPage) { mount(); return; }
-  const path = staticPage.dataset.poemStaticPath ?? '';
-  const workId = staticPage.querySelector<HTMLElement>('[data-poem-reading-page]')?.dataset.poemReadingPage ?? '';
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-  const pathname = window.location.pathname.slice(base.length);
-  const snapshot = {
-    path, workId,
-    heading: staticPage.querySelector('h1')?.textContent ?? '',
-    text: staticPage.querySelector('[data-poem-canonical]')?.textContent ?? '',
-    analysis: staticPage.querySelector('[data-poem-analysis]')?.textContent ?? '',
-  };
   const abort = new AbortController();
   let timer: number | undefined;
   try {
+    if (!__TLP_HAS_APPROVED_POEM_PAGES__) throw new Error('No approved standalone poem routes in this build');
+    const path = staticPage.dataset.poemStaticPath ?? '';
+    const workId = staticPage.querySelector<HTMLElement>('[data-poem-reading-page]')?.dataset.poemReadingPage ?? '';
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const pathname = window.location.pathname.slice(base.length);
+    const snapshot = {
+      path, workId,
+      heading: staticPage.querySelector('h1')?.textContent ?? '',
+      text: staticPage.querySelector('[data-poem-canonical]')?.textContent ?? '',
+      analysis: staticPage.querySelector('[data-poem-analysis]')?.textContent ?? '',
+    };
     if (!window.location.pathname.startsWith(base + '/') || (pathname !== path && pathname + '/' !== path)) {
       throw new Error('Initial poem path mismatch');
     }
