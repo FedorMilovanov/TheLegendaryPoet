@@ -411,7 +411,8 @@ html.theme-light ::target-text {
 .share-line-chip {
   position: fixed;
   z-index: 80;
-  transform: translateX(-50%);
+  --share-shift: clamp(calc(8px - var(--share-x)), -50%, calc(100vw - var(--share-x) - 100% - 8px));
+  transform: translateX(var(--share-shift));
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -426,7 +427,11 @@ html.theme-light ::target-text {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  white-space: nowrap;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 18px rgba(212, 175, 55, 0.12);
   cursor: pointer;
   animation: share-chip-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -436,8 +441,8 @@ html.theme-light ::target-text {
   color: #ffe9a8;
 }
 @keyframes share-chip-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.94); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  from { opacity: 0; transform: translateX(var(--share-shift)) translateY(6px) scale(0.94); }
+  to { opacity: 1; transform: translateX(var(--share-shift)) translateY(0) scale(1); }
 }
 html.theme-light .share-line-chip {
   background: rgba(252, 249, 240, 0.92);

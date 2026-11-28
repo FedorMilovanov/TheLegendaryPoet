@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { Check, Link2 } from 'lucide-react';
 
 /**
@@ -143,7 +143,7 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
       ref={chipRef}
       type="button"
       className="share-line-chip"
-      style={{ top: pos.top, left: pos.left }}
+      style={{ top: pos.top, left: pos.left, '--share-x': `${pos.left}px` } as CSSProperties}
       // Keep the selection alive: the button must not steal it on tap.
       onPointerDown={(e) => e.preventDefault()}
       onClick={copy}

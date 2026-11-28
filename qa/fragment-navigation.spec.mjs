@@ -180,7 +180,9 @@ test('share selection reports clipboard rejection and supports retry', async ({ 
       },
     } });
   });
+  await page.setViewportSize({ width: 320, height: 740 });
   await page.goto(BASE_URL + '/poets/alexander-blok', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '32px'; });
   const verse = page.locator('[data-poem-canonical]').first();
   const word = verse.locator('[data-poem-canonical-word]').first();
   await word.scrollIntoViewIfNeeded();
@@ -201,6 +203,10 @@ test('share selection reports clipboard rejection and supports retry', async ({ 
   await page.evaluate(() => { window.__rejectShare = true; });
   await chip.evaluate(node => node.click());
   await expect(chip).toHaveText('Не удалось скопировать');
+  await expect.poll(() => chip.evaluate(node => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 7 && rect.right <= innerWidth - 7 && node.scrollWidth <= node.clientWidth;
+  })).toBe(true);
   await page.evaluate(() => { window.__rejectShare = false; });
   await chip.evaluate(node => node.click());
   await expect(chip).toHaveText('Скопировано');
