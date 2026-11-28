@@ -85,7 +85,12 @@ async function localImageReport(page) {
     const rows = [];
     for (const img of images) {
       const url = new URL(img.currentSrc || img.src, location.href);
-      if (url.origin !== location.origin) continue;
+      // ResilientImage replaces a terminal failure with a transparent data GIF.
+      // Keep meaningful failed images in this report even after that replacement.
+      const terminalFailure = img.dataset.imageState === 'failed' &&
+        url.protocol === 'data:' && Boolean(img.getAttribute('alt')?.trim()) &&
+        img.getAttribute('aria-hidden') !== 'true';
+      if (url.origin !== location.origin && !terminalFailure) continue;
       if (!truePixels.has(url.href)) {
         const probe = new Image();
         probe.src = url.href;
@@ -101,9 +106,9 @@ async function localImageReport(page) {
       const source = truePixels.get(url.href);
       const laidOut = rect.width > 0 && rect.height > 0;
       rows.push({
-        src: url.pathname,
+        src: terminalFailure ? 'failed content image: ' + img.alt : url.pathname,
         laidOut,
-        decoded: Boolean(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0),
+        decoded: !terminalFailure && Boolean(img.complete && img.naturalWidth > 0 && img.naturalHeight > 0),
         sourceWidth: source ? source.width : null,
         sourceHeight: source ? source.height : null,
         renderedWidth: Math.round(rect.width * 100) / 100,
