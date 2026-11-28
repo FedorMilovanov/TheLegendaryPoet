@@ -17,7 +17,8 @@ export function selectDecoder() {
 
 export function validateImage(file, decoder) {
   const bytes = fs.readFileSync(file);
-  if (path.extname(file).toLowerCase() === '.webp') assertWebPContainer(bytes);
+  const extension = path.extname(file).toLowerCase();
+  if (extension === '.webp') assertWebPContainer(bytes);
   const args = decoder === 'ffmpeg'
     ? ['-v', 'error', '-xerror', '-i', file, '-f', 'null', '-']
     : ['-regard-warnings', file, 'null:'];
@@ -29,7 +30,13 @@ export function validateImage(file, decoder) {
   // whose frame size cannot be read is a file we must not ship, and 0x0 must
   // never be mistaken for "unknown, carry on". It comes after the pixel decode
   // so corrupt-but-consistent bytes are still reported as a decode failure.
-  const size = readIntrinsicSize(bytes);
+  const size = readIntrinsicSize(bytes, extension);
+  // The decoder may tolerate a missing final marker without emitting an error.
+  // Published standalone GIF/JPEG assets must end with their own trailer/EOI.
+  if (extension === '.gif' && bytes.at(-1) !== 0x3b) throw new Error('GIF missing final trailer');
+  if (['.jpg', '.jpeg'].includes(extension) && bytes.readUInt16BE(bytes.length - 2) !== 0xffd9) {
+    throw new Error('JPEG missing final EOI marker');
+  }
   if (!(size.width > 0 && size.height > 0)) {
     throw new Error(`unreadable intrinsic size ${size.width}x${size.height}`);
   }

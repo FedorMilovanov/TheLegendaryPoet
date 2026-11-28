@@ -210,12 +210,19 @@ const rawImageMultiset = raw.images.map((item) => `${item.sha256}:${item.compres
 const optimizedImageMultiset = optimized.images.map((item) => `${item.sha256}:${item.compressedBytes}:${item.dimensions.join('x')}`).sort();
 if (JSON.stringify(rawImageMultiset) !== JSON.stringify(optimizedImageMultiset)) fail('optimized candidate changed embedded image bytes/dimensions');
 
-const portraitHash = sourceAssets.sources?.find((item) => String(item.file ?? '').endsWith('.jpg'))?.sha256;
-const oneginHash = sourceAssets.derivatives?.find((item) => item.assetId === 'pushkin-onegin-1833-title-page-offline-derivative')?.sha256;
-if (!portraitHash || !oneginHash) fail('documentary source hashes are missing from source-assets evidence');
+const portraitSources = (sourceAssets.sources ?? []).filter(item => item.assetId === 'pushkin-kiprensky-1827-portrait');
+const oneginDerivatives = (sourceAssets.derivatives ?? []).filter(item => item.assetId === 'pushkin-onegin-1833-title-page-offline-derivative');
+if (portraitSources.length !== 1 || oneginDerivatives.length !== 1) fail('documentary source identity is missing or ambiguous');
+const portraitHash = portraitSources[0].sha256;
+const oneginHash = oneginDerivatives[0].sha256;
+if (![portraitHash, oneginHash].every(hash => /^sha256:[a-f0-9]{64}$/.test(hash ?? '')) || portraitHash === oneginHash) {
+  fail('documentary sources must have two distinct exact SHA-256 identities');
+}
 const documentaryHashes = new Set([portraitHash, oneginHash]);
-const documentaryImages = optimized.images.filter((item) => documentaryHashes.has(item.sha256));
-if (documentaryImages.length !== 2) fail(`optimized candidate must retain exactly two documentary images, found ${documentaryImages.length}`);
+const documentaryImages = optimized.images.filter(item => documentaryHashes.has(item.sha256));
+for (const [label, hash] of [['Kiprensky portrait', portraitHash], ['Onegin title page', oneginHash]]) {
+  if (documentaryImages.filter(item => item.sha256 === hash).length !== 1) fail(`optimized candidate must retain exactly one ${label}`);
+}
 const lookdevImages = optimized.images.filter((item) => !documentaryHashes.has(item.sha256));
 if (lookdevImages.length !== 10) fail(`optimized candidate must retain ten bounded roughness/normal maps, found ${lookdevImages.length}`);
 
