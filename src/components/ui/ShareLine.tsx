@@ -80,7 +80,7 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
         return;
       }
       const rect = range.getBoundingClientRect();
-      if (rect.width === 0 && rect.height === 0) {
+      if ((rect.width === 0 && rect.height === 0) || rect.bottom <= 0 || rect.top >= window.innerHeight) {
         visibleRange.current = null;
         setPos(null);
         return;
@@ -143,7 +143,7 @@ export default function ShareLine({ scopeRef }: ShareLineProps) {
       ref={chipRef}
       type="button"
       className="share-line-chip"
-      style={{ top: pos.top, left: pos.left, '--share-x': `${pos.left}px` } as CSSProperties}
+      style={{ top: pos.top, left: pos.left, '--share-x': `${pos.left}px`, '--share-y': `${pos.top}px` } as CSSProperties}
       // Keep the selection alive: the button must not steal it on tap.
       onPointerDown={(e) => e.preventDefault()}
       onClick={copy}
