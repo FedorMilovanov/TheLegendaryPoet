@@ -1,13 +1,7 @@
 /* A museum spread follows its actual reading column, not the viewport. */
-.memory-places { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.5rem; }
-.memory-section-heading { display: grid; gap: .5rem; }
 .memory-exhibit {
   container: memory-exhibit / inline-size;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0,1fr);
   overflow-wrap: anywhere;
-  gap: 1.5rem;
   border-top: 1px solid rgb(173 139 72 / .35);
   padding-block: 1.5rem;
 }
@@ -18,7 +12,6 @@
   text-wrap: balance;
 }
 .memory-photo-trigger { background: rgb(127 127 127 / .08); }
-.memory-photo img { height: auto; }
 .memory-caption { padding-top: .65rem; }
 .memory-caption-text { font-size: clamp(.875rem, .85rem + .1cqi, .9375rem); line-height: 1.6; text-wrap: pretty; }
 .memory-photo-credit { margin-top: .3rem; font-size: .75rem; line-height: 1.55; overflow-wrap: anywhere; }
@@ -39,19 +32,15 @@
   text-wrap: pretty;
 }
 .memory-facts {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
   border-block: 1px solid rgb(173 139 72 / .3);
 }
-.memory-fact { padding-block: .8rem; display: grid; gap: .3rem; }
+.memory-fact { padding-block: .8rem; gap: .3rem; }
 .memory-fact + .memory-fact { border-top: 1px solid rgb(173 139 72 / .2); }
 .memory-fact-value { font-size: clamp(1.2rem, 1rem + .8cqi, 1.65rem); line-height: 1.15; overflow-wrap: anywhere; }
-.memory-story, .memory-story-media, .memory-detail, .memory-detail-copy, .memory-extra { display: grid; gap: 1.5rem; grid-template-columns: minmax(0,1fr); align-items: start; }
 .memory-story > *, .memory-detail > *, .memory-extra > * { min-width: 0; }
 .memory-timeline { max-width: 68ch; }
 .memory-subtitle { font-size: clamp(1.35rem, 1.2rem + .65cqi, 1.8rem); line-height: 1.25; }
-.memory-events { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.25rem; margin-top: 1rem; border-left: 1px solid rgb(173 139 72 / .4); padding-left: 1rem; }
-.memory-event { position: relative; min-width: 0; }
+.memory-events { border-left: 1px solid rgb(173 139 72 / .4); }
 .memory-event::before { content: ""; position: absolute; width: .42rem; height: .42rem; border-radius: 50%; background: #ad8b48; left: -1.24rem; top: .42rem; }
 .memory-event-date { font-size: .85rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
 .memory-event-text, .memory-note-text { font-size: clamp(1rem, .98rem + .15cqi, 1.0625rem); line-height: 1.75; text-wrap: pretty; overflow-wrap: anywhere; }
@@ -78,27 +67,61 @@
   .memory-extra { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 .memory-gallery {
-  position: fixed; inset: 0; z-index: 110; display: grid;
+  z-index: 110;
   grid-template-rows: auto minmax(0,1fr) auto;
   gap: 12px; background: #101216; outline: none;
   padding: max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
 }
 /* Keep the icon controls at a stable accessible size even when the reader
    enlarges text; reserve the remaining space for the actual photograph. */
-.memory-gallery-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-.memory-gallery-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.memory-gallery-control { display: grid; place-items: center; width: 44px; height: 44px; color: #fff; border: 1px solid #65666a; border-radius: 50%; }
+.memory-gallery-toolbar, .memory-gallery-actions { gap: 8px; }
+.memory-gallery-control { width: 44px; height: 44px; border: 1px solid #65666a; border-radius: 50%; }
 .memory-gallery-control:disabled { opacity: .45; cursor: default; }
 .memory-gallery-control:focus-visible { outline: 2px solid #e8d6a7; outline-offset: 3px; }
 /* The stage has a definite two-dimensional size, independent of the image.
    Auto margins center fitting images and preserve accessible scroll origins
    when a zoomed image is larger than the stage. */
-.memory-gallery-stage { position: relative; overflow: auto; min-height: 0; min-width: 0; container-type: size; display: flex; }
+.memory-gallery-stage {
+  container-type: size;
+  --memory-fit-width: min(100cqw, calc(100cqh * var(--memory-photo-ratio)), var(--memory-photo-native));
+}
 .memory-gallery-stage:focus-visible { outline: 2px solid #e8d6a7; outline-offset: -2px; }
 .memory-gallery-stage img {
-  --memory-fit-width: min(100cqw, calc(100cqh * var(--memory-photo-ratio)), var(--memory-photo-native));
   display: block; flex: none; margin: auto;
   width: var(--memory-fit-width); height: auto; aspect-ratio: var(--memory-photo-ratio); object-fit: contain; max-width: none; max-height: none;
 }
 .memory-gallery-stage[data-zoom="true"] img { width: calc(2 * var(--memory-fit-width)); }
 .memory-gallery-caption { max-height: 28dvh; overflow: auto; width: min(100%, 70rem); margin-inline: auto; overflow-wrap: anywhere; }
+
+/* Cutouts are editorial previews, not extra gallery photographs. */
+.memory-photo-trigger[data-cutout="true"] { background: transparent; border-radius: 0; }
+/* Keep the same bounded inline frame while loading or showing the full fallback.
+   A clipped preview never changes the documentary gallery's source canvas. */
+.memory-photo-trigger[data-frame="true"] {
+  --memory-frame-limit: 480px;
+  width: min(100%, calc(var(--memory-frame-limit) * var(--memory-frame-ratio)));
+  aspect-ratio: var(--memory-frame-ratio);
+  margin-inline: auto;
+  overflow: clip;
+}
+.memory-photo-trigger[data-frame="true"] img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; max-width: none; object-fit: contain;
+}
+.memory-photo-trigger[data-frame="true"][data-cutout="true"] img {
+  inset: auto; left: var(--memory-frame-image-left); top: var(--memory-frame-image-top);
+  width: var(--memory-frame-image-width); height: auto;
+}
+@container memory-exhibit (max-width: 28rem) {
+  .memory-photo-trigger[data-frame="true"] { --memory-frame-limit: 460px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .memory-gallery-stage[data-reveal="true"]::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: var(--memory-reveal-preview) center / var(--memory-fit-width) auto no-repeat;
+  }
+  .memory-gallery-stage[data-reveal="true"] img { position: relative; z-index: 1; }
+  .memory-gallery-stage[data-reveal="true"] img[data-image-state="loading"] { opacity: 0; }
+  .memory-gallery-stage[data-reveal="true"] img[data-image-state="loaded"] { animation: memory-photo-reveal 320ms ease-out both; }
+  @keyframes memory-photo-reveal { from { opacity: 0; } to { opacity: 1; } }
+}

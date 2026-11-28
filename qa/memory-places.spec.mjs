@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
 import { contrastMeasurements } from './contrast-helpers.mjs';
 
 const base = process.env.QA_BASE_URL || 'http://127.0.0.1:4173';
@@ -40,13 +41,33 @@ for (const theme of ['dark', 'light']) {
     expect(readings.length).toBeGreaterThan(20);
     for (const { text, ratio } of readings) expect(ratio, text).toBeGreaterThanOrEqual(4.5);
     const overflow = await section.evaluate((node) => {
+      if (node.scrollWidth > node.clientWidth + 2) return true;
       const bounds = node.getBoundingClientRect();
-      return [...node.querySelectorAll('article, figure, img, ol, dl, details')].some((item) => {
+      return [...node.querySelectorAll('article, figure, .memory-photo-trigger, img, ol, dl, details')].some((item) => {
         const r = item.getBoundingClientRect();
-        return r.left < bounds.left - 1 || r.right > bounds.right + 1 || item.scrollWidth > item.clientWidth + 2;
+        // A framed image may extend past its button, but its visible area must
+        // stay clipped. The button itself is independently checked above.
+        const clip = item.tagName === 'IMG' ? item.closest('.memory-photo-trigger[data-frame="true"]') : null;
+        if (clip && getComputedStyle(clip).overflowX !== 'clip') return true;
+        const c = clip?.getBoundingClientRect();
+        const left = c ? Math.max(r.left, c.left) : r.left;
+        const right = c ? Math.min(r.right, c.right) : r.right;
+        const frameButton = item.matches('.memory-photo-trigger[data-frame="true"]');
+        if (frameButton && (getComputedStyle(item).overflowX !== 'clip' || item.scrollLeft !== 0 || item.scrollTop !== 0)) return true;
+        return left < bounds.left - 1 || right > bounds.right + 1 || (!frameButton && item.scrollWidth > item.clientWidth + 2);
       });
     });
     expect(overflow).toBe(false);
+    // Persist the real-page witness even when CI uses line/github reporters.
+    if (info.project.name === 'chromium-core') {
+      const cutout = section.locator('.memory-photo-trigger[data-cutout="true"]');
+      await expect(cutout).toHaveCount(1);
+      await cutout.scrollIntoViewIfNeeded();
+      await mkdir('qa-artifacts', { recursive: true });
+      const path = `qa-artifacts/museum-reveal-${theme}-story.png`;
+      await section.locator('.memory-story').screenshot({ path, animations: 'disabled', style: '.site-header,.mobile-dock,.scroll-top-btn,[data-custom-cursor-dot],[data-custom-cursor-ring],.cursor-trail { visibility: hidden !important; }' });
+      await info.attach(`museum-reveal-${theme}-story`, { path, contentType: 'image/png' });
+    }
     if (info.project.name === 'chromium-core' && process.env.QA_CAPTURE_MEMORY === '1') {
       await section.locator('h2').scrollIntoViewIfNeeded();
       await section.screenshot({ path: info.outputPath(`exhibit-${theme}.png`), animations: 'disabled', style: '.site-header,.mobile-dock,.scroll-top-btn,[data-custom-cursor-dot],[data-custom-cursor-ring],.cursor-trail { visibility: hidden !important; }' });
@@ -244,7 +265,13 @@ test('memory data is scoped to the current poet and retries without affecting th
       contentType: 'application/json',
       body: JSON.stringify([{ poetId: 'mikhail-lermontov', id: 'broken-place', title: 'Broken', location: 'Place', date: 'Date', intro: 'Intro', photos: [null], facts: [null], timeline: [null], sources: [null] }]),
     });
-    else await route.continue();
+    else if (failure === 'frame') {
+      const response = await route.fetch();
+      const payload = await response.json();
+      const preview = payload[0].photos.find(photo => photo.preview).preview;
+      preview.frame = { x: -1, y: 192, width: 518, height: 908 };
+      await route.fulfill({ response, json: payload });
+    } else await route.continue();
   });
   await page.goto(base + '/poets/mikhail-lermontov', { waitUntil: 'domcontentloaded' });
   const section = page.locator('#memory-places');
@@ -255,15 +282,154 @@ test('memory data is scoped to the current poet and retries without affecting th
   await expect(section.getByRole('button', { name: 'Повторить' })).toBeVisible();
   await expect(section.locator('article')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 2, name: /Полная Биография/i })).toBeVisible();
+  failure = 'frame';
+  await section.getByRole('button', { name: 'Повторить' }).click();
+  await expect(section.getByRole('button', { name: 'Повторить' })).toBeVisible();
+  await expect(section.locator('article')).toHaveCount(0);
   failure = 'none';
   await section.getByRole('button', { name: 'Повторить' }).click();
   await expect(section.locator('article')).toHaveCount(1);
   await expect(section.locator('figure:has(img)')).toHaveCount(3);
   expect(errors).toEqual([]);
-  expect(requests.length).toBeGreaterThanOrEqual(3);
+  expect(requests.length).toBeGreaterThanOrEqual(4);
   expect(requests.every(path => path.endsWith('/mikhail-lermontov.json'))).toBe(true);
   requests.length = 0;
   await page.goto(base + '/poets', { waitUntil: 'networkidle' });
   await expect(page.locator('#memory-places')).toHaveCount(0);
   expect(requests).toEqual([]);
+});
+
+// The preview and full photograph use the same source canvas, not two gallery entries.
+test('cutout reveals its documentary original and falls back without a second gallery', async ({ page }, info) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto(base + '/poets/mikhail-lermontov#memory-places', { waitUntil: 'domcontentloaded' });
+  const section = page.locator('#memory-places');
+  const opener = section.locator('.memory-photo-trigger').nth(1);
+  await opener.scrollIntoViewIfNeeded();
+  const image = opener.locator('img');
+  await expect(image).toHaveAttribute('data-image-state', 'loaded');
+  await expect(image).toHaveAttribute('src', /figure-cutout\.webp$/);
+  await expect(opener).toHaveAttribute('data-cutout', 'true');
+  await expect(opener).toHaveAccessibleName(/оригинал/i);
+  await expect(opener).toHaveAttribute('data-frame', 'true');
+  const measureFrame = () => opener.evaluate(btn => {
+    const b = btn.getBoundingClientRect();
+    const img = btn.querySelector('img');
+    const i = img.getBoundingClientRect();
+    const scale = i.width / img.naturalWidth;
+    return { width: b.width, height: b.height, left: i.left + 191 * scale - b.left,
+      top: i.top + 223 * scale - b.top, right: i.left + 647 * scale - b.left,
+      bottom: i.top + 1100 * scale - b.top, scrollLeft: btn.scrollLeft, scrollTop: btn.scrollTop };
+  });
+  const framed = await measureFrame();
+  expect(framed.left).toBeGreaterThanOrEqual(-1);
+  expect(framed.top).toBeGreaterThanOrEqual(-1);
+  expect(framed.right).toBeLessThanOrEqual(framed.width + 1);
+  expect(framed.bottom).toBeLessThanOrEqual(framed.height + 1);
+  expect(framed.height).toBeLessThanOrEqual(481);
+  expect(framed.scrollLeft).toBe(0);
+  expect(framed.scrollTop).toBe(0);
+  const sample = locator => locator.evaluate(node => {
+    const canvas = document.createElement('canvas');
+    canvas.width = node.naturalWidth; canvas.height = node.naturalHeight;
+    const ctx = canvas.getContext('2d'); ctx.drawImage(node, 0, 0);
+    return [[20,20],[410,450],[400,800]].map(([x,y]) => [...ctx.getImageData(x,y,1,1).data]);
+  });
+  const preview = await sample(image);
+  expect(preview[0][3]).toBe(0);
+  expect(preview[1][3]).toBe(255);
+  expect(preview[2][3]).toBe(255);
+  // Hold only the full photograph: prove the silhouette is painted first,
+  // not merely that the eventual original has the correct source pixels.
+  let releaseOriginal;
+  const gate = new Promise(resolve => { releaseOriginal = resolve; });
+  const holdOriginal = async route => { await gate; await route.continue(); };
+  await page.route('**/figure.webp', holdOriginal);
+  const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
+  const original = gallery.locator('img');
+  const stage = gallery.locator('.memory-gallery-stage');
+  try {
+    await opener.click();
+    await expect(gallery).toBeVisible();
+    await expect(original).toHaveAttribute('src', /figure\.webp$/);
+    await expect(original).toHaveAttribute('data-image-state', 'loading');
+    await expect(stage).toHaveAttribute('data-reveal', 'true');
+    await expect(original).toHaveCSS('opacity', '0');
+    const layer = await stage.evaluate(node => {
+      const style = getComputedStyle(node, '::before');
+      return { content: style.content, background: style.backgroundImage, position: style.position };
+    });
+    expect(layer.content).not.toBe('none');
+    expect(layer.background).toMatch(/figure-cutout\.webp/);
+    expect(layer.position).toBe('absolute');
+    if (info.project.name === 'chromium-core') {
+      await mkdir('qa-artifacts', { recursive: true });
+      await stage.screenshot({ path: 'qa-artifacts/museum-reveal-gallery-start.png', animations: 'disabled' });
+    }
+  } finally {
+    releaseOriginal();
+  }
+  await expect(original).toHaveAttribute('data-image-state', 'loaded');
+  await page.unroute('**/figure.webp', holdOriginal);
+  const full = await sample(original);
+  expect(full[0][3]).toBe(255);
+  expect(full.slice(1)).toEqual(preview.slice(1));
+  await expect(stage).toHaveAttribute('data-reveal', 'false');
+  await expect(original).toHaveCSS('opacity', '1');
+  expect(await stage.evaluate(node => getComputedStyle(node, '::before').content)).toBe('none');
+  if (info.project.name === 'chromium-core') {
+    await stage.screenshot({ path: 'qa-artifacts/museum-reveal-gallery-end.png', animations: 'disabled' });
+  }
+  await page.keyboard.press('Escape');
+  await expect(gallery).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await page.route('**/figure-cutout.webp', route => route.abort());
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await opener.scrollIntoViewIfNeeded();
+  await expect(image).toHaveAttribute('data-image-state', 'fallback');
+  await expect(opener).toHaveAttribute('data-cutout', 'false');
+  await expect(image).toHaveAttribute('src', /figure\.webp$/);
+  const fallbackFrame = await measureFrame();
+  expect(Math.abs(fallbackFrame.width - framed.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(fallbackFrame.height - framed.height)).toBeLessThanOrEqual(1);
+  await expect(image).toHaveCSS('object-fit', 'contain');
+  await opener.click();
+  await expect(gallery).toBeVisible();
+  await expect(gallery.locator('.memory-gallery-stage')).toHaveAttribute('data-reveal', 'false');
+  await expect(original).toHaveAttribute('data-image-state', 'loaded');
+  await page.keyboard.press('Escape');
+  await expect(gallery).toHaveCount(0);
+  await expect(opener).toBeFocused();
+});
+
+test('changing motion preference while original loads retires reveal permanently', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  let releaseOriginal;
+  const gate = new Promise(resolve => { releaseOriginal = resolve; });
+  await page.route('**/figure.webp', async route => {
+    await gate;
+    await route.continue();
+  });
+  const gallery = page.getByRole('dialog', { name: 'Фотографии места памяти' });
+  const stage = gallery.locator('.memory-gallery-stage');
+  try {
+    await page.goto(base + '/poets/mikhail-lermontov#memory-places', { waitUntil: 'domcontentloaded' });
+    const opener = page.locator('#memory-places .memory-photo-trigger').nth(1);
+    await opener.scrollIntoViewIfNeeded();
+    await expect(opener).toHaveAttribute('data-cutout', 'true');
+    await opener.click();
+    await expect(stage).toHaveAttribute('data-reveal', 'true');
+    await expect(gallery.locator('img')).toHaveAttribute('data-image-state', 'loading');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(stage).toHaveAttribute('data-reveal', 'false');
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await expect(stage).toHaveAttribute('data-reveal', 'false');
+  } finally {
+    releaseOriginal();
+  }
+  await expect(gallery.locator('img')).toHaveAttribute('data-image-state', 'loaded');
+  await expect(stage).toHaveAttribute('data-reveal', 'false');
+  await expect(gallery.locator('img')).toHaveCSS('opacity', '1');
+  await page.keyboard.press('Escape');
+  await expect(gallery).toHaveCount(0);
 });

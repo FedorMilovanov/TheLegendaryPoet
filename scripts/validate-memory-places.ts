@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { readIntrinsicSize } from './lib/image-metrics.mjs';
 import { poets } from '../src/data/poets';
 import { memoryPlaces, getMemoryPlaces } from '../src/data/memory-places';
+import { isMemoryPreviewFrame } from '../src/data/memory-places/previewFrame';
 
 const ids = new Set<string>();
 const assets = new Set<string>();
@@ -51,6 +52,21 @@ for (const place of memoryPlaces) {
     assert.equal(createHash('sha256').update(bytes).digest('hex'), photo.sha256, photo.src);
     assert(bytes.length <= 350_000, 'Image budget: ' + photo.src);
     size += bytes.length;
+    if (photo.preview) {
+      const preview = photo.preview;
+      assert.match(preview.src, /^\/images\/memory-places\/[a-z0-9-]+\/[a-z0-9-]+\.webp$/);
+      assert(!assets.has(preview.src), 'Duplicate preview asset: ' + preview.src);
+      assets.add(preview.src);
+      assert(preview.changes.trim());
+      assert(preview.frame === undefined || isMemoryPreviewFrame(preview.frame, photo.width, photo.height), 'Invalid preview frame: ' + preview.src);
+      assert.match(preview.sha256, /^[a-f0-9]{64}$/);
+      const derivative = readFileSync(resolve('public', preview.src.slice(1)));
+      assert.equal(derivative.length, preview.bytes, preview.src);
+      assert.equal(createHash('sha256').update(derivative).digest('hex'), preview.sha256, preview.src);
+      assert.deepEqual(readIntrinsicSize(derivative, '.webp'), { width: photo.width, height: photo.height }, 'Preview must share original canvas: ' + preview.src);
+      assert(derivative.length <= 350_000, 'Image budget: ' + preview.src);
+      size += derivative.length;
+    }
   }
   assert(size <= 750_000, 'Exhibit budget: ' + place.id);
 }

@@ -13,6 +13,7 @@ const hoverRoutes = ['home', 'articles', 'essay', 'poets', 'music', 'archive', '
 const animatedLifetime = 'animated modal exit lifetime';
 const suites = [
   { id: 'animated-modal-exit-lifetime', file: 'qa/reader-journeys.spec.mjs', grep: animatedLifetime },
+  { id: 'memory-places', file: 'qa/memory-places.spec.mjs' },
   { id: 'mobile-platforms', file: 'qa/mobile-platforms.spec.mjs' },
   { id: 'poets-status', file: 'qa/poets-status.spec.mjs' },
   { id: 'poem-source-coverage-w83', file: 'qa/poem-source-coverage-w83.spec.mjs' },

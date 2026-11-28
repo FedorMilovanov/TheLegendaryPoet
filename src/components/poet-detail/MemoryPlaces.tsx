@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { createElement, useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Landmark, MapPin, Maximize2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import './memory-places.css';
@@ -6,44 +6,95 @@ import type { MemoryPhoto, MemoryPlace } from '../../data/memory-places';
 import { loadMemoryPlaces } from '../../data/runtime/memoryPlaces';
 import ResilientImage, { type ImageLoadState } from '../media/ResilientImage';
 import { useDialogSurface } from '../../hooks/useDialogSurface';
+import { asset } from '../../utils/asset';
 
-const linkClass = 'theme-poet-accent underline decoration-current/40 underline-offset-4 hover:decoration-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
+const outline = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4';
+const linkClass = 'theme-poet-accent underline decoration-current/40 underline-offset-4 hover:decoration-current ' + outline;
 
-function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: number; onOpen: (index: number) => void }) {
+const reducedMotion = '(prefers-reduced-motion: reduce)';
+const galleryControl = 'memory-gallery-control grid place-items-center text-white';
+const storyGrid = 'grid grid-cols-1 gap-6 items-start';
+const subtitle = 'theme-text font-serif memory-subtitle';
+const kicker = 'text-xs font-semibold uppercase tracking-widest';
+const sectionKicker = 'theme-poet-accent ' + kicker;
+const failureLabel = 'Фотография недоступна';
+
+const muted = 'theme-functional-muted';
+const serif = 'theme-text font-serif';
+const accent = 'theme-poet-accent';
+const bodyText = 'theme-text';
+const islandMuted = 'theme-dark-island-muted';
+const changesClass = 'memory-photo-changes';
+const galleryImageFailure = 'memory-image-failure ';
+const statusClass = 'theme-functional-muted text-sm';
+
+function copy(tag: 'p' | 'h4' | 'span' | 'dt' | 'dd', className: string, children: ReactNode, key?: string) {
+  return createElement(tag, { className, key }, children);
+}
+
+function SourceLink({ href, children, className = linkClass }: { href: string; children: ReactNode; className?: string }) {
+  return <a href={href} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>;
+}
+
+function PhotoCredit({ photo, gallery = false, cutout = false }: { photo: MemoryPhoto; gallery?: boolean; cutout?: boolean }) {
+  const className = gallery ? 'underline underline-offset-4' : linkClass;
+  return <p className={(gallery ? islandMuted : muted) + ' memory-photo-credit'}>
+    <SourceLink href={photo.source} className={className}>{photo.credit} · {photo.sourceLabel}</SourceLink>
+    {' · '}<SourceLink href={photo.licenseUrl} className={className}>{photo.license}</SourceLink>
+    {copy("span", changesClass, photo.changes)}
+    {cutout && copy("span", changesClass, photo.preview?.changes)}
+  </p>;
+}
+
+function Photograph({ photo, index, onOpen }: { photo: MemoryPhoto; index: number; onOpen: (index: number, reveal: boolean) => void }) {
   const [imageState, setImageState] = useState<ImageLoadState>('loading');
+  const cutout = Boolean(photo.preview && imageState === 'loaded');
+  const frame = photo.preview?.frame;
+  const frameStyle = frame ? {
+    '--memory-frame-ratio': frame.width / frame.height,
+    '--memory-frame-image-width': `${photo.width / frame.width * 100}%`,
+    '--memory-frame-image-left': `${-frame.x / frame.width * 100}%`,
+    '--memory-frame-image-top': `${-frame.y / frame.height * 100}%`,
+  } as CSSProperties : undefined;
   return (
     <figure className="memory-photo min-w-0">
-      <button type="button" className="memory-photo-trigger relative block w-full overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" aria-haspopup="dialog" aria-label={imageState === 'failed' ? `Открыть галерею: ${photo.alt} (фотография недоступна)` : `Открыть фотографию: ${photo.alt}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index); }}>
-        <ResilientImage src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
-        <span className="memory-image-failure theme-functional-muted" aria-hidden="true">Фотография недоступна</span>
-        <span aria-hidden="true" className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-black/80 text-white"><Maximize2 size={18} /></span>
+      <button type="button" className={"memory-photo-trigger relative block w-full overflow-hidden rounded-xl " + outline} data-cutout={cutout} data-frame={Boolean(frame)} style={frameStyle} aria-haspopup="dialog" aria-label={`Открыть ${imageState === 'failed' ? 'галерею' : cutout ? 'оригинал фотографии' : 'фотографию'}: ${photo.alt}${imageState === 'failed' ? ' (фотография недоступна)' : ''}`} onClick={(event) => { event.currentTarget.focus({ preventScroll: true }); onOpen(index, cutout); }}>
+        <ResilientImage src={photo.preview?.src ?? photo.src} fallbackSrc={photo.preview ? photo.src : undefined} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" onStateChange={setImageState} style={{ aspectRatio: photo.width / photo.height }} className="block h-auto w-full object-contain" />
+        <span className={galleryImageFailure + muted} aria-hidden="true">{failureLabel}</span>
+        <span aria-hidden="true" className={`absolute bottom-3 right-3 flex h-11 items-center justify-center gap-2 rounded-full bg-black/80 text-white ${cutout ? 'px-3' : 'w-11'}`}><Maximize2 size={18} />{cutout && <span className="text-xs">Оригинал</span>}</span>
       </button>
       <figcaption className="memory-caption">
-        <p className="theme-text memory-caption-text">{photo.caption}</p>
-        <p className="theme-functional-muted memory-photo-credit">
-          <a href={photo.source} target="_blank" rel="noopener noreferrer" className={linkClass}>{photo.credit} · {photo.sourceLabel}</a>
-          {' · '}<a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>{photo.license}</a>
-          <span className="memory-photo-changes">{photo.changes}</span>
-        </p>
+        {copy("p", bodyText + " memory-caption-text", photo.caption)}
+        <PhotoCredit photo={photo} cutout={cutout} />
       </figcaption>
     </figure>
   );
 }
 
-function Gallery({ photos, index, onChange, onClose }: { photos: readonly MemoryPhoto[]; index: number; onChange: (index: number) => void; onClose: () => void }) {
+function Gallery({ photos, index, initialReveal, onChange, onClose }: { photos: readonly MemoryPhoto[]; index: number; initialReveal: boolean; onChange: (index: number) => void; onClose: () => void }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(false);
+  const [reveal, setReveal] = useState(() => initialReveal && !window.matchMedia(reducedMotion).matches);
   const [imageState, setImageState] = useState<ImageLoadState>('loading');
   const imageReady = imageState === 'loaded' || imageState === 'fallback';
   const { isTopmost } = useDialogSurface({ open: true, dialogRef, initialFocusRef: closeRef, onClose, label: 'memory-photo-gallery' });
   const photo = photos[index];
   const step = (direction: number) => {
     setZoom(false);
+    setReveal(false);
     setImageState('loading');
     onChange((index + direction + photos.length) % photos.length);
   };
+  useEffect(() => {
+    if (!reveal) return;
+    const motion = window.matchMedia(reducedMotion);
+    const retire = () => { if (motion.matches) setReveal(false); };
+    motion.addEventListener('change', retire);
+    retire();
+    return () => motion.removeEventListener('change', retire);
+  }, [reveal]);
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -51,7 +102,7 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
   }, [index, zoom]);
   return createPortal(
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Фотографии места памяти" tabIndex={-1}
-      className="memory-gallery theme-dark-island theme-dark-island-text"
+      className="memory-gallery fixed inset-0 grid theme-dark-island theme-dark-island-text"
       onKeyDown={(event) => {
         if (!isTopmost() || photos.length < 2 || (zoom && event.target === stageRef.current)) return;
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -59,30 +110,26 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
           step(event.key === 'ArrowLeft' ? -1 : 1);
         }
       }}>
-      <header className="memory-gallery-toolbar">
-        <p className="theme-dark-island-muted text-sm tabular-nums" aria-live="polite">{index + 1} / {photos.length}{imageState === 'failed' && <span className="sr-only">. Фотография недоступна</span>}</p>
-        <div className="memory-gallery-actions">
-          {photos.length > 1 && <>
-            <button className="memory-gallery-control" type="button" aria-label="Предыдущая фотография" onClick={() => step(-1)}><ChevronLeft size={20} /></button>
-            <button className="memory-gallery-control" type="button" aria-label="Следующая фотография" onClick={() => step(1)}><ChevronRight size={20} /></button>
-          </>}
-          <button className="memory-gallery-control" type="button" aria-label={zoom ? 'Уменьшить фотографию' : 'Увеличить фотографию'} aria-pressed={zoom} disabled={!imageReady} onClick={() => setZoom((value) => !value)}>{zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}</button>
-          <button ref={closeRef} className="memory-gallery-control" type="button" aria-label="Закрыть фотографии" onClick={onClose}><X size={22} /></button>
+      <header className="memory-gallery-toolbar flex flex-wrap items-center justify-between">
+        <p className={islandMuted + " text-sm tabular-nums"} aria-live="polite">{index + 1} / {photos.length}{imageState === 'failed' && <span className="sr-only">{". " + failureLabel}</span>}</p>
+        <div className="memory-gallery-actions flex flex-wrap items-center">
+          {photos.length > 1 && [-1, 1].map(direction => {
+            const Icon = direction < 0 ? ChevronLeft : ChevronRight;
+            return <button key={direction} className={galleryControl} type="button" aria-label={direction < 0 ? 'Предыдущая фотография' : 'Следующая фотография'} onClick={() => step(direction)}><Icon size={20} /></button>;
+          })}
+          <button className={galleryControl} type="button" aria-label={zoom ? 'Уменьшить фотографию' : 'Увеличить фотографию'} aria-pressed={zoom} disabled={!imageReady} onClick={() => { setReveal(false); setZoom((value) => !value); }}>{zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}</button>
+          <button ref={closeRef} className={galleryControl} type="button" aria-label="Закрыть фотографии" onClick={onClose}><X size={22} /></button>
         </div>
       </header>
-      <div className="memory-gallery-stage" ref={stageRef} data-zoom={zoom}
+      <div className="memory-gallery-stage relative overflow-auto min-h-0 min-w-0 flex" ref={stageRef} data-zoom={zoom} data-reveal={reveal && Boolean(photo.preview) && imageState !== 'failed'}
         role="region" aria-label="Область фотографии" tabIndex={zoom ? 0 : -1}
-        style={{ '--memory-photo-ratio': photo.width / photo.height, '--memory-photo-native': photo.width + 'px' } as CSSProperties}>
-        <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" onStateChange={setImageState} />
-        <span className="memory-image-failure theme-dark-island-muted" aria-hidden="true">Фотография недоступна</span>
+        style={{ '--memory-photo-ratio': photo.width / photo.height, '--memory-photo-native': photo.width + 'px', '--memory-reveal-preview': photo.preview ? `url("${asset(photo.preview.src)}")` : undefined } as CSSProperties}>
+        <ResilientImage key={photo.src} src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" onStateChange={setImageState} onAnimationEnd={(event) => { if (event.animationName === 'memory-photo-reveal') setReveal(false); }} />
+        <span className={galleryImageFailure + islandMuted} aria-hidden="true">{failureLabel}</span>
       </div>
       <footer className="memory-gallery-caption">
-        <p className="text-sm leading-relaxed">{photo.caption}</p>
-        <p className="theme-dark-island-muted memory-photo-credit">
-          <a className="underline underline-offset-4" href={photo.source} target="_blank" rel="noopener noreferrer">{photo.credit} · {photo.sourceLabel}</a>
-          {' · '}<a className="underline underline-offset-4" href={photo.licenseUrl} target="_blank" rel="noopener noreferrer">{photo.license}</a>
-          <span className="memory-photo-changes">{photo.changes}</span>
-        </p>
+        {copy("p", "text-sm leading-relaxed", photo.caption)}
+        <PhotoCredit photo={photo} gallery />
       </footer>
     </div>, document.body
   );
@@ -90,73 +137,78 @@ function Gallery({ photos, index, onChange, onClose }: { photos: readonly Memory
 
 function Exhibit({ place }: { place: MemoryPlace }) {
   const [activePhoto, setActivePhoto] = useState<number | null>(null);
+  const [revealOnOpen, setRevealOnOpen] = useState(false);
+  const open = (index: number, reveal: boolean) => {
+    setRevealOnOpen(reveal);
+    setActivePhoto(index);
+  };
   const close = useCallback(() => setActivePhoto(null), []);
   const [hero, figure, detail, ...more] = place.photos;
   const note = place.detailNote && <aside className="memory-note">
-        <p className="theme-poet-accent text-xs font-semibold uppercase tracking-widest">Деталь экспозиции</p>
-        <h4 className="theme-text font-serif memory-subtitle">{place.detailNote.title}</h4>
-        <p className="theme-text memory-note-text">{place.detailNote.text}</p>
+        {copy("p", sectionKicker, "Деталь экспозиции")}
+        {copy("h4", subtitle, place.detailNote.title)}
+        {copy("p", bodyText + " memory-note-text", place.detailNote.text)}
       </aside>;
   const quotation = place.literaryConnection && (
         <figure className="memory-quotation">
-          <p className="theme-poet-accent mb-4 text-xs font-semibold uppercase tracking-widest">Место в литературе</p>
-          <blockquote className="theme-text font-serif text-xl leading-[1.6] sm:text-2xl">
-            {place.literaryConnection.lines.map((line) => <span key={line} className="block">{line}</span>)}
+          {copy("p", sectionKicker + " mb-4", "Место в литературе")}
+          <blockquote className={serif + " text-xl leading-[1.6] sm:text-2xl"}>
+            {place.literaryConnection.lines.map((line) => copy("span", "block", line, line))}
           </blockquote>
-          <figcaption className="theme-functional-muted mt-4 text-xs leading-relaxed">
-            <a href={place.literaryConnection.url} target="_blank" rel="noopener noreferrer" className={linkClass}>{place.literaryConnection.attribution} ↗</a>
+          <figcaption className={muted + " mt-4 text-xs leading-relaxed"}>
+            <SourceLink href={place.literaryConnection.url}>{place.literaryConnection.attribution} ↗</SourceLink>
           </figcaption>
         </figure>
       );
   return (
-    <article id={`memory-${place.id}`} aria-labelledby={`memory-${place.id}-title`} className="memory-exhibit scroll-mt-28">
+    <article id={`memory-${place.id}`} aria-labelledby={`memory-${place.id}-title`} className="memory-exhibit min-w-0 grid grid-cols-1 gap-6 scroll-mt-28">
       <header className="memory-heading">
-        <p className="theme-functional-muted flex items-start gap-2 text-xs font-medium leading-relaxed"><MapPin size={15} className="mt-0.5 shrink-0" aria-hidden="true" /> <span>{place.location}</span></p>
-        <h3 id={`memory-${place.id}-title`} className="theme-text font-serif memory-title">{place.title}</h3>
-        <p className="theme-poet-accent text-sm font-semibold">{place.date}</p>
+        <p className={muted + " flex items-start gap-2 text-xs font-medium leading-relaxed"}><MapPin size={15} className="mt-0.5 shrink-0" aria-hidden="true" /> <span>{place.location}</span></p>
+        <h3 id={`memory-${place.id}-title`} className={serif + " memory-title"}>{place.title}</h3>
+        {copy("p", accent + " text-sm font-semibold", place.date)}
       </header>
-      {hero && <Photograph photo={hero} index={0} onOpen={setActivePhoto} />}
-      <p className="memory-lead theme-text">{place.intro}</p>
-      <dl className="memory-facts">
+      {hero && <Photograph photo={hero} index={0} onOpen={open} />}
+      {copy("p", "memory-lead " + bodyText, place.intro)}
+      <dl className="memory-facts grid grid-cols-1">
         {place.facts.map((fact) => (
-          <div key={fact.label} className="memory-fact min-w-0">
-            <dt className="theme-functional-muted text-xs leading-relaxed">{fact.label}</dt>
-            <dd className="theme-text font-serif memory-fact-value tabular-nums">{fact.value}</dd>
+          <div key={fact.label} className="memory-fact min-w-0 grid">
+            {copy("dt", muted + " text-xs leading-relaxed", fact.label)}
+            {copy("dd", serif + " memory-fact-value tabular-nums", fact.value)}
           </div>
         ))}
       </dl>
-      <div className="memory-story" data-has-photo={Boolean(figure)}>
+      <div className={"memory-story " + storyGrid} data-has-photo={Boolean(figure)}>
         <div className="memory-timeline min-w-0">
-          <h4 className="theme-text font-serif memory-subtitle">История места</h4>
-          <ol className="memory-events">
+          {copy("h4", subtitle, "История места")}
+          <ol className="memory-events grid grid-cols-1 gap-5 mt-4 pl-4">
             {place.timeline.map((event) => (
-              <li key={event.date} className="memory-event">
-                <p className="theme-poet-accent memory-event-date tabular-nums">{event.date}</p>
-                <p className="theme-text memory-event-text">{event.text}</p>
+              <li key={event.date} className="memory-event relative min-w-0">
+                {copy("p", accent + " memory-event-date tabular-nums", event.date)}
+                {copy("p", bodyText + " memory-event-text", event.text)}
               </li>
             ))}
           </ol>
         </div>
-        {figure && <div className="memory-story-media">
-          <Photograph photo={figure} index={1} onOpen={setActivePhoto} />
+        {figure && <div className={"memory-story-media " + storyGrid}>
+          <Photograph photo={figure} index={1} onOpen={open} />
           {!detail && note}
         </div>}
       </div>
       {!figure && note}
       {detail ? (
-        <div className="memory-detail" data-has-copy={Boolean(note || quotation)}>
-          <Photograph photo={detail} index={2} onOpen={setActivePhoto} />
-          {(note || quotation) && <div className="memory-detail-copy">{note}{quotation}</div>}
+        <div className={"memory-detail " + storyGrid} data-has-copy={Boolean(note || quotation)}>
+          <Photograph photo={detail} index={2} onOpen={open} />
+          {(note || quotation) && <div className={"memory-detail-copy " + storyGrid}>{note}{quotation}</div>}
         </div>
       ) : quotation}
-      {more.length > 0 && <div className="memory-extra">{more.map((photo, index) => <Photograph key={photo.src} photo={photo} index={index + 3} onOpen={setActivePhoto} />)}</div>}
+      {more.length > 0 && <div className={"memory-extra " + storyGrid}>{more.map((photo, index) => <Photograph key={photo.src} photo={photo} index={index + 3} onOpen={open} />)}</div>}
       <details className="memory-sources">
-        <summary className="theme-text cursor-pointer text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">Источники и дальнейшее чтение</summary>
+        <summary className={"theme-text cursor-pointer text-sm font-semibold " + outline}>Источники и дальнейшее чтение</summary>
         <ul className="mt-4 space-y-3 text-sm leading-relaxed">
-          {place.sources.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer" className={linkClass}>{source.label} ↗</a></li>)}
+          {place.sources.map((source) => <li key={source.url}><SourceLink href={source.url}>{source.label} ↗</SourceLink></li>)}
         </ul>
       </details>
-      {activePhoto !== null && <Gallery photos={place.photos} index={activePhoto} onChange={setActivePhoto} onClose={close} />}
+      {activePhoto !== null && <Gallery photos={place.photos} index={activePhoto} initialReveal={revealOnOpen} onChange={setActivePhoto} onClose={close} />}
     </article>
   );
 }
@@ -180,14 +232,14 @@ export default function MemoryPlaces({ poetId, revision }: { poetId: string; rev
     return () => cancelAnimationFrame(frame);
   }, [poetId, places]);
   return (
-    <section id="memory-places" aria-labelledby="memory-places-heading" className="memory-places scroll-mt-28">
-      <header className="memory-section-heading">
-        <p className="theme-poet-accent flex items-center gap-2 text-xs font-semibold uppercase tracking-widest"><Landmark size={17} aria-hidden="true" /> Литературная география</p>
-        <h2 id="memory-places-heading" className="theme-text font-serif text-3xl leading-tight sm:text-4xl">Места памяти</h2>
+    <section id="memory-places" aria-labelledby="memory-places-heading" className="memory-places grid grid-cols-1 gap-6 scroll-mt-28">
+      <header className="memory-section-heading grid gap-2">
+        <p className={accent + " flex items-center gap-2 " + kicker}><Landmark size={17} aria-hidden="true" /> Литературная география</p>
+        <h2 id="memory-places-heading" className={serif + " text-3xl leading-tight sm:text-4xl"}>Места памяти</h2>
       </header>
-      {failed ? <div role="status" className="theme-functional-muted text-sm">
+      {failed ? <div role="status" className={statusClass}>
         Не удалось загрузить экспозицию. <button type="button" className={linkClass} onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Повторить</button>
-      </div> : !places.length ? <p role="status" className="theme-functional-muted text-sm">Загрузка экспозиции…</p> : null}
+      </div> : !places.length ? <p role="status" className={statusClass}>Загрузка экспозиции…</p> : null}
       {places.length > 1 && (
         <nav aria-label="Места памяти поэта" className="flex flex-wrap gap-3">
           {places.map(place => <a key={place.id} href={`#memory-${place.id}`} className={linkClass}>{place.title}</a>)}
