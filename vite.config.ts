@@ -7,6 +7,7 @@ import { defineConfig, type HtmlTagDescriptor, type Plugin } from "vite";
 import { canonicalRoutePath, canonicalRouteUrl } from './src/routes/publicUrl';
 import { materializeSupplementaryPoets } from './scripts/supplementary-poet-artifacts';
 import { materializeMemoryPlaces } from './scripts/memory-place-artifacts';
+import { hasApprovedPoemPages, projectBrowserRouteContract } from './scripts/lib/poem-build-admission.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -188,9 +189,29 @@ function facsimileMediaGate(): Plugin {
 // VITE_BASE remains overridable for previews on another path.
 // NOTE: a normal multi-file build (no vite-plugin-singlefile) is used so that
 // route chunks, deep links and long-term asset caching remain reliable.
-export default defineConfig({
+// Strip build-only route metadata from the browser module, not the source registry.
+function browserRouteContractPlugin(): Plugin {
+  return {
+    name: 'browser-route-contract-projection',
+    enforce: 'pre',
+    transform(code, id) {
+      if (id !== ROUTE_CONTRACT_PATH.replace(/\\/g, '/')) return;
+      return { code: JSON.stringify(projectBrowserRouteContract(JSON.parse(code))), map: null };
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => ({
   base: process.env.VITE_BASE || '/',
-  plugins: [poetArtifactIntegrityPlugin(), legacyAliasDocumentsPlugin(), facsimileMediaGate(), searchVerificationPlugin(), react(), tailwindcss()],
+  // The committed index is regenerated and checked against canonical policy before build.
+  // No environment override: zero approvals must not ship the interactive route.
+  define: {
+    __TLP_INCLUDE_REVIEW_FACSIMILES__: JSON.stringify(mode === 'facsimile-preview'),
+    __TLP_HAS_APPROVED_POEM_PAGES__: JSON.stringify(hasApprovedPoemPages(JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'src/data/runtime/poemPages.generated.json'), 'utf8'),
+    ))),
+  },
+  plugins: [browserRouteContractPlugin(), poetArtifactIntegrityPlugin(), legacyAliasDocumentsPlugin(), facsimileMediaGate(), searchVerificationPlugin(), react(), tailwindcss()],
   resolve: {
     alias: [
       // Keep Three route-isolated, but expose only the Hall runtime surface to
@@ -223,4 +244,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

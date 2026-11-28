@@ -47,6 +47,17 @@
       "budgetBytes": 52000
     },
     {
+      "id": "poem-detail",
+      "path": "/poets/:id/:slug",
+      "page": "PoemDetailPage",
+      "module": "src/pages/PoemDetailPage.tsx",
+      "prefetch": false,
+      "sitemap": false,
+      "audit": "dynamic",
+      "discoveryState": "ready",
+      "budgetBytes": 18000
+    },
+    {
       "id": "ratings",
       "path": "/ratings",
       "page": "RatingsPage",
@@ -166,6 +177,7 @@
   ],
   "notFoundProbes": [
     "/route-audit-page-that-must-not-exist",
-    "/articles/route-audit-legacy"
+    "/articles/route-audit-legacy",
+    "/poets/alexander-blok/route-audit-unpublished-poem/"
   ]
 }

@@ -46,6 +46,9 @@ export const poemFacsimiles: Readonly<Record<string, PoemFacsimile>> = {
       originalUrl: 'https://commons.wikimedia.org/wiki/File:Я_вас_любил,_публикация_1830.png',
     }],
   },
+  // Node validators see the complete source registry; Vite removes review metadata
+  // from ordinary browser builds, exactly as the existing media release gate does.
+  ...(typeof __TLP_INCLUDE_REVIEW_FACSIMILES__ === 'undefined' || __TLP_INCLUDE_REVIEW_FACSIMILES__ ? {
   'pushkin-4': {
     poemId: 'pushkin-4',
     publication: '«Царское Село». Альманах на 1830 год',
@@ -86,6 +89,7 @@ export const poemFacsimiles: Readonly<Record<string, PoemFacsimile>> = {
       originalUrl: 'https://books.google.ru/books?id=8aFoAAAAcAAJ&pg=PA37',
     }],
   },
+  } satisfies Record<string, PoemFacsimile> : {}),
 };
 
 export function visiblePoemFacsimile(poemId: string, mode: string): PoemFacsimile | null {

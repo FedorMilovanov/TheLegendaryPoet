@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Star, Award, Heart, ChevronDown, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Poem } from '../../types/poet';
+import { Link } from '../ui/Link';
 import { visiblePoemFacsimile } from '../../data/poemFacsimiles';
 import CommunityPanel from '../community/CommunityPanel';
 import { poemRatingDimensions } from '../../data/ratingDimensions';
@@ -17,9 +18,10 @@ const PoemEpigraph = lazy(() => import('./PoemEpigraph'));
 interface PoemCardProps {
   poem: Poem;
   contentsId?: string;
+  standaloneHref?: string | null;
 }
 
-export default function PoemCard({ poem, contentsId }: PoemCardProps) {
+export default function PoemCard({ poem, contentsId, standaloneHref }: PoemCardProps) {
   const favorite = useFavoritePoem(poem.id);
   const facsimile = visiblePoemFacsimile(poem.id, import.meta.env.MODE);
   // Mark standalone editorial omissions and explicitly titled excerpts as incomplete.
@@ -78,6 +80,7 @@ export default function PoemCard({ poem, contentsId }: PoemCardProps) {
             </span>
           )}
           {poem.yearNote && <span data-poem-year-note className="ml-2 inline-block max-w-full text-xs font-medium normal-case tracking-normal text-luxury-gray-light">{poem.yearNote}</span>}
+          {standaloneHref && <p className="mt-3"><Link to={standaloneHref} aria-label={'Читать отдельно: ' + poem.title} className="theme-text inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">Читать стихотворение отдельно</Link></p>}
         </div>
         <div className="flex items-center gap-2">
           <button

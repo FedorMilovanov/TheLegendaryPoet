@@ -8,7 +8,10 @@ import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, poets } from '../src/data/poets.ts';
 import { getMemoryPlaces } from '../src/data/memory-places/index.ts';
 import { poetryCollections, collectionsForPoet, collectionsForEssay } from '../src/data/poetryCollections.ts';
+import { poets as canonicalPoets } from '../src/data/library/index.ts';
 import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
+import { buildPoemRouteCatalog } from './lib/poem-discovery.mjs';
+import { buildPoemPageModel } from '../src/lib/poemPageModel.ts';
 
 const BASE = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
 const OUTPUT = path.resolve('public/sitemap.xml');
@@ -88,8 +91,19 @@ function policyForRoute(route) {
   return policy;
 }
 
+const poemRoutePolicy = JSON.parse(fs.readFileSync(path.resolve('src/data/poem-route-policy.json'), 'utf8'));
+const poemRouteCatalog = buildPoemRouteCatalog(canonicalPoets, poemRoutePolicy, canonicalRoutePath);
+console.log('Poem route contract: ' + poemRouteCatalog.length + ' works; '
+  + poemRouteCatalog.filter(row => row.slug !== null).length + ' assigned slugs; '
+  + poemRouteCatalog.filter(row => row.eligible).length + ' standalone approvals.');
+
 const essays = getAllEssays();
 const publishedTracks = allMusicTracks.filter((track) => track.availability === 'published');
+const poemPages = poemRouteCatalog.filter(row => row.eligible).map(row => {
+  const page = buildPoemPageModel(row, poemRouteCatalog, allMusicTracks);
+  if (!page) throw new Error('Eligible poem lacks a page model: ' + row.poemId);
+  return page;
+});
 
 const staticRoutes = routeContract.routes
   .filter((route) => route.sitemap)
@@ -139,6 +153,10 @@ const urls = [
       caption: poet.shortBio,
     },
   })),
+  ...poemPages.map(page => ({
+    routeId: 'poem-detail', loc: page.path,
+    image: { loc: page.image, title: page.authorName, caption: page.heading },
+  })),
 ].map((item) => ({ ...item, loc: canonicalRoutePath(item.loc) }));
 
 const seen = new Set();
@@ -182,10 +200,17 @@ const dataDependencies = {
 const dynamicContentByPath = new Map([
   ...essays.map((essay) => [canonicalRoutePath(`/essays/${essay.slug}`), collectionsForEssay(essay.slug).length ? { essay, collections: collectionsForEssay(essay.slug) } : essay]),
   ...publishedTracks.map((track) => [canonicalRoutePath(`/music/${track.id}`), track]),
-  ...poets.map((poet) => {
+  // Author detail serves the complete canonical corpus after hydration. The
+  // deliberately abbreviated shell index cannot fingerprint these pages.
+  ...canonicalPoets.map((poet) => {
+    const authorPath = canonicalRoutePath(`/poets/${poet.id}`);
     const places = getMemoryPlaces(poet.id);
     const collections = collectionsForPoet(poet.id);
-    return [canonicalRoutePath(`/poets/${poet.id}`), {
+    const standalonePoems = poemPages.filter(page => page.authorHref === authorPath)
+      .map(page => ({ path: page.path, poemId: page.poemId }));
+    // A changed approval changes the author page too. Scope the additional
+    // fingerprint dependencies to authors with visible standalone links.
+    return [authorPath, {
       poet,
       memoryPlaces: places,
       ...(collections.length ? { collections } : {}),
@@ -193,8 +218,28 @@ const dynamicContentByPath = new Map([
         memoryPlacesView: fileHash('src/components/poet-detail/MemoryPlaces.tsx'),
         memoryPlacesStyle: fileHash('src/components/poet-detail/memory-places.css'),
       } : {}),
+      ...(standalonePoems.length ? {
+        standalonePoems,
+        authorEntryBody: fileHash('scripts/lib/poem-static-document.tsx'),
+        authorLink: fileHash('src/components/poet-detail/PoemCard.tsx'),
+        authorAdmission: fileHash('src/data/runtime/poemPagePayload.ts'),
+      } : {}),
     }];
   }),
+  ...poemPages.map(page => [page.path, {
+    page,
+    readingBody: fileHash('src/components/poet-detail/PoemReadingBody.tsx'),
+    archiveAction: fileHash('src/components/poet-detail/PoemArchiveAction.tsx'),
+    readerProgress: fileHash('src/components/articles/ReadingProgress.tsx'),
+    lineShare: fileHash('src/components/ui/ShareLine.tsx'),
+    internalLink: fileHash('src/components/ui/Link.tsx'),
+    model: fileHash('src/lib/poemPageModel.ts'),
+    staticDocument: fileHash('scripts/lib/poem-static-document.tsx'),
+    browserPayload: fileHash('src/data/runtime/poemPagePayload.ts'),
+    browserLoader: fileHash('src/data/runtime/browserPoemData.ts'),
+    directEntry: fileHash('src/main.tsx'),
+    routeRuntime: fileHash('src/routes/routeModules.ts'),
+  }]),
 ]);
 
 const manifestRoutes = urls.map((item) => {

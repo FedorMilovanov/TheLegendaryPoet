@@ -6,7 +6,11 @@ import path from 'node:path';
 import { getAllEssays } from '../src/data/essays/index.ts';
 import { allMusicTracks, musicTracks, poets } from '../src/data/poets.ts';
 import { siteConfig } from '../src/config/site.ts';
-import { canonicalRouteUrl } from '../src/routes/publicUrl.ts';
+import { canonicalRoutePath, canonicalRouteUrl } from '../src/routes/publicUrl.ts';
+import { poets as canonicalPoets } from '../src/data/library/index.ts';
+import { buildPoemRouteCatalog } from './lib/poem-discovery.mjs';
+import { buildPoemPageModel } from '../src/lib/poemPageModel.ts';
+import { assertPoemStaticAdmission, renderPoemStaticBody, renderAuthorPoemEntryBody } from './lib/poem-static-document.tsx';
 import {
   buildArticlePageSchema,
   buildMusicPageSchema,
@@ -209,11 +213,26 @@ async function main() {
     count++;
   }
 
+  const poemPolicy = JSON.parse(fs.readFileSync(path.resolve('src/data/poem-route-policy.json'), 'utf8'));
+  const poemCatalog = buildPoemRouteCatalog(canonicalPoets, poemPolicy, canonicalRoutePath);
+  const poemPages = poemCatalog.filter(row => row.eligible).map(row => {
+    const page = buildPoemPageModel(row, poemCatalog, allMusicTracks);
+    if (!page) throw new Error('Eligible poem has no reading model: ' + row.poemId);
+    return page;
+  });
+  const inventory = JSON.parse(fs.readFileSync(path.join(PUBLIC, 'discovery-manifest.json'), 'utf8'));
+  assertPoemStaticAdmission(poemPages, routeContract.routes, inventory.canonicalUrls);
+  const poemIndex = JSON.parse(fs.readFileSync(path.resolve('src/data/runtime/poemPages.generated.json'), 'utf8'));
+  if (poemIndex.schemaVersion !== 1 || Object.keys(poemIndex.pages).length !== poemPages.length
+      || poemPages.some(page => poemIndex.pages[page.path] !== page.poemId)) {
+    throw new Error('Author links and standalone browser index differ');
+  }
+
   for (const poet of poets) {
     const routePath = `/poets/${poet.id}`;
     const title = `${poet.name} — биография, стихи и анализ — THE LEGENDARY POET`;
     const breadcrumbs = pageBreadcrumbs('Поэты', '/poets', poet.name, routePath);
-    writeRoute(routePath, renderPage({
+    const head = renderPage({
       title,
       description: poet.shortBio,
       routePath,
@@ -227,7 +246,19 @@ async function main() {
         breadcrumbs,
         poet,
       }),
-    }));
+    });
+    const canonicalPoet = canonicalPoets.find(item => item.id === poet.id);
+    if (!canonicalPoet) throw new Error('Missing canonical author: ' + poet.id);
+    writeRoute(routePath, renderAuthorPoemEntryBody(head, canonicalPoet, poemIndex));
+    count++;
+  }
+
+  for (const page of poemPages) {
+    const head = renderPage({
+      title: page.title, description: page.description, routePath: page.path,
+      image: page.image, imageAlt: 'Портрет: ' + page.authorName, jsonLd: page.schema,
+    });
+    writeRoute(page.path, renderPoemStaticBody(head, page));
     count++;
   }
 

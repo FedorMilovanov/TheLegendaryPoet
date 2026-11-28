@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { computeIndexNowDelta } from './indexnow-delta.mjs';
+import { assertLiveDiscoverySnapshot, computeIndexNowDelta } from './indexnow-delta.mjs';
 
 const SITE_URL = (process.env.SITE_URL || 'https://thelegendarypoet.ru').replace(/\/$/, '');
 const INDEXNOW_KEY = process.env.INDEXNOW_KEY || '189937c25bd79e9d675311b76f9481854c85722f';
@@ -22,8 +22,15 @@ if (currentManifest.site !== SITE_URL) {
 }
 
 let previousManifest = null;
-if (BASE_MANIFEST_PATH && fs.existsSync(BASE_MANIFEST_PATH)) {
+if (BASE_MANIFEST_PATH) {
   previousManifest = readManifest(BASE_MANIFEST_PATH, 'previous');
+}
+
+if (process.env.INDEXNOW_VERIFY_LIVE === '1') {
+  await assertLiveDiscoverySnapshot(currentManifest, SITE_URL, {
+    nonce: `${process.env.GITHUB_RUN_ID || 'local'}-${process.env.GITHUB_RUN_ATTEMPT || '1'}`,
+  });
+  console.log('IndexNow: live discovery snapshot matches the candidate');
 }
 
 const delta = computeIndexNowDelta(currentManifest, previousManifest, { forceFull });

@@ -79,7 +79,13 @@ if (exists(routeContractPath) && exists(routeRuntimePath)) {
   const redirects = Array.isArray(routeContract.redirects) ? routeContract.redirects : [];
   const notFoundProbes = Array.isArray(routeContract.notFoundProbes) ? routeContract.notFoundProbes : [];
   assert(routeContract.schemaVersion === 1, 'route contract schemaVersion must be 1');
-  assert(routes.length === 14, `route contract must register 14 lazy pages, found ${routes.length}`);
+  assert(routes.length === 15, `route contract must register 15 lazy pages, found ${routes.length}`);
+  const poemRoute = routes.find((route) => route.id === 'poem-detail');
+  assert(poemRoute?.path === '/poets/:id/:slug' && poemRoute.page === 'PoemDetailPage'
+    && poemRoute.audit === 'dynamic' && poemRoute.discoveryState === 'ready'
+    && poemRoute.sitemap === false && poemRoute.prefetch === false,
+    'standalone poem route must retain its lazy, individually admitted discovery contract');
+  assert(notFoundProbes.includes('/poets/alexander-blok/route-audit-unpublished-poem/'), 'route contract must exercise an unknown standalone poem');
   assert(new Set(routes.map((route) => route.id)).size === routes.length, 'route contract ids must be unique');
   assert(new Set(routes.map((route) => route.path)).size === routes.length, 'route contract paths must be unique');
   assert(routes.filter((route) => route.path === '*' && route.audit === 'not-found').length === 1, 'route contract must define one wildcard NotFound route');

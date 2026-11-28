@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '../components/ui/Link';
+import poemPageIndex from '../data/runtime/poemPages.generated.json';
+import { approvedPoemHref, type PoemPageIndex } from '../data/runtime/poemPagePayload';
 import ShareLine from '../components/ui/ShareLine';
 import Breadcrumbs from '../components/seo/Breadcrumbs';
 import { poets } from '../data/poets';
@@ -213,7 +215,7 @@ export default function PoetDetailPage() {
               <Suspense fallback={<p role="status" className="sr-only">Загрузка стихотворений</p>}>
                 <div className="mt-10 space-y-16">
                   {poet.poems.map((poem) => (
-                    <PoemCard key={poem.id} poem={poem} contentsId={contentsId} />
+                    <PoemCard key={poem.id} poem={poem} contentsId={contentsId} standaloneHref={approvedPoemHref(poemPageIndex as PoemPageIndex, poet.id, poem.id)} />
                   ))}
                 </div>
               </Suspense>
